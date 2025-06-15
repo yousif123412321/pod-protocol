@@ -34,8 +34,8 @@ export class ChannelCommands {
           let name = options.name;
           let description = options.description;
           let visibility = options.visibility as ChannelVisibility;
-          let maxParticipants = parseInt(options.maxParticipants);
-          let feePerMessage = parseInt(options.fee);
+          let maxParticipants = parseInt(options.maxParticipants, 10);
+          let feePerMessage = parseInt(options.fee, 10);
 
           if (options.interactive) {
             const answers = await inquirer.prompt([
@@ -218,11 +218,11 @@ export class ChannelCommands {
             const wallet = getWallet(globalOpts.keypair);
             channels = await client.getChannelsByCreator(
               wallet.publicKey,
-              parseInt(options.limit),
+              parseInt(options.limit, 10),
             );
           } else {
             channels = await client.getAllChannels(
-              parseInt(options.limit),
+              parseInt(options.limit, 10),
               options.visibility as ChannelVisibility,
             );
           }
@@ -441,7 +441,7 @@ export class ChannelCommands {
 
           const participants = await client.getChannelParticipants(
             new PublicKey(channelId),
-            parseInt(options.limit),
+            parseInt(options.limit, 10),
           );
 
           if (participants.length === 0) {
@@ -498,7 +498,7 @@ export class ChannelCommands {
 
           const messages = await client.getChannelMessages(
             new PublicKey(channelId),
-            parseInt(options.limit),
+            parseInt(options.limit, 10),
           );
 
           if (messages.length === 0) {

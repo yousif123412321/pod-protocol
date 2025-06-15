@@ -42,7 +42,7 @@ export class MessageCommands {
           let payload = options.payload;
           let messageType = options.type as MessageType;
           let customValue = options.customValue
-            ? parseInt(options.customValue)
+            ? parseInt(options.customValue, 10)
             : 0;
 
           if (options.interactive) {
@@ -310,7 +310,7 @@ export class MessageCommands {
 
           const messages = await client.getAgentMessages(
             agentAddress,
-            parseInt(options.limit),
+            parseInt(options.limit, 10),
             options.filter as MessageStatus,
           );
 
