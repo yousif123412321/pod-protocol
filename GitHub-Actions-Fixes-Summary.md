@@ -48,26 +48,25 @@ This document summarizes all the fixes applied to the GitHub Actions workflows i
 - ✅ Added npm cache to Node.js setup
 - ✅ Fixed dependency installation to use `--legacy-peer-deps` flag
 
-## Disabled Workflows
+## Removed Workflows
+
+The following example workflows were removed as they were not relevant to this project:
 
 ### 9. **Next.js Workflow** (`/.github/workflows/nextjs.yml`)
-- ⚠️ **DISABLED** - This project doesn't use Next.js
-- Changed to manual trigger only
-- Added clear comments explaining why it's disabled
+- ⚠️ **REMOVED** - Repository does not contain a Next.js app
 
 ### 10. **Jekyll Workflow** (`/.github/workflows/jekyll-gh-pages.yml`)
-- ⚠️ **DISABLED** - This project doesn't use Jekyll
-- Changed to manual trigger only
-- Added clear comments explaining why it's disabled
+- ⚠️ **REMOVED** - Repository does not contain a Jekyll site
 
 ### 11. **NPM Grunt Workflow** (`/.github/workflows/npm-grunt.yml`)
-- ⚠️ **DISABLED** - This project doesn't use Grunt
-- Changed to manual trigger only
-- Added clear comments explaining why it's disabled
+- ⚠️ **REMOVED** - Repository does not use Grunt
+
+### 12. **Manual Example Workflow** (`/.github/workflows/manual.yml`)
+- ⚠️ **REMOVED** - Sample workflow providing a greeting step
 
 ## New Workflows Created
 
-### 12. **Build and Test Workflow** (`/.github/workflows/build-and-test.yml`)
+### 13. **Build and Test Workflow** (`/.github/workflows/build-and-test.yml`)
 - ✅ **NEW** - Comprehensive build and test workflow
 - Tests across multiple OS (Ubuntu, Windows, macOS)
 - Tests multiple Node.js versions (18, 20)
@@ -75,14 +74,14 @@ This document summarizes all the fixes applied to the GitHub Actions workflows i
 - Runs linting, building, and testing for all components
 - Includes security auditing
 
-### 13. **Documentation Deploy Workflow** (`/.github/workflows/docs-deploy.yml`)
+### 14. **Documentation Deploy Workflow** (`/.github/workflows/docs-deploy.yml`)
 - ✅ **NEW** - Simple documentation deployment to GitHub Pages
 - Builds and deploys documentation from README and docs folder
 - Handles cases where docs generation scripts don't exist
 
 ## Fixed Actions
 
-### 14. **Setup Solana Action** (`/actions/setup-solana/action.yml`)
+### 15. **Setup Solana Action** (`/actions/setup-solana/action.yml`)
 - ✅ Updated cache action from v3 to v4
 
 ## Key Improvements
@@ -91,8 +90,9 @@ This document summarizes all the fixes applied to the GitHub Actions workflows i
 2. **Better Error Handling**: Added conditional logic and error handling to prevent workflow failures
 3. **Proper Dependency Installation**: Added `--legacy-peer-deps` flag to handle peer dependency conflicts
 4. **Cross-Platform Testing**: Ensured workflows work across different operating systems
-5. **Disabled Irrelevant Workflows**: Disabled workflows that don't match the project structure
+5. **Removed Irrelevant Workflows**: Deleted sample workflows that didn't match the project structure
 6. **Added Comprehensive Testing**: Created a new workflow that properly tests the entire project
+7. **Normalized Workflow Files**: Added trailing newlines for consistent formatting
 
 ## Scripts That Should Be Added
 
