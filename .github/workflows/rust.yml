@@ -1,4 +1,4 @@
-name: Rust
+name: Rust CI
 
 on:
   push:
@@ -11,12 +11,25 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
 
-      # Install stable toolchain and required target for cross-compilation
+      # Cache Rust dependencies and build output for faster builds
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
       - name: Set up Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -24,19 +37,8 @@ jobs:
           profile: minimal
           override: true
 
-      - name: Add aarch64-apple-darwin target
-        run: rustup target add aarch64-apple-darwin
-
-      # (Optional) Install additional toolchains/targets if needed
-      # - name: Add other targets
-      #   run: rustup target add <other-target>
-
-      - name: Build (default target)
+      - name: Build
         run: cargo build --verbose
-
-      # If you need to build for the specific target:
-      # - name: Build for aarch64-apple-darwin
-      #   run: cargo build --target aarch64-apple-darwin --verbose
 
       - name: Run tests
         run: cargo test --verbose
