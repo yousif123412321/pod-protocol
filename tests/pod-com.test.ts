@@ -1,24 +1,20 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program, BN, AnchorProvider } from "@coral-xyz/anchor";
 import { PodCom } from "../target/types/pod_com";
-import { PublicKey, Keypair, SystemProgram, Connection, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import {
+  PublicKey,
+  Keypair,
+  SystemProgram,
+  Connection,
+  LAMPORTS_PER_SOL,
+} from "@solana/web3.js";
 import { expect, test, beforeAll, describe } from "bun:test";
-
-// Define types that match the IDL
-type MessageType = {
-  text?: Record<string, never>;
-  data?: Record<string, never>;
-  command?: Record<string, never>;
-  response?: Record<string, never>;
-  custom?: number;
-};
-
-type MessageStatus = {
-  pending?: Record<string, never>;
-  delivered?: Record<string, never>;
-  read?: Record<string, never>;
-  failed?: Record<string, never>;
-};
+import {
+  MessageType,
+  MessageStatus,
+  findAgentPDA,
+  findMessagePDA,
+} from "./test-utils";
 
 // Configure the client to use the local cluster.
 const provider = anchor.AnchorProvider.env();
@@ -39,61 +35,6 @@ let senderAgentPDA: PublicKey;
 let recipientAgentPDA: PublicKey;
 let messagePDA: PublicKey;
 
-/**
- * Finds the Program Derived Address (PDA) for an agent account
- * @param wallet - The public key of the agent's wallet
- * @returns The PDA and bump seed for the agent account
- */
-const findAgentPDA = (wallet: PublicKey): [PublicKey, number] => {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from("agent"), wallet.toBuffer()],
-    program.programId
-  );
-};
-
-/**
- * Finds the Program Derived Address (PDA) for a message account
- * Based on debug analysis: SendMessage uses sender_agent.key() but UpdateMessageStatus uses message_account.sender
- * So we need to be consistent with what gets stored in the message account
- */
-const findMessagePDAForSending = (senderAgentPDA: PublicKey, recipient: PublicKey, payloadHash: Uint8Array, messageType: MessageType): [PublicKey, number] => {
-  const messageTypeId = messageType.text ? 0 : 
-                       messageType.data ? 1 : 
-                       messageType.command ? 2 : 
-                       messageType.response ? 3 : 
-                       typeof messageType.custom === 'number' ? 4 + messageType.custom : 0;
-  
-  return PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("message"),
-      senderAgentPDA.toBuffer(), // For SendMessage context seeds
-      recipient.toBuffer(),
-      Buffer.from(payloadHash),
-      Buffer.from([messageTypeId])
-    ],
-    program.programId
-  );
-};
-
-const findMessagePDAForUpdate = (senderWallet: PublicKey, recipient: PublicKey, payloadHash: Uint8Array, messageType: MessageType): [PublicKey, number] => {
-  const messageTypeId = messageType.text ? 0 : 
-                       messageType.data ? 1 : 
-                       messageType.command ? 2 : 
-                       messageType.response ? 3 : 
-                       typeof messageType.custom === 'number' ? 4 + messageType.custom : 0;
-  
-  return PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("message"),
-      senderWallet.toBuffer(), // For UpdateMessageStatus context seeds (message_account.sender)
-      recipient.toBuffer(),
-      Buffer.from(payloadHash),
-      Buffer.from([messageTypeId])
-    ],
-    program.programId
-  );
-};
-
 describe("POD-COM Tests", () => {
   beforeAll(async () => {
     // Initialize PDAs
@@ -104,7 +45,8 @@ describe("POD-COM Tests", () => {
   test("can register a sender agent", async () => {
     try {
       // Check if agent already exists
-      const existingAgent = await program.account.agentAccount.fetch(senderAgentPDA);
+      const existingAgent =
+        await program.account.agentAccount.fetch(senderAgentPDA);
       if (existingAgent) {
         // Agent already exists, skip creation
         expect(existingAgent.pubkey.equals(wallet.publicKey)).toBe(true);
@@ -127,7 +69,8 @@ describe("POD-COM Tests", () => {
     expect(tx).toBeTruthy();
 
     // Verify the agent was created
-    const agentAccount = await program.account.agentAccount.fetch(senderAgentPDA);
+    const agentAccount =
+      await program.account.agentAccount.fetch(senderAgentPDA);
     expect(agentAccount.metadataUri).toBe(METADATA_URI);
     expect(agentAccount.pubkey.equals(wallet.publicKey)).toBe(true);
   });
@@ -139,15 +82,21 @@ describe("POD-COM Tests", () => {
 
   test("can send a message", async () => {
     const messageType = { text: {} };
-    
+
     // Use agent PDA as that's what gets stored in message.sender and used for PDA calculation
-    [messagePDA] = findMessagePDAForSending(senderAgentPDA, wallet.publicKey, PAYLOAD_HASH, messageType);
+    [messagePDA] = findMessagePDA(
+      senderAgentPDA,
+      wallet.publicKey,
+      PAYLOAD_HASH,
+      messageType,
+      program.programId,
+    );
 
     const tx = await program.methods
       .sendMessage(
         wallet.publicKey, // Send to self to avoid needing separate recipient
         Array.from(PAYLOAD_HASH), // Convert to number array for Anchor
-        messageType
+        messageType,
       )
       .accounts({
         messageAccount: messagePDA,
@@ -161,20 +110,26 @@ describe("POD-COM Tests", () => {
     expect(tx).toBeTruthy();
 
     // Verify the message was created
-    const messageAccount = await program.account.messageAccount.fetch(messagePDA);
-    expect(Array.from(messageAccount.payloadHash)).toEqual(Array.from(PAYLOAD_HASH));
+    const messageAccount =
+      await program.account.messageAccount.fetch(messagePDA);
+    expect(Array.from(messageAccount.payloadHash)).toEqual(
+      Array.from(PAYLOAD_HASH),
+    );
     expect(messageAccount.sender.equals(senderAgentPDA)).toBe(true); // Now sender is agent PDA
     expect(messageAccount.recipient.equals(wallet.publicKey)).toBe(true);
-    expect('pending' in messageAccount.status).toBe(true);
+    expect("pending" in messageAccount.status).toBe(true);
   });
 
   test("can update message status to delivered", async () => {
     // First ensure the message exists by checking it was created in the previous test
     try {
-      const messageAccount = await program.account.messageAccount.fetch(messagePDA);
-      expect('pending' in messageAccount.status).toBe(true);
+      const messageAccount =
+        await program.account.messageAccount.fetch(messagePDA);
+      expect("pending" in messageAccount.status).toBe(true);
     } catch (error) {
-      throw new Error("Message account not found - previous test may have failed");
+      throw new Error(
+        "Message account not found - previous test may have failed",
+      );
     }
 
     const tx = await program.methods
@@ -190,8 +145,9 @@ describe("POD-COM Tests", () => {
     expect(tx).toBeTruthy();
 
     // Verify the message status was updated
-    const messageAccount = await program.account.messageAccount.fetch(messagePDA);
-    expect('delivered' in messageAccount.status).toBe(true);
+    const messageAccount =
+      await program.account.messageAccount.fetch(messagePDA);
+    expect("delivered" in messageAccount.status).toBe(true);
   });
 
   test("can update agent metadata", async () => {
@@ -199,10 +155,7 @@ describe("POD-COM Tests", () => {
     const newCapabilities = new BN(2);
 
     const tx = await program.methods
-      .updateAgent(
-        newCapabilities,
-        newMetadataUri
-      )
+      .updateAgent(newCapabilities, newMetadataUri)
       .accounts({
         agentAccount: senderAgentPDA,
         signer: wallet.publicKey,
@@ -213,7 +166,8 @@ describe("POD-COM Tests", () => {
     expect(tx).toBeTruthy();
 
     // Verify the agent was updated
-    const agentAccount = await program.account.agentAccount.fetch(senderAgentPDA);
+    const agentAccount =
+      await program.account.agentAccount.fetch(senderAgentPDA);
     expect(agentAccount.metadataUri).toBe(newMetadataUri);
     expect(agentAccount.capabilities.toNumber()).toBe(2);
   });
