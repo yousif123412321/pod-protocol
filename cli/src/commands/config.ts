@@ -8,6 +8,7 @@ import { homedir } from "os";
 import { join, dirname } from "path";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import qrcode from "qrcode-terminal";
+import { loadConfig as loadSharedConfig } from "../utils/config";
 
 interface CliConfig {
   network: string;
@@ -22,24 +23,7 @@ export class ConfigCommands {
   }
 
   private loadConfig(): CliConfig {
-    const configPath = this.getConfigPath();
-    if (!existsSync(configPath)) {
-      return {
-        network: "devnet",
-        keypairPath: join(homedir(), ".config", "solana", "id.json")
-      };
-    }
-
-    try {
-      const configData = readFileSync(configPath, "utf8");
-      return JSON.parse(configData);
-    } catch (error) {
-      console.warn(chalk.yellow("Warning: Could not read config file, using defaults"));
-      return {
-        network: "devnet",
-        keypairPath: join(homedir(), ".config", "solana", "id.json")
-      };
-    }
+    return loadSharedConfig();
   }
 
   private saveConfig(config: CliConfig): void {

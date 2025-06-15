@@ -109,6 +109,50 @@ export function getMessageTypeFromId(id: number): { type: MessageType; customVal
 }
 
 /**
+ * Convert MessageType enum to program format (object with empty record)
+ */
+export function convertMessageTypeToProgram(messageType: MessageType, customValue?: number): any {
+  switch (messageType) {
+    case MessageType.Text:
+      return { text: {} };
+    case MessageType.Data:
+      return { data: {} };
+    case MessageType.Command:
+      return { command: {} };
+    case MessageType.Response:
+      return { response: {} };
+    case MessageType.Custom:
+      return { custom: customValue || 0 };
+    default:
+      return { text: {} };
+  }
+}
+
+/**
+ * Convert program format back to MessageType enum
+ */
+export function convertMessageTypeFromProgram(programType: any): { type: MessageType; customValue?: number } {
+  if (programType.text !== undefined) return { type: MessageType.Text };
+  if (programType.data !== undefined) return { type: MessageType.Data };
+  if (programType.command !== undefined) return { type: MessageType.Command };
+  if (programType.response !== undefined) return { type: MessageType.Response };
+  if (programType.custom !== undefined) return { type: MessageType.Custom, customValue: programType.custom };
+  return { type: MessageType.Text };
+}
+
+/**
+ * Handle legacy object-based message type format for backward compatibility
+ */
+export function getMessageTypeIdFromObject(msg: any): number {
+  if (msg.text !== undefined) return 0;
+  if (msg.data !== undefined) return 1;
+  if (msg.command !== undefined) return 2;
+  if (msg.response !== undefined) return 3;
+  if (typeof msg.custom === "number") return 4 + msg.custom;
+  return 0;
+}
+
+/**
  * Create a SHA-256 hash of message payload
  */
 export async function hashPayload(payload: string | Uint8Array): Promise<Uint8Array> {

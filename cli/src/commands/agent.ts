@@ -1,6 +1,5 @@
 import { Command } from "commander";
 import chalk from "chalk";
-import ora from "ora";
 import inquirer from "inquirer";
 import { table } from "table";
 import { PublicKey } from "@solana/web3.js";
@@ -9,7 +8,15 @@ import {
   AGENT_CAPABILITIES,
   getCapabilityNames,
 } from "@pod-com/sdk";
-import { createClient, getWallet } from "../utils/client";
+import { 
+  createCommandHandler, 
+  handleDryRun, 
+  createSpinner, 
+  showSuccess, 
+  getTableConfig,
+  formatValue,
+  validatePublicKey
+} from "../utils/shared";
 
 export class AgentCommands {
   register(program: Command) {
@@ -24,85 +31,70 @@ export class AgentCommands {
       .option("-c, --capabilities <value>", "Agent capabilities as number")
       .option("-m, --metadata <uri>", "Metadata URI")
       .option("-i, --interactive", "Interactive registration")
-      .action(async (options, cmd) => {
-        const globalOpts = cmd.optsWithGlobals();
+      .action(createCommandHandler("register agent", async (client, wallet, globalOpts, options) => {
+        let capabilities = options.capabilities
+          ? parseInt(options.capabilities, 10)
+          : 0;
+        let metadataUri = options.metadata || "";
 
-        try {
-          let capabilities = options.capabilities
-            ? parseInt(options.capabilities, 10)
-            : 0;
-          let metadataUri = options.metadata || "";
+        if (options.interactive) {
+          const answers = await inquirer.prompt([
+            {
+              type: "checkbox",
+              name: "capabilities",
+              message: "Select agent capabilities:",
+              choices: [
+                { name: "Trading", value: AGENT_CAPABILITIES.TRADING },
+                { name: "Analysis", value: AGENT_CAPABILITIES.ANALYSIS },
+                {
+                  name: "Data Processing",
+                  value: AGENT_CAPABILITIES.DATA_PROCESSING,
+                },
+                {
+                  name: "Content Generation",
+                  value: AGENT_CAPABILITIES.CONTENT_GENERATION,
+                },
+              ],
+            },
+            {
+              type: "input",
+              name: "metadataUri",
+              message: "Metadata URI (optional):",
+              default: "",
+            },
+          ]);
 
-          if (options.interactive) {
-            const answers = await inquirer.prompt([
-              {
-                type: "checkbox",
-                name: "capabilities",
-                message: "Select agent capabilities:",
-                choices: [
-                  { name: "Trading", value: AGENT_CAPABILITIES.TRADING },
-                  { name: "Analysis", value: AGENT_CAPABILITIES.ANALYSIS },
-                  {
-                    name: "Data Processing",
-                    value: AGENT_CAPABILITIES.DATA_PROCESSING,
-                  },
-                  {
-                    name: "Content Generation",
-                    value: AGENT_CAPABILITIES.CONTENT_GENERATION,
-                  },
-                ],
-              },
-              {
-                type: "input",
-                name: "metadataUri",
-                message: "Metadata URI (optional):",
-                default: "",
-              },
-            ]);
-
-            capabilities = answers.capabilities.reduce(
-              (acc: number, cap: number) => acc | cap,
-              0,
-            );
-            metadataUri = answers.metadataUri;
-          }
-
-          if (!metadataUri) {
-            metadataUri = `https://pod-com.org/agents/${Date.now()}`;
-          }
-
-          const spinner = ora("Registering agent...").start();
-
-          const client = await createClient(globalOpts.network);
-          const wallet = getWallet(globalOpts.keypair);
-
-          if (globalOpts.dryRun) {
-            spinner.succeed("Dry run: Agent registration prepared");
-            console.log(
-              chalk.cyan("Capabilities:"),
-              getCapabilityNames(capabilities).join(", "),
-            );
-            console.log(chalk.cyan("Metadata URI:"), metadataUri);
-            return;
-          }
-
-          const signature = await client.registerAgent(wallet, {
-            capabilities,
-            metadataUri,
-          });
-
-          spinner.succeed("Agent registered successfully!");
-          console.log(chalk.green("Transaction:"), signature);
-          console.log(
-            chalk.cyan("Capabilities:"),
-            getCapabilityNames(capabilities).join(", "),
+          capabilities = answers.capabilities.reduce(
+            (acc: number, cap: number) => acc | cap,
+            0,
           );
-          console.log(chalk.cyan("Metadata URI:"), metadataUri);
-        } catch (error: any) {
-          console.error(chalk.red("Failed to register agent:"), error.message);
-          process.exit(1);
+          metadataUri = answers.metadataUri;
         }
-      });
+
+        if (!metadataUri) {
+          metadataUri = `https://pod-com.org/agents/${Date.now()}`;
+        }
+
+        const spinner = createSpinner("Registering agent...");
+
+        if (handleDryRun(globalOpts, spinner, "Agent registration", {
+          "Capabilities": getCapabilityNames(capabilities).join(", "),
+          "Metadata URI": metadataUri
+        })) {
+          return;
+        }
+
+        const signature = await client.registerAgent(wallet, {
+          capabilities,
+          metadataUri,
+        });
+
+        showSuccess(spinner, "Agent registered successfully!", {
+          "Transaction": signature,
+          "Capabilities": getCapabilityNames(capabilities).join(", "),
+          "Metadata URI": metadataUri
+        });
+      }));
 
     // Show agent info
     agent

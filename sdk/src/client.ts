@@ -32,9 +32,11 @@ import {
   findEscrowPDA,
   hashPayload,
   getMessageTypeId,
+  convertMessageTypeToProgram,
+  convertMessageTypeFromProgram,
   retry
 } from "./utils";
-// import { PodCom } from "./pod_com";
+import { PodCom } from "./pod_com";
 import IDL from "./pod_com.json";
 
 /**
@@ -144,7 +146,7 @@ export class PodComClient {
     const [agentPDA] = findAgentPDA(walletPublicKey, this.programId);
 
     try {
-      const account = await program.account.agentAccount.fetch(agentPDA);
+      const account = await (program.account as any)["agentAccount"].fetch(agentPDA);
       return {
         pubkey: account.pubkey,
         capabilities: account.capabilities.toNumber(),
@@ -168,8 +170,8 @@ export class PodComClient {
     const program = this.ensureInitialized();
 
     try {
-      const accounts = await program.account.agentAccount.all();
-      return accounts.slice(0, limit).map(({ account, publicKey }) => ({
+      const accounts = await (program.account as any)["agentAccount"].all();
+      return accounts.slice(0, limit).map(({ account, publicKey }: {account: any, publicKey: any}) => ({
         pubkey: account.pubkey,
         capabilities: account.capabilities.toNumber(),
         metadataUri: account.metadataUri,
@@ -262,7 +264,7 @@ export class PodComClient {
     const program = this.ensureInitialized();
 
     try {
-      const account = await program.account.messageAccount.fetch(messagePDA);
+      const account = await (program.account as any)["messageAccount"].fetch(messagePDA);
       return this.convertMessageAccountFromProgram(account, messagePDA);
     } catch (error: any) {
       if (error?.message?.includes("Account does not exist")) {
@@ -287,21 +289,21 @@ export class PodComClient {
       
       // Add filter for sender or recipient (would need custom implementation)
       // For now, get all messages and filter client-side
-      const accounts = await program.account.messageAccount.all();
+      const accounts = await (program.account as any)["messageAccount"].all();
       
-      let filteredAccounts = accounts.filter(({ account }) => 
+      let filteredAccounts = accounts.filter(({ account }: {account: any}) => 
         account.sender.equals(agentPublicKey) || 
         account.recipient.equals(agentPublicKey)
       );
 
       if (statusFilter) {
         const statusObj = this.convertMessageStatus(statusFilter);
-        filteredAccounts = filteredAccounts.filter(({ account }) => 
+        filteredAccounts = filteredAccounts.filter(({ account }: {account: any}) => 
           JSON.stringify(account.status) === JSON.stringify(statusObj)
         );
       }
 
-      return filteredAccounts.slice(0, limit).map(({ account, publicKey }) => 
+      return filteredAccounts.slice(0, limit).map(({ account, publicKey }: {account: any, publicKey: any}) => 
         this.convertMessageAccountFromProgram(account, publicKey)
       );
     } catch (error) {
@@ -354,7 +356,7 @@ export class PodComClient {
     const program = this.ensureInitialized();
 
     try {
-      const account = await program.account.channelAccount.fetch(channelPDA);
+      const account = await (program.account as any)["channelAccount"].fetch(channelPDA);
       return this.convertChannelAccountFromProgram(account, channelPDA);
     } catch (error: any) {
       if (error?.message?.includes("Account does not exist")) {
@@ -374,17 +376,17 @@ export class PodComClient {
     const program = this.ensureInitialized();
 
     try {
-      const accounts = await program.account.channelAccount.all();
+      const accounts = await (program.account as any)["channelAccount"].all();
       
       let filteredAccounts = accounts;
       if (visibilityFilter) {
         const visibilityObj = this.convertChannelVisibility(visibilityFilter);
-        filteredAccounts = accounts.filter(({ account }) => 
+        filteredAccounts = accounts.filter(({ account }: {account: any}) => 
           JSON.stringify(account.visibility) === JSON.stringify(visibilityObj)
         );
       }
 
-      return filteredAccounts.slice(0, limit).map(({ account, publicKey }) => 
+      return filteredAccounts.slice(0, limit).map(({ account, publicKey }: {account: any, publicKey: any}) => 
         this.convertChannelAccountFromProgram(account, publicKey)
       );
     } catch (error) {
@@ -403,7 +405,7 @@ export class PodComClient {
     const program = this.ensureInitialized();
 
     try {
-      const accounts = await program.account.channelAccount.all([
+      const accounts = await (program.account as any)["channelAccount"].all([
         {
           memcmp: {
             offset: 8, // Skip discriminator
@@ -412,7 +414,7 @@ export class PodComClient {
         },
       ]);
 
-      return accounts.slice(0, limit).map(({ account, publicKey }) => 
+      return accounts.slice(0, limit).map(({ account, publicKey }: {account: any, publicKey: any}) => 
         this.convertChannelAccountFromProgram(account, publicKey)
       );
     } catch (error) {
@@ -441,9 +443,9 @@ export class PodComClient {
     );
 
     // Check if invitation exists
-    let invitationAccount = null;
+    let invitationAccount: any = null;
     try {
-      invitationAccount = await program.account.channelInvitation.fetch(invitationPDA);
+      invitationAccount = await (program.account as any)["channelInvitation"].fetch(invitationPDA);
     } catch (error) {
       // Invitation doesn't exist, which is fine for public channels
     }
@@ -578,11 +580,11 @@ export class PodComClient {
   /**
    * Get channel participants
    */
-  async getChannelParticipants(channelPDA: PublicKey, limit: number = 50): Promise<any[]> {
+  async getChannelParticipants(channelPDA: PublicKey, limit: number = 50): Promise<Array<{pubkey: PublicKey; channel: PublicKey; participant: PublicKey; joinedAt: number; isActive: boolean; messagesSent: number; lastMessageAt: number; bump: number}>> {
     const program = this.ensureInitialized();
 
     try {
-      const accounts = await program.account.channelParticipant.all([
+      const accounts = await (program.account as any)["channelParticipant"].all([
         {
           memcmp: {
             offset: 8, // Skip discriminator
@@ -591,7 +593,7 @@ export class PodComClient {
         },
       ]);
 
-      return accounts.slice(0, limit).map(({ account, publicKey }) => ({
+      return accounts.slice(0, limit).map(({ account, publicKey }: {account: any, publicKey: any}) => ({
         pubkey: publicKey,
         channel: account.channel,
         participant: account.participant,
@@ -610,11 +612,11 @@ export class PodComClient {
   /**
    * Get channel messages
    */
-  async getChannelMessages(channelPDA: PublicKey, limit: number = 50): Promise<any[]> {
+  async getChannelMessages(channelPDA: PublicKey, limit: number = 50): Promise<Array<{pubkey: PublicKey; channel: PublicKey; sender: PublicKey; content: string; messageType: MessageType; createdAt: number; editedAt: number | null; replyTo: PublicKey | null; bump: number}>> {
     const program = this.ensureInitialized();
 
     try {
-      const accounts = await program.account.channelMessage.all([
+      const accounts = await (program.account as any)["channelMessage"].all([
         {
           memcmp: {
             offset: 8, // Skip discriminator
@@ -623,7 +625,7 @@ export class PodComClient {
         },
       ]);
 
-      return accounts.slice(0, limit).map(({ account, publicKey }) => ({
+      return accounts.slice(0, limit).map(({ account, publicKey }: {account: any, publicKey: any}) => ({
         pubkey: publicKey,
         channel: account.channel,
         sender: account.sender,
@@ -706,7 +708,7 @@ export class PodComClient {
     const [escrowPDA] = findEscrowPDA(channel, depositor, this.programId);
 
     try {
-      const account = await program.account.escrowAccount.fetch(escrowPDA);
+      const account = await (program.account as any)["escrowAccount"].fetch(escrowPDA);
       return {
         channel: account.channel,
         depositor: account.depositor,
@@ -734,7 +736,7 @@ export class PodComClient {
     const program = this.ensureInitialized();
 
     try {
-      const accounts = await program.account.escrowAccount.all([
+      const accounts = await (program.account as any)["escrowAccount"].all([
         {
           memcmp: {
             offset: 8 + 32, // Skip discriminator + channel pubkey
@@ -743,7 +745,7 @@ export class PodComClient {
         },
       ]);
 
-      return accounts.slice(0, limit).map(({ account }) => ({
+      return accounts.slice(0, limit).map(({ account }: {account: any}) => ({
         channel: account.channel,
         depositor: account.depositor,
         balance: account.amount.toNumber(),
@@ -763,29 +765,11 @@ export class PodComClient {
   // ============================================================================
 
   private convertMessageType(messageType: MessageType, customValue?: number): any {
-    switch (messageType) {
-      case MessageType.Text:
-        return { text: {} };
-      case MessageType.Data:
-        return { data: {} };
-      case MessageType.Command:
-        return { command: {} };
-      case MessageType.Response:
-        return { response: {} };
-      case MessageType.Custom:
-        return { custom: customValue || 0 };
-      default:
-        return { text: {} };
-    }
+    return convertMessageTypeToProgram(messageType, customValue);
   }
 
   private convertMessageTypeFromProgram(programType: any): MessageType {
-    if (programType.text !== undefined) return MessageType.Text;
-    if (programType.data !== undefined) return MessageType.Data;
-    if (programType.command !== undefined) return MessageType.Command;
-    if (programType.response !== undefined) return MessageType.Response;
-    if (programType.custom !== undefined) return MessageType.Custom;
-    return MessageType.Text;
+    return convertMessageTypeFromProgram(programType).type;
   }
 
   private convertMessageStatus(status: MessageStatus): any {
