@@ -1,0 +1,70 @@
+name: Performance Testing
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  performance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build optimized release
+        run: |
+          npm run build:all
+          cargo build --release
+
+      - name: Run performance tests
+        run: |
+          npm run test:performance
+          cargo bench
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-results
+          path: |
+            performance-results.json
+            target/criterion/
+            
+      - name: Comment PR with performance results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            if (fs.existsSync('performance-results.json')) {
+              const results = JSON.parse(fs.readFileSync('performance-results.json', 'utf8'));
+              const comment = `## 🚀 Performance Test Results
+              
+              | Metric | Value | Status |
+              |--------|-------|--------|
+              | Average Response Time | ${results.avgResponseTime}ms | ${results.avgResponseTime < 100 ? '✅' : '⚠️'} |
+              | Throughput | ${results.throughput} req/s | ${results.throughput > 1000 ? '✅' : '⚠️'} |
+              | Memory Usage | ${results.memoryUsage}MB | ${results.memoryUsage < 500 ? '✅' : '⚠️'} |
+              `;
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            }
