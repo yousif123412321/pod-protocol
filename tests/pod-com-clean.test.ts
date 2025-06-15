@@ -9,7 +9,7 @@ import {
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
 import { expect, test, beforeAll, describe } from "bun:test";
-import { MessageType, findAgentPDA, findMessagePDA } from "./test-utils";
+import { findAgentPDA, findMessagePDA } from "./test-utils";
 
 // Configure the client to use the local cluster.
 const provider = anchor.AnchorProvider.env();
@@ -44,7 +44,7 @@ describe("POD-COM Clean Tests", () => {
     });
 
     // Initialize PDAs
-    [agentPDA] = findAgentPDA(testWallet.publicKey);
+    [agentPDA] = findAgentPDA(testWallet.publicKey, program.programId);
   });
 
   test("can register a test agent", async () => {
@@ -75,6 +75,7 @@ describe("POD-COM Clean Tests", () => {
       testWallet.publicKey,
       PAYLOAD_HASH,
       messageType,
+      program.programId,
     );
 
     const tx = await program.methods

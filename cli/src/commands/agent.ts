@@ -29,7 +29,7 @@ export class AgentCommands {
 
         try {
           let capabilities = options.capabilities
-            ? parseInt(options.capabilities)
+            ? parseInt(options.capabilities, 10)
             : 0;
           let metadataUri = options.metadata || "";
 
@@ -182,7 +182,7 @@ export class AgentCommands {
 
           const updateOptions: any = {};
           if (options.capabilities) {
-            updateOptions.capabilities = parseInt(options.capabilities);
+            updateOptions.capabilities = parseInt(options.capabilities, 10);
           }
           if (options.metadata) {
             updateOptions.metadataUri = options.metadata;
@@ -225,7 +225,7 @@ export class AgentCommands {
 
           const client = await createClient(globalOpts.network);
 
-          const agents = await client.getAllAgents(parseInt(options.limit));
+          const agents = await client.getAllAgents(parseInt(options.limit, 10));
 
           if (agents.length === 0) {
             spinner.succeed("No agents found");
