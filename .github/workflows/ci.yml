@@ -17,62 +17,69 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
 
-    - name: Install Rust
-      run: |
-        if ! command -v rustup &>/dev/null; then
-          curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused \
-               --location --silent --show-error --fail https://sh.rustup.rs \
-               | sh -s -- --default-toolchain none -y || exit 1
-        fi
+      - name: Ensure Rust is installed
+        run: |
+          if ! command -v rustup &>/dev/null; then
+            curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused \
+                 --location --silent --show-error --fail https://sh.rustup.rs \
+                 | sh -s -- --default-toolchain none -y || exit 1
+          fi
 
-    - name: Setup Rust target
-      run: rustup target add aarch64-apple-darwin
+      - name: Add aarch64-apple-darwin rust target (if needed)
+        run: rustup target add aarch64-apple-darwin
 
-    - name: Install Solana CLI
-      run: |
-        curl -sSf https://release.solana.com/stable/install | bash || exit 1
-        echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+      - name: Install Solana CLI (with retries)
+        run: |
+          for i in {1..5}; do
+            curl -sSfL https://release.solana.com/v${SOLANA_VERSION}/install | bash && break || sleep 10
+          done
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
-    - name: Install Anchor CLI
-      run: npm install -g @coral-xyz/anchor-cli@${{ env.ANCHOR_VERSION }} --legacy-peer-deps
+      - name: Confirm Solana CLI is on PATH
+        run: solana --version
 
-    - name: Generate keypair
-      run: solana-keygen new --no-bip39-passphrase
+      - name: Install Anchor CLI
+        run: npm install -g @coral-xyz/anchor-cli@${ANCHOR_VERSION} --legacy-peer-deps
 
-    - name: Install dependencies
-      run: |
-        npm install --legacy-peer-deps
-        cd sdk && npm install --legacy-peer-deps
-        cd ../cli && npm install --legacy-peer-deps
+      - name: Generate keypair
+        run: solana-keygen new --no-bip39-passphrase
 
-    - name: Lint Rust code
-      run: |
-        cargo fmt -- --check
-        cargo clippy -- -D warnings
+      - name: Install dependencies (with legacy peer deps)
+        run: |
+          npm install --legacy-peer-deps
+          cd sdk && npm install --legacy-peer-deps
+          cd ../cli && npm install --legacy-peer-deps
 
-    - name: Build Anchor program
-      run: anchor build
+      - name: Lint Rust code
+        run: |
+          cargo fmt -- --check
+          cargo clippy -- -D warnings
 
-    - name: Build SDK
-      run: |
-        cd sdk
-        npm run build
+      - name: Build Anchor program
+        run: anchor build
 
-    - name: Build CLI
-      run: |
-        cd cli
-        npm run build
+      - name: Build SDK
+        run: |
+          cd sdk
+          npm run build
 
-    - name: Run tests
-      run: anchor test --skip-deploy
-      env:
-        ANCHOR_PROVIDER_URL: "http://localhost:8899"
+      - name: Build CLI
+        run: |
+          cd cli
+          npm run build
+
+      - name: Run tests
+        run: anchor test --skip-deploy
+        env:
+          ANCHOR_PROVIDER_URL: "http://localhost:8899"
+
+  # Add publish and security jobs as needed, using similar patterns.
