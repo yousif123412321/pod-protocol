@@ -19,17 +19,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
 
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Update npm dependencies
         run: |
+          npm ci --legacy-peer-deps
           npm update
-          cd sdk && npm update
-          cd ../cli && npm update
+          cd sdk && npm ci --legacy-peer-deps && npm update
+          cd ../cli && npm ci --legacy-peer-deps && npm update
 
       - name: Update Rust dependencies
         run: cargo update

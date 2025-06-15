@@ -263,19 +263,7 @@ export class PodComClient {
 
     try {
       const account = await program.account.messageAccount.fetch(messagePDA);
-      return {
-        pubkey: messagePDA,
-        sender: account.sender,
-        recipient: account.recipient,
-        payloadHash: new Uint8Array(account.payloadHash),
-        payload: "", // Payload is not stored on-chain, only hash
-        messageType: this.convertMessageTypeFromProgram(account.messageType),
-        timestamp: account.createdAt.toNumber(),
-        createdAt: account.createdAt.toNumber(),
-        expiresAt: account.expiresAt.toNumber(),
-        status: this.convertMessageStatusFromProgram(account.status),
-        bump: account.bump
-      };
+      return this.convertMessageAccountFromProgram(account, messagePDA);
     } catch (error: any) {
       if (error?.message?.includes("Account does not exist")) {
         return null;
@@ -313,19 +301,9 @@ export class PodComClient {
         );
       }
 
-      return filteredAccounts.slice(0, limit).map(({ account, publicKey }) => ({
-        pubkey: publicKey,
-        sender: account.sender,
-        recipient: account.recipient,
-        payloadHash: new Uint8Array(account.payloadHash),
-        payload: "",
-        messageType: this.convertMessageTypeFromProgram(account.messageType),
-        timestamp: account.createdAt.toNumber(),
-        createdAt: account.createdAt.toNumber(),
-        expiresAt: account.expiresAt.toNumber(),
-        status: this.convertMessageStatusFromProgram(account.status),
-        bump: account.bump
-      }));
+      return filteredAccounts.slice(0, limit).map(({ account, publicKey }) => 
+        this.convertMessageAccountFromProgram(account, publicKey)
+      );
     } catch (error) {
       console.warn("Failed to fetch messages:", error);
       return [];
@@ -377,21 +355,7 @@ export class PodComClient {
 
     try {
       const account = await program.account.channelAccount.fetch(channelPDA);
-      return {
-        pubkey: channelPDA,
-        creator: account.creator,
-        name: account.name,
-        description: account.description,
-        visibility: this.convertChannelVisibilityFromProgram(account.visibility),
-        maxParticipants: account.maxParticipants,
-        participantCount: account.currentParticipants,
-        currentParticipants: account.currentParticipants,
-        feePerMessage: account.feePerMessage.toNumber(),
-        escrowBalance: account.escrowBalance.toNumber(),
-        createdAt: account.createdAt.toNumber(),
-        isActive: true, // Assume active if account exists
-        bump: account.bump
-      };
+      return this.convertChannelAccountFromProgram(account, channelPDA);
     } catch (error: any) {
       if (error?.message?.includes("Account does not exist")) {
         return null;
@@ -420,21 +384,9 @@ export class PodComClient {
         );
       }
 
-      return filteredAccounts.slice(0, limit).map(({ account, publicKey }) => ({
-        pubkey: publicKey,
-        creator: account.creator,
-        name: account.name,
-        description: account.description,
-        visibility: this.convertChannelVisibilityFromProgram(account.visibility),
-        maxParticipants: account.maxParticipants,
-        participantCount: account.currentParticipants,
-        currentParticipants: account.currentParticipants,
-        feePerMessage: account.feePerMessage.toNumber(),
-        escrowBalance: account.escrowBalance.toNumber(),
-        createdAt: account.createdAt.toNumber(),
-        isActive: true,
-        bump: account.bump
-      }));
+      return filteredAccounts.slice(0, limit).map(({ account, publicKey }) => 
+        this.convertChannelAccountFromProgram(account, publicKey)
+      );
     } catch (error) {
       console.warn("Failed to fetch channels:", error);
       return [];
@@ -460,21 +412,9 @@ export class PodComClient {
         },
       ]);
 
-      return accounts.slice(0, limit).map(({ account, publicKey }) => ({
-        pubkey: publicKey,
-        creator: account.creator,
-        name: account.name,
-        description: account.description,
-        visibility: this.convertChannelVisibilityFromProgram(account.visibility),
-        maxParticipants: account.maxParticipants,
-        participantCount: account.currentParticipants,
-        currentParticipants: account.currentParticipants,
-        feePerMessage: account.feePerMessage.toNumber(),
-        escrowBalance: account.escrowBalance.toNumber(),
-        createdAt: account.createdAt.toNumber(),
-        isActive: true,
-        bump: account.bump
-      }));
+      return accounts.slice(0, limit).map(({ account, publicKey }) => 
+        this.convertChannelAccountFromProgram(account, publicKey)
+      );
     } catch (error) {
       console.warn("Failed to fetch creator channels:", error);
       return [];
@@ -488,14 +428,7 @@ export class PodComClient {
     const program = this.ensureInitialized();
 
     // Derive participant PDA
-    const [participantPDA] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("participant"),
-        channelPDA.toBuffer(),
-        wallet.publicKey.toBuffer(),
-      ],
-      this.programId
-    );
+    const [participantPDA] = this.findParticipantPDA(channelPDA, wallet.publicKey);
 
     // Check if channel requires invitation (for private channels)
     const [invitationPDA] = PublicKey.findProgramAddressSync(
@@ -537,14 +470,7 @@ export class PodComClient {
     const program = this.ensureInitialized();
 
     // Derive participant PDA
-    const [participantPDA] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("participant"),
-        channelPDA.toBuffer(),
-        wallet.publicKey.toBuffer(),
-      ],
-      this.programId
-    );
+    const [participantPDA] = this.findParticipantPDA(channelPDA, wallet.publicKey);
 
     const tx = await program.methods
       .leaveChannel()
@@ -575,14 +501,7 @@ export class PodComClient {
     const nonce = Date.now();
 
     // Derive participant PDA
-    const [participantPDA] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("participant"),
-        channelPDA.toBuffer(),
-        wallet.publicKey.toBuffer(),
-      ],
-      this.programId
-    );
+    const [participantPDA] = this.findParticipantPDA(channelPDA, wallet.publicKey);
 
     // Derive message PDA
     const nonceBuffer = Buffer.alloc(8);
@@ -629,14 +548,7 @@ export class PodComClient {
     const program = this.ensureInitialized();
 
     // Derive participant PDA (for inviter)
-    const [participantPDA] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("participant"),
-        channelPDA.toBuffer(),
-        wallet.publicKey.toBuffer(),
-      ],
-      this.programId
-    );
+    const [participantPDA] = this.findParticipantPDA(channelPDA, wallet.publicKey);
 
     // Derive invitation PDA
     const [invitationPDA] = PublicKey.findProgramAddressSync(
@@ -914,5 +826,54 @@ export class PodComClient {
     if (programVisibility.public !== undefined) return ChannelVisibility.Public;
     if (programVisibility.private !== undefined) return ChannelVisibility.Private;
     return ChannelVisibility.Public;
+  }
+
+  // ============================================================================
+  // Helper Methods for Account Conversion
+  // ============================================================================
+
+  private convertChannelAccountFromProgram(account: any, publicKey: PublicKey): ChannelAccount {
+    return {
+      pubkey: publicKey,
+      creator: account.creator,
+      name: account.name,
+      description: account.description,
+      visibility: this.convertChannelVisibilityFromProgram(account.visibility),
+      maxParticipants: account.maxParticipants,
+      participantCount: account.currentParticipants,
+      currentParticipants: account.currentParticipants,
+      feePerMessage: account.feePerMessage.toNumber(),
+      escrowBalance: account.escrowBalance.toNumber(),
+      createdAt: account.createdAt.toNumber(),
+      isActive: true,
+      bump: account.bump
+    };
+  }
+
+  private convertMessageAccountFromProgram(account: any, publicKey: PublicKey): MessageAccount {
+    return {
+      pubkey: publicKey,
+      sender: account.sender,
+      recipient: account.recipient,
+      payloadHash: new Uint8Array(account.payloadHash),
+      payload: "",
+      messageType: this.convertMessageTypeFromProgram(account.messageType),
+      timestamp: account.createdAt.toNumber(),
+      createdAt: account.createdAt.toNumber(),
+      expiresAt: account.expiresAt.toNumber(),
+      status: this.convertMessageStatusFromProgram(account.status),
+      bump: account.bump
+    };
+  }
+
+  private findParticipantPDA(channelPDA: PublicKey, userPublicKey: PublicKey): [PublicKey, number] {
+    return PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("participant"),
+        channelPDA.toBuffer(),
+        userPublicKey.toBuffer(),
+      ],
+      this.programId
+    );
   }
 }

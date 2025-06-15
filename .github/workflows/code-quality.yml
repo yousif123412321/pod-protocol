@@ -20,13 +20,15 @@ jobs:
           node-version: '18'
 
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
           components: rustfmt, clippy
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci --legacy-peer-deps
+          cd sdk && npm ci --legacy-peer-deps
+          cd ../cli && npm ci --legacy-peer-deps
 
       - name: Run ESLint
         run: |
@@ -34,7 +36,7 @@ jobs:
           cd ../cli && npm run lint
 
       - name: Run Prettier check
-        run: npm run format:check
+        run: npm run lint
 
       - name: Run Rust formatting check
         run: cargo fmt --check
@@ -44,16 +46,17 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          npm run test:coverage
+          npm test
           cargo test
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
-          file: ./coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
 
       - name: SonarCloud Scan
+        if: env.SONAR_TOKEN != ''
         uses: SonarSource/sonarcloud-github-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

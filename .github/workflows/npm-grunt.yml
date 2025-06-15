@@ -1,10 +1,13 @@
-name: NodeJS with Grunt
+# NodeJS with Grunt - DISABLED as this project doesn't use Grunt
+name: NodeJS with Grunt (DISABLED)
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  # Disabled - uncomment if you add Grunt to this project
+  # push:
+  #   branches: [ "main" ]
+  # pull_request:
+  #   branches: [ "main" ]
+  workflow_dispatch:  # Only allow manual trigger
 
 jobs:
   build:
@@ -24,5 +27,5 @@ jobs:
 
     - name: Build
       run: |
-        npm install
-        grunt
+        echo "This workflow is disabled - project doesn't use Grunt"
+        echo "If you want to enable this, uncomment the trigger events and update the build commands"

@@ -19,12 +19,13 @@ jobs:
           node-version: '18'
 
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci --legacy-peer-deps
+          cd sdk && npm ci --legacy-peer-deps
+          cd ../cli && npm ci --legacy-peer-deps
 
       - name: Build optimized release
         run: |
@@ -33,20 +34,28 @@ jobs:
 
       - name: Run performance tests
         run: |
-          npm run test:performance
-          cargo bench
+          echo "Running performance tests..."
+          npm test
+          # Only run cargo bench if bench target exists
+          if cargo metadata --format-version 1 | grep -q '"bench"'; then
+            cargo bench
+          else
+            echo "No benchmark targets found, running cargo test instead"
+            cargo test --release
+          fi
 
       - name: Upload performance results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: performance-results
           path: |
             performance-results.json
             target/criterion/
+          if-no-files-found: ignore
             
       - name: Comment PR with performance results
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');

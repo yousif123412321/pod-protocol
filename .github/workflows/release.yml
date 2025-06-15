@@ -25,7 +25,10 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci --legacy-peer-deps
+          cd sdk && npm ci --legacy-peer-deps
+          cd ../cli && npm ci --legacy-peer-deps
 
       - name: Build all packages
         run: npm run build:all
@@ -35,10 +38,10 @@ jobs:
           npx conventional-changelog-cli -p angular -i CHANGELOG.md -s
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
-            target/deploy/pod_com.so
+            target/deploy/*.so
             sdk/dist/*
             cli/dist/*
           generate_release_notes: true
