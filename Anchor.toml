@@ -1,0 +1,38 @@
+[toolchain]
+# Using Yarn as the package manager (Bun is not directly supported by Anchor yet)
+package_manager = "yarn"
+
+[features]
+# Enable resolution of Anchor feature flags
+resolution = true
+# Skip linting during build (set to false for production)
+skip-lint = false
+
+# Program configurations for different clusters
+[programs.localnet]
+pod_com = "AytBW3hwCk2SrWAQkdtSdH36kgDwesvpGWqqCP7jYTko"
+
+[programs.devnet]
+pod_com = "AytBW3hwCk2SrWAQkdtSdH36kgDwesvpGWqqCP7jYTko"
+
+# Registry configuration for Anchor programs
+[registry]
+url = "https://api.apr.dev"
+
+# Provider configuration
+[provider]
+# Default cluster to use (devnet, testnet, mainnet-beta, or localnet)
+cluster = "devnet"
+# Path to the wallet to use for deployment
+wallet = "~/.config/solana/id.json"
+
+# Test script configuration
+[scripts]
+test = "bun test"
+
+# Solana configuration
+[solana]
+# Enable the new BPF loader (required for Agave)
+enable_bpf_loader = true
+# Enable the new BPF program deployment
+enable_deploy = true

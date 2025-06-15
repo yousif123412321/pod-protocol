@@ -1,0 +1,49 @@
+{
+  "name": "@pod-com/cli",
+  "version": "1.0.0",
+  "description": "Command-line interface for POD-COM AI Agent Communication Protocol",
+  "main": "dist/index.js",
+  "bin": {
+    "pod": "dist/index.js",
+    "pod-com": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "test": "bun test",
+    "lint": "eslint src --ext .ts"
+  },
+  "keywords": [
+    "solana",
+    "ai",
+    "agents", 
+    "communication",
+    "cli",
+    "pod-com"
+  ],
+  "author": "POD-COM Team",
+  "license": "MIT",
+  "dependencies": {
+    "@pod-com/sdk": "file:../sdk",
+    "@solana/web3.js": "^1.95.4",
+    "commander": "^12.1.0",
+    "inquirer": "^12.0.0",
+    "chalk": "^5.3.0",
+    "ora": "^8.1.1",
+    "table": "^6.8.2",
+    "qrcode-terminal": "^0.12.0"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^22.10.5",
+    "@types/qrcode-terminal": "^0.12.2",
+    "@typescript-eslint/eslint-plugin": "^8.19.0",
+    "@typescript-eslint/parser": "^8.19.0",
+    "eslint": "^9.18.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

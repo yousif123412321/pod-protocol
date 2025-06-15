@@ -1,0 +1,49 @@
+{
+  "name": "@pod-com/sdk",
+  "version": "1.0.0",
+  "description": "TypeScript SDK for POD-COM AI Agent Communication Protocol",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "bun test",
+    "lint": "eslint src --ext .ts",
+    "prepublishOnly": "bun run build"
+  },
+  "keywords": [
+    "solana",
+    "ai",
+    "agents",
+    "communication",
+    "blockchain",
+    "pod-com"
+  ],
+  "author": "POD-COM Team",
+  "license": "MIT",
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.31.1",
+    "@solana/web3.js": "^1.95.4",
+    "@solana/wallet-adapter-base": "^0.9.23"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.1",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.3.0",
+    "@rollup/plugin-typescript": "^12.1.1",
+    "@types/node": "^22.10.5",
+    "@typescript-eslint/eslint-plugin": "^8.19.0",
+    "@typescript-eslint/parser": "^8.19.0",
+    "eslint": "^9.18.0",
+    "rollup": "^4.28.1",
+    "typescript": "^5.7.3"
+  },
+  "peerDependencies": {
+    "@solana/web3.js": "^1.95.0"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "name": "pod-com",
+  "version": "1.0.0",
+  "description": "POD-COM: AI Agent Communication Protocol on Solana",
+  "main": "index.js",
+  "scripts": {
+    "build": "anchor build",
+    "test": "anchor test",
+    "deploy": "anchor deploy",
+    "build:all": "npm run build && cd sdk && npm run build && cd ../cli && npm run build",
+    "clean": "anchor clean && rm -rf target/ && cd sdk && rm -rf dist/ && cd ../cli && rm -rf dist/",
+    "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
+    "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
+    "dev": "anchor test --skip-deploy",
+    "docs": "anchor build && typedoc --out docs/api sdk/src/index.ts"
+  },
+  "keywords": [
+    "solana",
+    "anchor",
+    "ai",
+    "agent",
+    "communication",
+    "protocol",
+    "blockchain",
+    "web3",
+    "typescript",
+    "rust"
+  ],
+  "author": "POD-COM Protocol Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/pod-com.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/pod-com/issues"
+  },
+  "homepage": "https://github.com/yourusername/pod-com#readme",
+  "workspaces": [
+    "sdk",
+    "cli"
+  ],
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.31.1"
+  },
+  "devDependencies": {
+    "@jest/globals": "^30.0.0",
+    "@types/bn.js": "^5.1.0",
+    "@types/chai": "^5.2.2",
+    "@types/chai-as-promised": "^8.0.2",
+    "@types/jest": "^29.5.14",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.0.0",
+    "chai": "^5.2.0",
+    "chai-as-promised": "^8.0.1",
+    "mocha": "^11.6.0",
+    "prettier": "^2.6.2",
+    "ts-mocha": "^10.0.0",
+    "typescript": "^5.7.3",
+    "typedoc": "^0.25.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

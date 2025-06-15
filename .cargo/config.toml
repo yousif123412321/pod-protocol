@@ -1,0 +1,43 @@
+# Set the default build target to the native architecture
+[build]
+target = "aarch64-apple-darwin"  # or "x86_64-apple-darwin" for Intel Macs
+
+# Common build settings
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3
+
+# Platform-specific linker settings
+[target.aarch64-apple-darwin]
+rustflags = [
+    "-C", "link-arg=-undefined",
+    "-C", "link-arg=dynamic_lookup",
+]
+
+[target.x86_64-apple-darwin]
+rustflags = [
+    "-C", "link-arg=-undefined",
+    "-C", "link-arg=dynamic_lookup",
+]
+
+[target.x86_64-unknown-linux-gnu]
+rustflags = [
+    "-C", "link-arg=-fuse-ld=lld",
+    "-C", "link-arg=-Wl,-z,notext",
+]
+
+# Solana program build settings
+[target.bpfel-unknown-unknown]
+rustflags = [
+    "-C", "default-linker-libraries",
+    "-C", "link-arg=-z", "-C", "link-arg=notext",
+    "-C", "link-arg=--no-rosegment",
+]
+
+# Disable wasm32 targets to avoid getrandom issues
+[target.wasm32-unknown-unknown]
+rustflags = ["--cfg=target_os=\"solana\""]
+
+[target.wasm32-wasi]
+rustflags = ["--cfg=target_os=\"solana\""]
