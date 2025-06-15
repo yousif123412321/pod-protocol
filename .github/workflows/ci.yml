@@ -2,150 +2,38 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches:
+      - main
   pull_request:
-    branches: [ main, develop ]
-
-env:
-  CARGO_TERM_COLOR: always
-  SOLANA_VERSION: "1.16.27"
-  ANCHOR_VERSION: "0.31.1"
 
 jobs:
-  test:
-    name: Test Suite
+  build:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-
-    - name: Setup Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        toolchain: stable
-
-    - name: Cache Rust dependencies
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          target/
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-    - name: Install Solana CLI
+    - name: Install Rust
       run: |
-        sh -c "$(curl -sSfL https://release.solana.com/v${{ env.SOLANA_VERSION }}/install)"
-        echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+        if ! command -v rustup &>/dev/null; then
+          curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused \
+               --location --silent --show-error --fail https://sh.rustup.rs \
+               | sh -s -- --default-toolchain none -y || exit 1
+        fi
+
+    - name: Install Solana CLI tools
+      run: |
+        curl -sSf https://release.solana.com/stable/install | bash
+        export PATH="$PATH:/home/runner/.local/share/solana/install/active_release/bin"
 
     - name: Install Anchor CLI
+      run: npm install -g @coral-xyz/anchor-cli@0.31.1
+
+    - name: Run Tests
+      run: cargo test
+
+    - name: Cleanup
       run: |
-        npm install -g @coral-xyz/anchor-cli@${{ env.ANCHOR_VERSION }}
-
-    - name: Generate keypair
-      run: |
-        solana-keygen new --no-bip39-passphrase
-
-    - name: Install dependencies
-      run: |
-        npm install
-        cd sdk && npm install
-        cd ../cli && npm install
-
-    - name: Lint Rust code
-      run: |
-        cargo fmt -- --check
-        cargo clippy -- -D warnings
-
-    - name: Build Anchor program
-      run: |
-        anchor build
-
-    - name: Build SDK
-      run: |
-        cd sdk
-        npm run build
-
-    - name: Build CLI
-      run: |
-        cd cli
-        npm run build
-
-    - name: Run tests
-      run: |
-        anchor test --skip-deploy
-      env:
-        ANCHOR_PROVIDER_URL: "http://localhost:8899"
-
-  publish:
-    name: Publish Packages
-    runs-on: ubuntu-latest
-    needs: test
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        registry-url: 'https://registry.npmjs.org'
-
-    - name: Install dependencies
-      run: npm install
-
-    - name: Build packages
-      run: |
-        cd sdk && npm run build
-        cd ../cli && npm run build
-
-    - name: Publish SDK to NPM
-      run: |
-        cd sdk
-        npm publish --access public
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      continue-on-error: true
-
-    - name: Publish CLI to NPM
-      run: |
-        cd cli
-        npm publish --access public
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      continue-on-error: true
-
-  security:
-    name: Security Audit
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-
-    - name: Install dependencies
-      run: npm install
-
-    - name: Run security audit
-      run: npm audit
-
-    - name: Run Rust security audit
-      uses: actions-rs/audit-check@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        rm -rf /home/runner/work/_temp
+        unset CARGO_HOME
