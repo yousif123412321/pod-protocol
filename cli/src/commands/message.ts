@@ -6,6 +6,22 @@ import { table } from "table";
 import { PublicKey } from "@solana/web3.js";
 import { PodComClient, MessageType, MessageStatus } from "@pod-com/sdk";
 import { createClient, getWallet } from "../utils/client";
+import { 
+  createCommandHandler, 
+  handleDryRun, 
+  createSpinner, 
+  showSuccess, 
+  getTableConfig,
+  formatValue,
+  GlobalOptions
+} from "../utils/shared";
+import { 
+  validatePublicKey, 
+  validateMessage, 
+  validateEnum, 
+  validatePositiveInteger,
+  ValidationError 
+} from "../utils/validation";
 
 export class MessageCommands {
   register(program: Command) {
@@ -35,19 +51,16 @@ export class MessageCommands {
         "Custom value for custom message types",
       )
       .option("-i, --interactive", "Interactive message creation")
-      .action((options, cmd) => this.handleSend(options, cmd));
+      .action(createCommandHandler("send message", async (client, wallet, globalOpts, options) => {
+        await this.handleSend(client, wallet, globalOpts, options);
+      }));
   }
 
-  private async handleSend(options: any, cmd: Command) {
-    const globalOpts = cmd.optsWithGlobals();
-
-    try {
-      let recipient = options.recipient;
-      let payload = options.payload;
-      let messageType = options.type as MessageType;
-      let customValue = options.customValue
-        ? parseInt(options.customValue, 10)
-        : 0;
+  private async handleSend(client: PodComClient, wallet: any, globalOpts: any, options: any) {
+    let recipient = options.recipient;
+    let payload = options.payload;
+    let messageType = options.type as MessageType;
+    let customValue = options.customValue ? parseInt(options.customValue, 10) : 0;
 
       if (options.interactive) {
         const answers = await inquirer.prompt([
@@ -113,41 +126,35 @@ export class MessageCommands {
       }
 
       if (!recipient || !payload) {
-        console.error(chalk.red("Error: Recipient and payload are required"));
-        process.exit(1);
+        throw new ValidationError("Recipient and payload are required");
       }
 
-      const spinner = ora("Sending message...").start();
+      const recipientKey = validatePublicKey(recipient, "recipient");
+      const validatedPayload = validateMessage(payload);
 
-      const client = await createClient(globalOpts.network);
-      const wallet = getWallet(globalOpts.keypair);
+      const spinner = createSpinner("Sending message...");
 
-      if (globalOpts.dryRun) {
-        spinner.succeed("Dry run: Message prepared");
-        console.log(chalk.cyan("Recipient:"), recipient);
-        console.log(chalk.cyan("Type:"), messageType);
-        console.log(
-          chalk.cyan("Payload:"),
-          payload.slice(0, 100) + (payload.length > 100 ? "..." : ""),
-        );
+      if (handleDryRun(globalOpts, spinner, "Message send", {
+        "Recipient": recipientKey.toBase58(),
+        "Type": messageType,
+        "Content": validatedPayload.slice(0, 100) + (validatedPayload.length > 100 ? "..." : ""),
+        "Custom Value": customValue > 0 ? customValue : "N/A"
+      })) {
         return;
       }
 
       const signature = await client.sendMessage(wallet, {
-        recipient: new PublicKey(recipient),
-        payload,
+        recipient: recipientKey,
+        payload: validatedPayload,
         messageType,
         customValue,
       });
 
-      spinner.succeed("Message sent successfully!");
-      console.log(chalk.green("Transaction:"), signature);
-      console.log(chalk.cyan("Recipient:"), recipient);
-      console.log(chalk.cyan("Type:"), messageType);
-    } catch (error: any) {
-      console.error(chalk.red("Failed to send message:"), error.message);
-      process.exit(1);
-    }
+      showSuccess(spinner, "Message sent successfully!", {
+        "Transaction": signature,
+        "Recipient": recipientKey.toBase58(),
+        "Type": messageType
+      });
   }
 
   private registerInfo(message: Command) {
@@ -161,11 +168,12 @@ export class MessageCommands {
     const globalOpts = cmd.optsWithGlobals();
 
     try {
-      const spinner = ora("Fetching message information...").start();
+      const messageKey = validatePublicKey(messageId, "message ID");
+      const spinner = createSpinner("Fetching message information...");
 
       const client = await createClient(globalOpts.network);
 
-      const messageData = await client.getMessage(new PublicKey(messageId));
+      const messageData = await client.getMessage(messageKey);
 
       if (!messageData) {
         spinner.fail("Message not found");
@@ -175,33 +183,28 @@ export class MessageCommands {
       spinner.succeed("Message information retrieved");
 
       const data = [
-        ["Message ID", messageData.pubkey.toBase58()],
-        ["Sender", messageData.sender.toBase58()],
-        ["Recipient", messageData.recipient.toBase58()],
-        ["Type", messageData.messageType],
-        ["Status", messageData.status],
+        ["Message ID", formatValue(messageData.pubkey.toBase58(), 'address')],
+        ["Sender", formatValue(messageData.sender.toBase58(), 'address')],
+        ["Recipient", formatValue(messageData.recipient.toBase58(), 'address')],
+        ["Type", formatValue(messageData.messageType, 'text')],
+        ["Status", formatValue(messageData.status, 'text')],
         [
           "Payload",
-          messageData.payload.slice(0, 100) +
-            (messageData.payload.length > 100 ? "..." : ""),
+          formatValue(messageData.payload.slice(0, 100) +
+            (messageData.payload.length > 100 ? "..." : ""), 'text'),
         ],
-        ["Timestamp", new Date(messageData.timestamp * 1000).toLocaleString()],
+        ["Timestamp", formatValue(new Date(messageData.timestamp * 1000).toLocaleString(), 'text')],
         [
           "Expires At",
-          messageData.expiresAt
+          formatValue(messageData.expiresAt
             ? new Date(messageData.expiresAt * 1000).toLocaleString()
-            : "Never",
+            : "Never", 'text'),
         ],
       ];
 
       console.log(
         "\n" +
-          table(data, {
-            header: {
-              alignment: "center",
-              content: chalk.blue.bold("Message Information"),
-            },
-          }),
+          table(data, getTableConfig("Message Information")),
       );
     } catch (error: any) {
       console.error(chalk.red("Failed to fetch message info:"), error.message);
@@ -226,44 +229,36 @@ export class MessageCommands {
 
     try {
       if (!options.message || !options.status) {
-        console.error(chalk.red("Error: Message ID and status are required"));
-        console.log(
-          chalk.yellow("Usage: pod message status -m <messageId> -s <status>"),
-        );
-        return;
+        throw new ValidationError("Message ID and status are required");
       }
 
-      const validStatuses = ["pending", "delivered", "read", "failed"];
-      if (!validStatuses.includes(options.status)) {
-        console.error(
-          chalk.red("Error: Invalid status. Must be one of:"),
-          validStatuses.join(", "),
-        );
-        return;
-      }
+      const messageKey = validatePublicKey(options.message, "message ID");
+      const validStatuses = ["pending", "delivered", "read", "failed"] as const;
+      const validatedStatus = validateEnum(options.status, validStatuses, "status");
 
-      const spinner = ora("Updating message status...").start();
+      const spinner = createSpinner("Updating message status...");
 
       const client = await createClient(globalOpts.network);
       const wallet = getWallet(globalOpts.keypair);
 
-      if (globalOpts.dryRun) {
-        spinner.succeed("Dry run: Message status update prepared");
-        console.log(chalk.cyan("Message:"), options.message);
-        console.log(chalk.cyan("New Status:"), options.status);
+      if (handleDryRun(globalOpts, spinner, "Message status update", {
+        "Message": options.message,
+        "New Status": validatedStatus
+      })) {
         return;
       }
 
       const signature = await client.updateMessageStatus(
         wallet,
-        new PublicKey(options.message),
-        options.status as MessageStatus,
+        messageKey,
+        validatedStatus as MessageStatus,
       );
 
-      spinner.succeed("Message status updated successfully!");
-      console.log(chalk.green("Transaction:"), signature);
-      console.log(chalk.cyan("Message:"), options.message);
-      console.log(chalk.cyan("New Status:"), options.status);
+      showSuccess(spinner, "Message status updated successfully!", {
+        "Transaction": signature,
+        "Message": options.message,
+        "New Status": validatedStatus
+      });
     } catch (error: any) {
       console.error(
         chalk.red("Failed to update message status:"),
@@ -297,13 +292,14 @@ export class MessageCommands {
     const globalOpts = cmd.optsWithGlobals();
 
     try {
-      const spinner = ora("Fetching messages...").start();
+      const limit = validatePositiveInteger(options.limit, "limit");
+      const spinner = createSpinner("Fetching messages...");
 
       const client = await createClient(globalOpts.network);
 
       let agentAddress;
       if (options.agent) {
-        agentAddress = new PublicKey(options.agent);
+        agentAddress = validatePublicKey(options.agent, "agent address");
       } else {
         const wallet = getWallet(globalOpts.keypair);
         agentAddress = wallet.publicKey;
@@ -311,7 +307,7 @@ export class MessageCommands {
 
       const messages = await client.getAgentMessages(
         agentAddress,
-        parseInt(options.limit, 10),
+        limit,
         options.filter as MessageStatus,
       );
 
@@ -323,24 +319,19 @@ export class MessageCommands {
       spinner.succeed(`Found ${messages.length} messages`);
 
       const data = messages.map((msg: any) => [
-        msg.pubkey.toBase58().slice(0, 8) + "...",
-        msg.sender.toBase58().slice(0, 8) + "...",
-        msg.recipient.toBase58().slice(0, 8) + "...",
-        msg.messageType,
-        msg.status,
-        new Date(msg.timestamp * 1000).toLocaleDateString(),
+        formatValue(msg.pubkey.toBase58().slice(0, 8) + "...", 'address'),
+        formatValue(msg.sender.toBase58().slice(0, 8) + "...", 'address'),
+        formatValue(msg.recipient.toBase58().slice(0, 8) + "...", 'address'),
+        formatValue(msg.messageType, 'text'),
+        formatValue(msg.status, 'text'),
+        formatValue(new Date(msg.timestamp * 1000).toLocaleDateString(), 'text'),
       ]);
 
       console.log(
         "\n" +
           table(
             [["ID", "Sender", "Recipient", "Type", "Status", "Date"], ...data],
-            {
-              header: {
-                alignment: "center",
-                content: chalk.blue.bold("Messages"),
-              },
-            },
+            getTableConfig("Messages"),
           ),
       );
     } catch (error: any) {
