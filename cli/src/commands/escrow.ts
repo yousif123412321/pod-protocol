@@ -85,7 +85,7 @@ export class EscrowCommands {
             if (options.amount) {
               amount = solToLamports(parseFloat(options.amount));
             } else if (options.lamports) {
-              amount = parseInt(options.lamports);
+              amount = parseInt(options.lamports, 10);
             } else {
               console.error(
                 chalk.red(
@@ -214,7 +214,7 @@ export class EscrowCommands {
               if (options.amount) {
                 amount = solToLamports(parseFloat(options.amount));
               } else if (options.lamports) {
-                amount = parseInt(options.lamports);
+                amount = parseInt(options.lamports, 10);
               } else {
                 console.error(
                   chalk.red(
@@ -361,7 +361,7 @@ export class EscrowCommands {
 
           const escrows = await client.getEscrowsByDepositor(
             wallet.publicKey,
-            parseInt(options.limit),
+            parseInt(options.limit, 10),
           );
 
           if (escrows.length === 0) {

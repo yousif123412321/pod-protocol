@@ -38,8 +38,8 @@ let messagePDA: PublicKey;
 describe("POD-COM Tests", () => {
   beforeAll(async () => {
     // Initialize PDAs
-    [senderAgentPDA] = findAgentPDA(wallet.publicKey);
-    [recipientAgentPDA] = findAgentPDA(wallet.publicKey); // Use same wallet to avoid airdrop
+    [senderAgentPDA] = findAgentPDA(wallet.publicKey, program.programId);
+    [recipientAgentPDA] = findAgentPDA(wallet.publicKey, program.programId); // Use same wallet to avoid airdrop
   });
 
   test("can register a sender agent", async () => {
@@ -86,7 +86,7 @@ describe("POD-COM Tests", () => {
     // Use agent PDA as that's what gets stored in message.sender and used for PDA calculation
     [messagePDA] = findMessagePDA(
       senderAgentPDA,
-      wallet.publicKey,
+      recipientAgentPDA,
       PAYLOAD_HASH,
       messageType,
       program.programId,
