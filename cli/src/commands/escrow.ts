@@ -5,7 +5,7 @@ import inquirer from "inquirer";
 import { table } from "table";
 import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { PodComClient, lamportsToSol, solToLamports } from "@pod-com/sdk";
-import { loadKeypair, getNetworkEndpoint } from "../utils/config";
+import { createClient, getWallet } from "../utils/client";
 
 export class EscrowCommands {
   register(program: Command) {
@@ -23,7 +23,7 @@ export class EscrowCommands {
       .option("-i, --interactive", "Interactive deposit")
       .action(async (options, cmd) => {
         const globalOpts = cmd.optsWithGlobals();
-        
+
         try {
           let channelId = options.channel;
           let amount: number = 0;
@@ -41,7 +41,7 @@ export class EscrowCommands {
                   } catch {
                     return "Please enter a valid channel ID";
                   }
-                }
+                },
               },
               {
                 type: "list",
@@ -49,19 +49,24 @@ export class EscrowCommands {
                 message: "Amount unit:",
                 choices: [
                   { name: "SOL", value: "sol" },
-                  { name: "Lamports", value: "lamports" }
-                ]
+                  { name: "Lamports", value: "lamports" },
+                ],
               },
               {
                 type: "number",
                 name: "amount",
-                message: (answers) => `Amount in ${answers.unit.toUpperCase()}:`,
-                validate: (input: number) => input > 0 ? true : "Amount must be greater than 0"
-              }
+                message: (answers) =>
+                  `Amount in ${answers.unit.toUpperCase()}:`,
+                validate: (input: number) =>
+                  input > 0 ? true : "Amount must be greater than 0",
+              },
             ]);
 
             channelId = answers.channelId;
-            amount = answers.unit === "sol" ? solToLamports(answers.amount) : answers.amount;
+            amount =
+              answers.unit === "sol"
+                ? solToLamports(answers.amount)
+                : answers.amount;
           } else {
             if (!channelId) {
               console.error(chalk.red("Error: Channel ID is required"));
@@ -69,7 +74,11 @@ export class EscrowCommands {
             }
 
             if (options.amount && options.lamports) {
-              console.error(chalk.red("Error: Specify either --amount (SOL) or --lamports, not both"));
+              console.error(
+                chalk.red(
+                  "Error: Specify either --amount (SOL) or --lamports, not both",
+                ),
+              );
               process.exit(1);
             }
 
@@ -78,40 +87,44 @@ export class EscrowCommands {
             } else if (options.lamports) {
               amount = parseInt(options.lamports);
             } else {
-              console.error(chalk.red("Error: Amount is required (use --amount for SOL or --lamports)"));
+              console.error(
+                chalk.red(
+                  "Error: Amount is required (use --amount for SOL or --lamports)",
+                ),
+              );
               process.exit(1);
             }
           }
 
           const spinner = ora("Depositing to escrow...").start();
 
-          const client = new PodComClient({
-            endpoint: getNetworkEndpoint(globalOpts.network),
-            commitment: "confirmed"
-          });
-
-          await client.initialize();
-          const wallet = loadKeypair(globalOpts.keypair);
+          const client = await createClient(globalOpts.network);
+          const wallet = getWallet(globalOpts.keypair);
 
           if (globalOpts.dryRun) {
             spinner.succeed("Dry run: Escrow deposit prepared");
             console.log(chalk.cyan("Channel:"), channelId);
-            console.log(chalk.cyan("Amount:"), `${lamportsToSol(amount)} SOL (${amount} lamports)`);
+            console.log(
+              chalk.cyan("Amount:"),
+              `${lamportsToSol(amount)} SOL (${amount} lamports)`,
+            );
             return;
           }
 
           const signature = await client.depositEscrow(wallet, {
             channel: new PublicKey(channelId),
-            amount
+            amount,
           });
 
           spinner.succeed("Escrow deposit successful!");
           console.log(chalk.green("Transaction:"), signature);
           console.log(chalk.cyan("Channel:"), channelId);
           console.log(chalk.cyan("Deposited:"), `${lamportsToSol(amount)} SOL`);
-
         } catch (error: any) {
-          console.error(chalk.red("Failed to deposit to escrow:"), error.message);
+          console.error(
+            chalk.red("Failed to deposit to escrow:"),
+            error.message,
+          );
           process.exit(1);
         }
       });
@@ -127,7 +140,7 @@ export class EscrowCommands {
       .option("-i, --interactive", "Interactive withdrawal")
       .action(async (options, cmd) => {
         const globalOpts = cmd.optsWithGlobals();
-        
+
         try {
           let channelId = options.channel;
           let amount: number = 0;
@@ -146,13 +159,13 @@ export class EscrowCommands {
                   } catch {
                     return "Please enter a valid channel ID";
                   }
-                }
+                },
               },
               {
                 type: "confirm",
                 name: "withdrawAll",
                 message: "Withdraw all available funds?",
-                default: false
+                default: false,
               },
               {
                 type: "list",
@@ -160,23 +173,28 @@ export class EscrowCommands {
                 message: "Amount unit:",
                 choices: [
                   { name: "SOL", value: "sol" },
-                  { name: "Lamports", value: "lamports" }
+                  { name: "Lamports", value: "lamports" },
                 ],
-                when: (answers) => !answers.withdrawAll
+                when: (answers) => !answers.withdrawAll,
               },
               {
                 type: "number",
                 name: "amount",
-                message: (answers) => `Amount in ${answers.unit?.toUpperCase()}:`,
-                validate: (input: number) => input > 0 ? true : "Amount must be greater than 0",
-                when: (answers) => !answers.withdrawAll
-              }
+                message: (answers) =>
+                  `Amount in ${answers.unit?.toUpperCase()}:`,
+                validate: (input: number) =>
+                  input > 0 ? true : "Amount must be greater than 0",
+                when: (answers) => !answers.withdrawAll,
+              },
             ]);
 
             channelId = answers.channelId;
             withdrawAll = answers.withdrawAll;
-            amount = answers.withdrawAll ? 0 : 
-              (answers.unit === "sol" ? solToLamports(answers.amount) : answers.amount);
+            amount = answers.withdrawAll
+              ? 0
+              : answers.unit === "sol"
+                ? solToLamports(answers.amount)
+                : answers.amount;
           } else {
             if (!channelId) {
               console.error(chalk.red("Error: Channel ID is required"));
@@ -185,7 +203,11 @@ export class EscrowCommands {
 
             if (!withdrawAll) {
               if (options.amount && options.lamports) {
-                console.error(chalk.red("Error: Specify either --amount (SOL) or --lamports, not both"));
+                console.error(
+                  chalk.red(
+                    "Error: Specify either --amount (SOL) or --lamports, not both",
+                  ),
+                );
                 process.exit(1);
               }
 
@@ -194,7 +216,11 @@ export class EscrowCommands {
               } else if (options.lamports) {
                 amount = parseInt(options.lamports);
               } else {
-                console.error(chalk.red("Error: Amount is required (use --amount for SOL, --lamports, or --all)"));
+                console.error(
+                  chalk.red(
+                    "Error: Amount is required (use --amount for SOL, --lamports, or --all)",
+                  ),
+                );
                 process.exit(1);
               }
             }
@@ -202,19 +228,14 @@ export class EscrowCommands {
 
           const spinner = ora("Withdrawing from escrow...").start();
 
-          const client = new PodComClient({
-            endpoint: getNetworkEndpoint(globalOpts.network),
-            commitment: "confirmed"
-          });
-
-          await client.initialize();
-          const wallet = loadKeypair(globalOpts.keypair);
+          const client = await createClient(globalOpts.network);
+          const wallet = getWallet(globalOpts.keypair);
 
           // If withdrawing all, get current balance first
           if (withdrawAll) {
             const escrowData = await client.getEscrow(
               new PublicKey(channelId),
-              wallet.publicKey
+              wallet.publicKey,
             );
             if (!escrowData) {
               spinner.fail("No escrow account found for this channel");
@@ -226,22 +247,29 @@ export class EscrowCommands {
           if (globalOpts.dryRun) {
             spinner.succeed("Dry run: Escrow withdrawal prepared");
             console.log(chalk.cyan("Channel:"), channelId);
-            console.log(chalk.cyan("Amount:"), withdrawAll ? "All funds" : `${lamportsToSol(amount)} SOL (${amount} lamports)`);
+            console.log(
+              chalk.cyan("Amount:"),
+              withdrawAll
+                ? "All funds"
+                : `${lamportsToSol(amount)} SOL (${amount} lamports)`,
+            );
             return;
           }
 
           const signature = await client.withdrawEscrow(wallet, {
             channel: new PublicKey(channelId),
-            amount
+            amount,
           });
 
           spinner.succeed("Escrow withdrawal successful!");
           console.log(chalk.green("Transaction:"), signature);
           console.log(chalk.cyan("Channel:"), channelId);
           console.log(chalk.cyan("Withdrawn:"), `${lamportsToSol(amount)} SOL`);
-
         } catch (error: any) {
-          console.error(chalk.red("Failed to withdraw from escrow:"), error.message);
+          console.error(
+            chalk.red("Failed to withdraw from escrow:"),
+            error.message,
+          );
           process.exit(1);
         }
       });
@@ -251,10 +279,13 @@ export class EscrowCommands {
       .command("balance")
       .description("Show escrow balance for a channel")
       .option("-c, --channel <channelId>", "Channel ID")
-      .option("-a, --agent [address]", "Agent address (defaults to current wallet)")
+      .option(
+        "-a, --agent [address]",
+        "Agent address (defaults to current wallet)",
+      )
       .action(async (options, cmd) => {
         const globalOpts = cmd.optsWithGlobals();
-        
+
         try {
           if (!options.channel) {
             console.error(chalk.red("Error: Channel ID is required"));
@@ -263,24 +294,19 @@ export class EscrowCommands {
 
           const spinner = ora("Fetching escrow balance...").start();
 
-          const client = new PodComClient({
-            endpoint: getNetworkEndpoint(globalOpts.network),
-            commitment: "confirmed"
-          });
+          const client = await createClient(globalOpts.network);
 
-          await client.initialize();
-          
           let agentAddress;
           if (options.agent) {
             agentAddress = new PublicKey(options.agent);
           } else {
-            const wallet = loadKeypair(globalOpts.keypair);
+            const wallet = getWallet(globalOpts.keypair);
             agentAddress = wallet.publicKey;
           }
 
           const escrowData = await client.getEscrow(
             new PublicKey(options.channel),
-            agentAddress
+            agentAddress,
           );
 
           if (!escrowData) {
@@ -295,18 +321,26 @@ export class EscrowCommands {
             ["Depositor", escrowData.depositor.toBase58()],
             ["Balance", `${lamportsToSol(escrowData.balance)} SOL`],
             ["Balance (Lamports)", escrowData.balance.toString()],
-            ["Last Updated", new Date(escrowData.lastUpdated * 1000).toLocaleString()]
+            [
+              "Last Updated",
+              new Date(escrowData.lastUpdated * 1000).toLocaleString(),
+            ],
           ];
 
-          console.log("\n" + table(data, {
-            header: {
-              alignment: "center",
-              content: chalk.blue.bold("Escrow Balance")
-            }
-          }));
-
+          console.log(
+            "\n" +
+              table(data, {
+                header: {
+                  alignment: "center",
+                  content: chalk.blue.bold("Escrow Balance"),
+                },
+              }),
+          );
         } catch (error: any) {
-          console.error(chalk.red("Failed to fetch escrow balance:"), error.message);
+          console.error(
+            chalk.red("Failed to fetch escrow balance:"),
+            error.message,
+          );
           process.exit(1);
         }
       });
@@ -318,21 +352,16 @@ export class EscrowCommands {
       .option("-l, --limit <number>", "Maximum number of escrows to show", "10")
       .action(async (options, cmd) => {
         const globalOpts = cmd.optsWithGlobals();
-        
+
         try {
           const spinner = ora("Fetching escrow accounts...").start();
 
-          const client = new PodComClient({
-            endpoint: getNetworkEndpoint(globalOpts.network),
-            commitment: "confirmed"
-          });
+          const client = await createClient(globalOpts.network);
+          const wallet = getWallet(globalOpts.keypair);
 
-          await client.initialize();
-          const wallet = loadKeypair(globalOpts.keypair);
-          
           const escrows = await client.getEscrowsByDepositor(
             wallet.publicKey,
-            parseInt(options.limit)
+            parseInt(options.limit),
           );
 
           if (escrows.length === 0) {
@@ -346,21 +375,34 @@ export class EscrowCommands {
             escrow.channel.toBase58().slice(0, 8) + "...",
             `${lamportsToSol(escrow.balance)} SOL`,
             escrow.balance.toString(),
-            new Date(escrow.lastUpdated * 1000).toLocaleDateString()
+            new Date(escrow.lastUpdated * 1000).toLocaleDateString(),
           ]);
 
-          console.log("\n" + table([
-            ["Channel", "Balance (SOL)", "Balance (Lamports)", "Last Updated"],
-            ...data
-          ], {
-            header: {
-              alignment: "center",
-              content: chalk.blue.bold("Escrow Accounts")
-            }
-          }));
-
+          console.log(
+            "\n" +
+              table(
+                [
+                  [
+                    "Channel",
+                    "Balance (SOL)",
+                    "Balance (Lamports)",
+                    "Last Updated",
+                  ],
+                  ...data,
+                ],
+                {
+                  header: {
+                    alignment: "center",
+                    content: chalk.blue.bold("Escrow Accounts"),
+                  },
+                },
+              ),
+          );
         } catch (error: any) {
-          console.error(chalk.red("Failed to list escrow accounts:"), error.message);
+          console.error(
+            chalk.red("Failed to list escrow accounts:"),
+            error.message,
+          );
           process.exit(1);
         }
       });

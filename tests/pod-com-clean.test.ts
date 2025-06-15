@@ -1,17 +1,15 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program, BN, AnchorProvider } from "@coral-xyz/anchor";
 import { PodCom } from "../target/types/pod_com";
-import { PublicKey, Keypair, SystemProgram, Connection, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import {
+  PublicKey,
+  Keypair,
+  SystemProgram,
+  Connection,
+  LAMPORTS_PER_SOL,
+} from "@solana/web3.js";
 import { expect, test, beforeAll, describe } from "bun:test";
-
-// Define types that match the IDL
-type MessageType = {
-  text?: Record<string, never>;
-  data?: Record<string, never>;
-  command?: Record<string, never>;
-  response?: Record<string, never>;
-  custom?: number;
-};
+import { MessageType, findAgentPDA, findMessagePDA } from "./test-utils";
 
 // Configure the client to use the local cluster.
 const provider = anchor.AnchorProvider.env();
@@ -30,46 +28,14 @@ const PAYLOAD_HASH = new Uint8Array(32).fill(42); // Different hash to avoid con
 let agentPDA: PublicKey;
 let messagePDA: PublicKey;
 
-/**
- * Finds the Program Derived Address (PDA) for an agent account
- */
-const findAgentPDA = (wallet: PublicKey): [PublicKey, number] => {
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from("agent"), wallet.toBuffer()],
-    program.programId
-  );
-};
-
-/**
- * Finds the Program Derived Address (PDA) for a message account using agent PDA
- */
-const findMessagePDA = (senderAgentPDA: PublicKey, recipient: PublicKey, payloadHash: Uint8Array, messageType: MessageType): [PublicKey, number] => {
-  const messageTypeId = messageType.text ? 0 : 
-                       messageType.data ? 1 : 
-                       messageType.command ? 2 : 
-                       messageType.response ? 3 : 
-                       typeof messageType.custom === 'number' ? 4 + messageType.custom : 0;
-  
-  return PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("message"),
-      senderAgentPDA.toBuffer(),
-      recipient.toBuffer(),
-      Buffer.from(payloadHash),
-      Buffer.from([messageTypeId])
-    ],
-    program.programId
-  );
-};
-
 describe("POD-COM Clean Tests", () => {
   beforeAll(async () => {
     // Airdrop SOL to test wallet
     const airdropSignature = await provider.connection.requestAirdrop(
       testWallet.publicKey,
-      2 * LAMPORTS_PER_SOL
+      2 * LAMPORTS_PER_SOL,
     );
-    
+
     const latestBlockhash = await provider.connection.getLatestBlockhash();
     await provider.connection.confirmTransaction({
       signature: airdropSignature,
@@ -102,16 +68,17 @@ describe("POD-COM Clean Tests", () => {
 
   test("can send a message using fresh account", async () => {
     const messageType = { text: {} };
-    
-    // Calculate message PDA 
-    [messagePDA] = findMessagePDA(agentPDA, testWallet.publicKey, PAYLOAD_HASH, messageType);
+
+    // Calculate message PDA
+    [messagePDA] = findMessagePDA(
+      agentPDA,
+      testWallet.publicKey,
+      PAYLOAD_HASH,
+      messageType,
+    );
 
     const tx = await program.methods
-      .sendMessage(
-        testWallet.publicKey,
-        Array.from(PAYLOAD_HASH),
-        messageType
-      )
+      .sendMessage(testWallet.publicKey, Array.from(PAYLOAD_HASH), messageType)
       .accounts({
         messageAccount: messagePDA,
         senderAgent: agentPDA,
@@ -124,11 +91,14 @@ describe("POD-COM Clean Tests", () => {
     expect(tx).toBeTruthy();
 
     // Verify the message was created
-    const messageAccount = await program.account.messageAccount.fetch(messagePDA);
-    expect(Array.from(messageAccount.payloadHash)).toEqual(Array.from(PAYLOAD_HASH));
+    const messageAccount =
+      await program.account.messageAccount.fetch(messagePDA);
+    expect(Array.from(messageAccount.payloadHash)).toEqual(
+      Array.from(PAYLOAD_HASH),
+    );
     expect(messageAccount.sender.equals(testWallet.publicKey)).toBe(true);
     expect(messageAccount.recipient.equals(testWallet.publicKey)).toBe(true);
-    expect('pending' in messageAccount.status).toBe(true);
+    expect("pending" in messageAccount.status).toBe(true);
   });
 
   test("can update message status", async () => {
@@ -145,7 +115,8 @@ describe("POD-COM Clean Tests", () => {
     expect(tx).toBeTruthy();
 
     // Verify the message status was updated
-    const messageAccount = await program.account.messageAccount.fetch(messagePDA);
-    expect('delivered' in messageAccount.status).toBe(true);
+    const messageAccount =
+      await program.account.messageAccount.fetch(messagePDA);
+    expect("delivered" in messageAccount.status).toBe(true);
   });
 });

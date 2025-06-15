@@ -4,8 +4,12 @@ import ora from "ora";
 import inquirer from "inquirer";
 import { table } from "table";
 import { PublicKey } from "@solana/web3.js";
-import { PodComClient, AGENT_CAPABILITIES, getCapabilityNames } from "@pod-com/sdk";
-import { loadKeypair, getNetworkEndpoint } from "../utils/config";
+import {
+  PodComClient,
+  AGENT_CAPABILITIES,
+  getCapabilityNames,
+} from "@pod-com/sdk";
+import { createClient, getWallet } from "../utils/client";
 
 export class AgentCommands {
   register(program: Command) {
@@ -22,9 +26,11 @@ export class AgentCommands {
       .option("-i, --interactive", "Interactive registration")
       .action(async (options, cmd) => {
         const globalOpts = cmd.optsWithGlobals();
-        
+
         try {
-          let capabilities = options.capabilities ? parseInt(options.capabilities) : 0;
+          let capabilities = options.capabilities
+            ? parseInt(options.capabilities)
+            : 0;
           let metadataUri = options.metadata || "";
 
           if (options.interactive) {
@@ -36,19 +42,28 @@ export class AgentCommands {
                 choices: [
                   { name: "Trading", value: AGENT_CAPABILITIES.TRADING },
                   { name: "Analysis", value: AGENT_CAPABILITIES.ANALYSIS },
-                  { name: "Data Processing", value: AGENT_CAPABILITIES.DATA_PROCESSING },
-                  { name: "Content Generation", value: AGENT_CAPABILITIES.CONTENT_GENERATION },
-                ]
+                  {
+                    name: "Data Processing",
+                    value: AGENT_CAPABILITIES.DATA_PROCESSING,
+                  },
+                  {
+                    name: "Content Generation",
+                    value: AGENT_CAPABILITIES.CONTENT_GENERATION,
+                  },
+                ],
               },
               {
                 type: "input",
                 name: "metadataUri",
                 message: "Metadata URI (optional):",
-                default: ""
-              }
+                default: "",
+              },
             ]);
 
-            capabilities = answers.capabilities.reduce((acc: number, cap: number) => acc | cap, 0);
+            capabilities = answers.capabilities.reduce(
+              (acc: number, cap: number) => acc | cap,
+              0,
+            );
             metadataUri = answers.metadataUri;
           }
 
@@ -58,31 +73,31 @@ export class AgentCommands {
 
           const spinner = ora("Registering agent...").start();
 
-          const client = new PodComClient({
-            endpoint: getNetworkEndpoint(globalOpts.network),
-            commitment: "confirmed"
-          });
-
-          await client.initialize();
-          const wallet = loadKeypair(globalOpts.keypair);
+          const client = await createClient(globalOpts.network);
+          const wallet = getWallet(globalOpts.keypair);
 
           if (globalOpts.dryRun) {
             spinner.succeed("Dry run: Agent registration prepared");
-            console.log(chalk.cyan("Capabilities:"), getCapabilityNames(capabilities).join(", "));
+            console.log(
+              chalk.cyan("Capabilities:"),
+              getCapabilityNames(capabilities).join(", "),
+            );
             console.log(chalk.cyan("Metadata URI:"), metadataUri);
             return;
           }
 
           const signature = await client.registerAgent(wallet, {
             capabilities,
-            metadataUri
+            metadataUri,
           });
 
           spinner.succeed("Agent registered successfully!");
           console.log(chalk.green("Transaction:"), signature);
-          console.log(chalk.cyan("Capabilities:"), getCapabilityNames(capabilities).join(", "));
+          console.log(
+            chalk.cyan("Capabilities:"),
+            getCapabilityNames(capabilities).join(", "),
+          );
           console.log(chalk.cyan("Metadata URI:"), metadataUri);
-
         } catch (error: any) {
           console.error(chalk.red("Failed to register agent:"), error.message);
           process.exit(1);
@@ -95,22 +110,17 @@ export class AgentCommands {
       .description("Show agent information")
       .action(async (address, cmd) => {
         const globalOpts = cmd.optsWithGlobals();
-        
+
         try {
           const spinner = ora("Fetching agent information...").start();
 
-          const client = new PodComClient({
-            endpoint: getNetworkEndpoint(globalOpts.network),
-            commitment: "confirmed"
-          });
+          const client = await createClient(globalOpts.network);
 
-          await client.initialize();
-          
           let walletAddress;
           if (address) {
             walletAddress = new PublicKey(address);
           } else {
-            const wallet = loadKeypair(globalOpts.keypair);
+            const wallet = getWallet(globalOpts.keypair);
             walletAddress = wallet.publicKey;
           }
 
@@ -125,21 +135,32 @@ export class AgentCommands {
 
           const data = [
             ["Public Key", agentData.pubkey.toBase58()],
-            ["Capabilities", getCapabilityNames(agentData.capabilities).join(", ")],
+            [
+              "Capabilities",
+              getCapabilityNames(agentData.capabilities).join(", "),
+            ],
             ["Reputation", agentData.reputation.toString()],
             ["Metadata URI", agentData.metadataUri],
-            ["Last Updated", new Date(agentData.lastUpdated * 1000).toLocaleString()]
+            [
+              "Last Updated",
+              new Date(agentData.lastUpdated * 1000).toLocaleString(),
+            ],
           ];
 
-          console.log("\n" + table(data, {
-            header: {
-              alignment: "center",
-              content: chalk.blue.bold("Agent Information")
-            }
-          }));
-
+          console.log(
+            "\n" +
+              table(data, {
+                header: {
+                  alignment: "center",
+                  content: chalk.blue.bold("Agent Information"),
+                },
+              }),
+          );
         } catch (error: any) {
-          console.error(chalk.red("Failed to fetch agent info:"), error.message);
+          console.error(
+            chalk.red("Failed to fetch agent info:"),
+            error.message,
+          );
           process.exit(1);
         }
       });
@@ -152,17 +173,12 @@ export class AgentCommands {
       .option("-m, --metadata <uri>", "New metadata URI")
       .action(async (options, cmd) => {
         const globalOpts = cmd.optsWithGlobals();
-        
+
         try {
           const spinner = ora("Updating agent...").start();
 
-          const client = new PodComClient({
-            endpoint: getNetworkEndpoint(globalOpts.network),
-            commitment: "confirmed"
-          });
-
-          await client.initialize();
-          const wallet = loadKeypair(globalOpts.keypair);
+          const client = await createClient(globalOpts.network);
+          const wallet = getWallet(globalOpts.keypair);
 
           const updateOptions: any = {};
           if (options.capabilities) {
@@ -179,7 +195,10 @@ export class AgentCommands {
 
           if (globalOpts.dryRun) {
             spinner.succeed("Dry run: Agent update prepared");
-            console.log(chalk.cyan("Updates:"), JSON.stringify(updateOptions, null, 2));
+            console.log(
+              chalk.cyan("Updates:"),
+              JSON.stringify(updateOptions, null, 2),
+            );
             return;
           }
 
@@ -187,7 +206,6 @@ export class AgentCommands {
 
           spinner.succeed("Agent updated successfully!");
           console.log(chalk.green("Transaction:"), signature);
-
         } catch (error: any) {
           console.error(chalk.red("Failed to update agent:"), error.message);
           process.exit(1);
@@ -201,17 +219,12 @@ export class AgentCommands {
       .option("-l, --limit <number>", "Maximum number of agents to show", "10")
       .action(async (options, cmd) => {
         const globalOpts = cmd.optsWithGlobals();
-        
+
         try {
           const spinner = ora("Fetching agents...").start();
 
-          const client = new PodComClient({
-            endpoint: getNetworkEndpoint(globalOpts.network),
-            commitment: "confirmed"
-          });
+          const client = await createClient(globalOpts.network);
 
-          await client.initialize();
-          
           const agents = await client.getAllAgents(parseInt(options.limit));
 
           if (agents.length === 0) {
@@ -225,19 +238,24 @@ export class AgentCommands {
             agent.pubkey.toBase58().slice(0, 8) + "...",
             getCapabilityNames(agent.capabilities).join(", "),
             agent.reputation.toString(),
-            new Date(agent.lastUpdated * 1000).toLocaleDateString()
+            new Date(agent.lastUpdated * 1000).toLocaleDateString(),
           ]);
 
-          console.log("\n" + table([
-            ["Address", "Capabilities", "Reputation", "Last Updated"],
-            ...data
-          ], {
-            header: {
-              alignment: "center",
-              content: chalk.blue.bold("Registered Agents")
-            }
-          }));
-
+          console.log(
+            "\n" +
+              table(
+                [
+                  ["Address", "Capabilities", "Reputation", "Last Updated"],
+                  ...data,
+                ],
+                {
+                  header: {
+                    alignment: "center",
+                    content: chalk.blue.bold("Registered Agents"),
+                  },
+                },
+              ),
+          );
         } catch (error: any) {
           console.error(chalk.red("Failed to list agents:"), error.message);
           process.exit(1);
