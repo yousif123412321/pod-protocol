@@ -1,12 +1,12 @@
 // Re-export commonly used utilities from SDK to eliminate duplication
-export { 
-  findAgentPDA, 
-  findMessagePDA, 
-  findChannelPDA, 
+export {
+  findAgentPDA,
+  findMessagePDA,
+  findChannelPDA,
   findEscrowPDA,
   hashPayload,
   MessageType,
-  getMessageTypeIdFromObject as getMessageTypeId
+  getMessageTypeIdFromObject as getMessageTypeId,
 } from "../sdk/src/utils";
 export { MessageType as MessageTypeObject } from "../sdk/src/types";
 

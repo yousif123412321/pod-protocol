@@ -5,10 +5,10 @@ declare_id!("HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps");
 
 /*
  * POD-COM: AI Agent Communication Protocol v1.0.0
- * 
+ *
  * A comprehensive Solana program enabling secure, scalable communication between AI agents
  * with features including direct messaging, group channels, escrow systems, and reputation management.
- * 
+ *
  * CORE FEATURES:
  * - Agent registration and identity management
  * - Direct messaging between agents with expiration
@@ -17,25 +17,25 @@ declare_id!("HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps");
  * - Reputation system for trusted interactions
  * - Rate limiting and spam prevention
  * - Comprehensive event monitoring
- * 
+ *
  * PDA USAGE DOCUMENTATION:
- * - Agent accounts use PDA: ["agent", wallet_pubkey] 
+ * - Agent accounts use PDA: ["agent", wallet_pubkey]
  * - Message senders ALWAYS use agent PDA addresses (not wallet addresses)
  * - This ensures all communication is between registered agents
  * - Channel participants store agent PDA addresses
- * 
+ *
  * CONSISTENCY RULES:
  * - message.sender = agent_pda (NOT wallet_pubkey)
- * - participant.participant = agent_pda (NOT wallet_pubkey)  
+ * - participant.participant = agent_pda (NOT wallet_pubkey)
  * - All communication flows through agent identities
- * 
+ *
  * SECURITY FEATURES:
  * - Comprehensive input validation on all functions
  * - Rate limiting with sliding window approach
  * - Authorization checks for sensitive operations
  * - Escrow protection for financial interactions
  * - Message expiration for privacy
- * 
+ *
  * PROGRAM ID: HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps
  * NETWORK: Devnet (ready for mainnet deployment)
  */
@@ -53,10 +53,23 @@ const MIN_REPUTATION_FOR_CHANNELS: u64 = 50; // Minimum reputation to create cha
 // Account Space Constants (8 bytes for discriminator + actual data)
 const AGENT_ACCOUNT_SPACE: usize = 8 + 32 + 8 + (4 + MAX_METADATA_URI_LENGTH) + 8 + 8 + 1 + 7; // 268 bytes
 const MESSAGE_ACCOUNT_SPACE: usize = 8 + 32 + 32 + 32 + 1 + 8 + 8 + 1 + 1 + 7; // 130 bytes
-const CHANNEL_ACCOUNT_SPACE: usize = 8 + 32 + (4 + MAX_CHANNEL_NAME_LENGTH) + (4 + MAX_CHANNEL_DESCRIPTION_LENGTH) + 1 + 4 + 4 + 8 + 8 + 8 + 1 + 1 + 6; // 335 bytes
+const CHANNEL_ACCOUNT_SPACE: usize = 8
+    + 32
+    + (4 + MAX_CHANNEL_NAME_LENGTH)
+    + (4 + MAX_CHANNEL_DESCRIPTION_LENGTH)
+    + 1
+    + 4
+    + 4
+    + 8
+    + 8
+    + 8
+    + 1
+    + 1
+    + 6; // 335 bytes
 const CHANNEL_PARTICIPANT_SPACE: usize = 8 + 32 + 32 + 8 + 1 + 8 + 8 + 1 + 7; // 105 bytes
 const CHANNEL_INVITATION_SPACE: usize = 8 + 32 + 32 + 32 + 8 + 8 + 1 + 1 + 6; // 128 bytes
-const CHANNEL_MESSAGE_SPACE: usize = 8 + 32 + 32 + (4 + MAX_MESSAGE_CONTENT_LENGTH) + 1 + 8 + 9 + 33 + 1 + 7; // 1135 bytes
+const CHANNEL_MESSAGE_SPACE: usize =
+    8 + 32 + 32 + (4 + MAX_MESSAGE_CONTENT_LENGTH) + 1 + 8 + 9 + 33 + 1 + 7; // 1135 bytes
 const ESCROW_ACCOUNT_SPACE: usize = 8 + 32 + 32 + 8 + 8 + 1 + 7; // 96 bytes
 
 // Error codes
@@ -178,95 +191,95 @@ pub struct EscrowWithdrawal {
 // Channel account structure
 #[account]
 pub struct ChannelAccount {
-    pub creator: Pubkey,             // 32 bytes
-    pub name: String,                // 4 + 50 bytes (max 50 chars)
-    pub description: String,         // 4 + 200 bytes (max 200 chars)
+    pub creator: Pubkey,               // 32 bytes
+    pub name: String,                  // 4 + 50 bytes (max 50 chars)
+    pub description: String,           // 4 + 200 bytes (max 200 chars)
     pub visibility: ChannelVisibility, // 1 byte
-    pub max_participants: u32,       // 4 bytes
-    pub current_participants: u32,   // 4 bytes
-    pub fee_per_message: u64,        // 8 bytes (lamports)
-    pub escrow_balance: u64,         // 8 bytes (lamports)
-    pub created_at: i64,             // 8 bytes
-    pub is_active: bool,             // 1 byte
-    pub bump: u8,                    // 1 byte
-    _reserved: [u8; 6],              // 6 bytes (padding)
+    pub max_participants: u32,         // 4 bytes
+    pub current_participants: u32,     // 4 bytes
+    pub fee_per_message: u64,          // 8 bytes (lamports)
+    pub escrow_balance: u64,           // 8 bytes (lamports)
+    pub created_at: i64,               // 8 bytes
+    pub is_active: bool,               // 1 byte
+    pub bump: u8,                      // 1 byte
+    _reserved: [u8; 6],                // 6 bytes (padding)
 }
 
 // Channel participant account structure
 #[account]
 pub struct ChannelParticipant {
-    pub channel: Pubkey,             // 32 bytes
-    pub participant: Pubkey,         // 32 bytes
-    pub joined_at: i64,              // 8 bytes
-    pub is_active: bool,             // 1 byte
-    pub messages_sent: u64,          // 8 bytes
-    pub last_message_at: i64,        // 8 bytes
-    pub bump: u8,                    // 1 byte
-    _reserved: [u8; 7],              // 7 bytes (padding)
+    pub channel: Pubkey,      // 32 bytes
+    pub participant: Pubkey,  // 32 bytes
+    pub joined_at: i64,       // 8 bytes
+    pub is_active: bool,      // 1 byte
+    pub messages_sent: u64,   // 8 bytes
+    pub last_message_at: i64, // 8 bytes
+    pub bump: u8,             // 1 byte
+    _reserved: [u8; 7],       // 7 bytes (padding)
 }
 
 // Channel invitation account structure (for private channels)
 #[account]
 pub struct ChannelInvitation {
-    pub channel: Pubkey,             // 32 bytes
-    pub inviter: Pubkey,             // 32 bytes
-    pub invitee: Pubkey,             // 32 bytes
-    pub created_at: i64,             // 8 bytes
-    pub expires_at: i64,             // 8 bytes
-    pub is_accepted: bool,           // 1 byte
-    pub bump: u8,                    // 1 byte
-    _reserved: [u8; 6],              // 6 bytes (padding)
+    pub channel: Pubkey,   // 32 bytes
+    pub inviter: Pubkey,   // 32 bytes
+    pub invitee: Pubkey,   // 32 bytes
+    pub created_at: i64,   // 8 bytes
+    pub expires_at: i64,   // 8 bytes
+    pub is_accepted: bool, // 1 byte
+    pub bump: u8,          // 1 byte
+    _reserved: [u8; 6],    // 6 bytes (padding)
 }
 
 // Channel message account structure (for broadcast messages)
 #[account]
 pub struct ChannelMessage {
-    pub channel: Pubkey,             // 32 bytes
-    pub sender: Pubkey,              // 32 bytes
-    pub content: String,             // 4 + 1000 bytes (max content)
-    pub message_type: MessageType,   // 1 byte
-    pub created_at: i64,             // 8 bytes
-    pub edited_at: Option<i64>,      // 9 bytes (1 for Option + 8 for i64)
-    pub reply_to: Option<Pubkey>,    // 33 bytes (1 for Option + 32 for Pubkey)
-    pub bump: u8,                    // 1 byte
-    _reserved: [u8; 7],              // 7 bytes (padding)
+    pub channel: Pubkey,           // 32 bytes
+    pub sender: Pubkey,            // 32 bytes
+    pub content: String,           // 4 + 1000 bytes (max content)
+    pub message_type: MessageType, // 1 byte
+    pub created_at: i64,           // 8 bytes
+    pub edited_at: Option<i64>,    // 9 bytes (1 for Option + 8 for i64)
+    pub reply_to: Option<Pubkey>,  // 33 bytes (1 for Option + 32 for Pubkey)
+    pub bump: u8,                  // 1 byte
+    _reserved: [u8; 7],            // 7 bytes (padding)
 }
 
 // Escrow account structure
 #[account]
 pub struct EscrowAccount {
-    pub channel: Pubkey,             // 32 bytes
-    pub depositor: Pubkey,           // 32 bytes
-    pub amount: u64,                 // 8 bytes
-    pub created_at: i64,             // 8 bytes
-    pub bump: u8,                    // 1 byte
-    _reserved: [u8; 7],              // 7 bytes (padding)
+    pub channel: Pubkey,   // 32 bytes
+    pub depositor: Pubkey, // 32 bytes
+    pub amount: u64,       // 8 bytes
+    pub created_at: i64,   // 8 bytes
+    pub bump: u8,          // 1 byte
+    _reserved: [u8; 7],    // 7 bytes (padding)
 }
 
 // Agent account structure
 #[account]
 pub struct AgentAccount {
-    pub pubkey: Pubkey,          // 32 bytes
-    pub capabilities: u64,       // 8 bytes
-    pub metadata_uri: String,    // 4 + MAX_METADATA_URI_LENGTH bytes
-    pub reputation: u64,         // 8 bytes
-    pub last_updated: i64,       // 8 bytes
-    pub bump: u8,                // 1 byte
-    _reserved: [u8; 7],          // 7 bytes (padding)
+    pub pubkey: Pubkey,       // 32 bytes
+    pub capabilities: u64,    // 8 bytes
+    pub metadata_uri: String, // 4 + MAX_METADATA_URI_LENGTH bytes
+    pub reputation: u64,      // 8 bytes
+    pub last_updated: i64,    // 8 bytes
+    pub bump: u8,             // 1 byte
+    _reserved: [u8; 7],       // 7 bytes (padding)
 }
 
 // Message account structure
 #[account]
 pub struct MessageAccount {
-    pub sender: Pubkey,          // 32 bytes
-    pub recipient: Pubkey,        // 32 bytes
-    pub payload_hash: [u8; 32],   // 32 bytes
+    pub sender: Pubkey,            // 32 bytes
+    pub recipient: Pubkey,         // 32 bytes
+    pub payload_hash: [u8; 32],    // 32 bytes
     pub message_type: MessageType, // 1 byte (max)
-    pub created_at: i64,         // 8 bytes
-    pub expires_at: i64,          // 8 bytes
-    pub status: MessageStatus,    // 1 byte (max)
-    pub bump: u8,                // 1 byte
-    _reserved: [u8; 7],          // 7 bytes (padding)
+    pub created_at: i64,           // 8 bytes
+    pub expires_at: i64,           // 8 bytes
+    pub status: MessageStatus,     // 1 byte (max)
+    pub bump: u8,                  // 1 byte
+    _reserved: [u8; 7],            // 7 bytes (padding)
 }
 
 #[program]
@@ -286,16 +299,17 @@ pub mod pod_com {
         if metadata_uri.len() > MAX_METADATA_URI_LENGTH {
             return Err(PodComError::InvalidMetadataUriLength.into());
         }
-        if capabilities > u64::MAX / 2 { // Reasonable upper bound
+        if capabilities > u64::MAX / 2 {
+            // Reasonable upper bound
             return Err(PodComError::Unauthorized.into()); // Reusing error for invalid capabilities
         }
 
         let agent = &mut ctx.accounts.agent_account;
         let clock = Clock::get()?;
-        
+
         agent.pubkey = ctx.accounts.signer.key();
         agent.capabilities = capabilities;
-        agent.metadata_uri = metadata_uri;
+        agent.metadata_uri = metadata_uri.clone();
         agent.reputation = 100; // Initial reputation
         agent.last_updated = clock.unix_timestamp;
         agent.bump = ctx.bumps.agent_account;
@@ -304,7 +318,7 @@ pub mod pod_com {
         emit!(AgentRegistered {
             agent: agent.pubkey,
             capabilities,
-            metadata_uri: metadata_uri.clone(),
+            metadata_uri,
             timestamp: clock.unix_timestamp,
         });
 
@@ -321,13 +335,13 @@ pub mod pod_com {
     ) -> Result<()> {
         let message = &mut ctx.accounts.message_account;
         let clock = Clock::get()?;
-        
+
         // IMPORTANT: Use agent PDA as sender for consistency across all message types
         // This ensures all messages are associated with registered agents, not raw wallets
         message.sender = ctx.accounts.sender_agent.key();
         message.recipient = recipient;
         message.payload_hash = payload_hash;
-        message.message_type = message_type;
+        message.message_type = message_type.clone();
         message.created_at = clock.unix_timestamp;
         message.expires_at = clock.unix_timestamp + MESSAGE_EXPIRATION_SECONDS;
         message.status = MessageStatus::Pending;
@@ -337,11 +351,15 @@ pub mod pod_com {
         emit!(MessageSent {
             sender: message.sender,
             recipient: message.recipient,
-            message_type: message_type.clone(),
+            message_type,
             timestamp: clock.unix_timestamp,
         });
 
-        msg!("Message sent from {:?} to {:?}", message.sender, message.recipient);
+        msg!(
+            "Message sent from {:?} to {:?}",
+            message.sender,
+            message.recipient
+        );
         Ok(())
     }
 
@@ -353,25 +371,25 @@ pub mod pod_com {
     ) -> Result<()> {
         let agent = &mut ctx.accounts.agent_account;
         let clock = Clock::get()?;
-        
+
         // Verify the signer owns the agent account
         if *ctx.accounts.signer.key != agent.pubkey {
             return Err(PodComError::Unauthorized.into());
         }
-        
+
         if let Some(caps) = capabilities {
             agent.capabilities = caps;
         }
-        
+
         if let Some(uri) = metadata_uri {
             if uri.len() > MAX_METADATA_URI_LENGTH {
                 return Err(PodComError::InvalidMetadataUriLength.into());
             }
             agent.metadata_uri = uri;
         }
-        
+
         agent.last_updated = clock.unix_timestamp;
-        
+
         msg!("Agent updated: {:?}", agent.pubkey);
         Ok(())
     }
@@ -383,32 +401,33 @@ pub mod pod_com {
     ) -> Result<()> {
         let message = &mut ctx.accounts.message_account;
         let clock = Clock::get()?;
-        
+
         // Verify the message hasn't expired
         if clock.unix_timestamp > message.expires_at {
             return Err(PodComError::MessageExpired.into());
         }
-        
+
         // Verify the caller is the recipient for certain status updates
         match new_status {
             MessageStatus::Delivered | MessageStatus::Read => {
                 if ctx.accounts.recipient_agent.pubkey != message.recipient {
                     return Err(PodComError::Unauthorized.into());
                 }
-            },
+            }
             MessageStatus::Failed => {
                 // Only sender or recipient can mark as failed
-                if ctx.accounts.signer.key() != message.sender && 
-                   ctx.accounts.signer.key() != message.recipient {
+                if ctx.accounts.signer.key() != message.sender
+                    && ctx.accounts.signer.key() != message.recipient
+                {
                     return Err(PodComError::Unauthorized.into());
                 }
-            },
+            }
             _ => return Err(PodComError::InvalidMessageStatusTransition.into()),
         }
-        
+
         // Update status
         message.status = new_status;
-        
+
         msg!("Message status updated to {:?}", message.status);
         Ok(())
     }
@@ -435,13 +454,14 @@ pub mod pod_com {
         if max_participants == 0 || max_participants > MAX_PARTICIPANTS_PER_CHANNEL {
             return Err(PodComError::ChannelFull.into()); // Reusing error for invalid participant count
         }
-        if fee_per_message > 1_000_000_000 { // Max 1 SOL per message
+        if fee_per_message > 1_000_000_000 {
+            // Max 1 SOL per message
             return Err(PodComError::InsufficientFunds.into()); // Reusing error for excessive fee
         }
 
         let channel = &mut ctx.accounts.channel_account;
         let clock = Clock::get()?;
-        
+
         channel.creator = ctx.accounts.creator.key();
         channel.name = name.trim().to_string();
         channel.description = description.trim().to_string();
@@ -452,33 +472,31 @@ pub mod pod_com {
         channel.escrow_balance = 0;
         channel.created_at = clock.unix_timestamp;
         channel.bump = ctx.bumps.channel_account;
-        
+
         msg!("Channel created: {:?}", channel.creator);
         Ok(())
     }
 
     // Deposit to escrow for a channel
-    pub fn deposit_escrow(
-        ctx: Context<DepositEscrow>,
-        amount: u64,
-    ) -> Result<()> {
+    pub fn deposit_escrow(ctx: Context<DepositEscrow>, amount: u64) -> Result<()> {
         // Input validation
         if amount == 0 {
             return Err(PodComError::InsufficientFunds.into());
         }
-        if amount > 10_000_000_000 { // Max 10 SOL per deposit
+        if amount > 10_000_000_000 {
+            // Max 10 SOL per deposit
             return Err(PodComError::InsufficientFunds.into());
         }
 
         let clock = Clock::get()?;
-        
+
         // Transfer SOL from depositor to escrow PDA
         let transfer_instruction = anchor_lang::solana_program::system_instruction::transfer(
             &ctx.accounts.depositor.key(),
             &ctx.accounts.escrow_account.key(),
             amount,
         );
-        
+
         anchor_lang::solana_program::program::invoke(
             &transfer_instruction,
             &[
@@ -486,58 +504,61 @@ pub mod pod_com {
                 ctx.accounts.escrow_account.to_account_info(),
             ],
         )?;
-        
+
         // Initialize escrow account data
         let escrow = &mut ctx.accounts.escrow_account;
         let channel = &mut ctx.accounts.channel_account;
-        
+
         escrow.channel = channel.key();
         escrow.depositor = ctx.accounts.depositor.key();
         escrow.amount = amount;
         escrow.created_at = clock.unix_timestamp;
         escrow.bump = ctx.bumps.escrow_account;
-        
+
         // Update channel escrow balance
         channel.escrow_balance += amount;
-        
+
         msg!("Deposited {} lamports to escrow", amount);
         Ok(())
     }
 
     // Withdraw from escrow
-    pub fn withdraw_escrow(
-        ctx: Context<WithdrawEscrow>,
-        amount: u64,
-    ) -> Result<()> {
+    pub fn withdraw_escrow(ctx: Context<WithdrawEscrow>, amount: u64) -> Result<()> {
         // Verify the depositor is withdrawing their own funds
         if ctx.accounts.escrow_account.depositor != ctx.accounts.depositor.key() {
             return Err(PodComError::Unauthorized.into());
         }
-        
+
         // Verify sufficient balance
         if ctx.accounts.escrow_account.amount < amount {
             return Err(PodComError::InsufficientFunds.into());
         }
-        
+
         // Transfer SOL from escrow PDA back to depositor
-        **ctx.accounts.escrow_account.to_account_info().try_borrow_mut_lamports()? -= amount;
-        **ctx.accounts.depositor.to_account_info().try_borrow_mut_lamports()? += amount;
-        
+        **ctx
+            .accounts
+            .escrow_account
+            .to_account_info()
+            .try_borrow_mut_lamports()? -= amount;
+        **ctx
+            .accounts
+            .depositor
+            .to_account_info()
+            .try_borrow_mut_lamports()? += amount;
+
         // Update account data
         let escrow = &mut ctx.accounts.escrow_account;
         let channel = &mut ctx.accounts.channel_account;
-        
+
         escrow.amount -= amount;
         channel.escrow_balance -= amount;
-        
+
         msg!("Withdrew {} lamports from escrow", amount);
         Ok(())
     }
 
     // Join a channel
-    pub fn join_channel(
-        ctx: Context<JoinChannel>,
-    ) -> Result<()> {
+    pub fn join_channel(ctx: Context<JoinChannel>) -> Result<()> {
         let channel = &mut ctx.accounts.channel_account;
         let participant = &mut ctx.accounts.participant_account;
         let clock = Clock::get()?;
@@ -550,9 +571,10 @@ pub mod pod_com {
         // For private channels, check if there's a valid invitation
         if channel.visibility == ChannelVisibility::Private {
             if let Some(invitation) = &ctx.accounts.invitation_account {
-                if invitation.invitee != ctx.accounts.user.key() || 
-                   invitation.is_accepted || 
-                   clock.unix_timestamp > invitation.expires_at {
+                if invitation.invitee != ctx.accounts.user.key()
+                    || invitation.is_accepted
+                    || clock.unix_timestamp > invitation.expires_at
+                {
                     return Err(PodComError::PrivateChannelRequiresInvitation.into());
                 }
             } else {
@@ -579,14 +601,16 @@ pub mod pod_com {
             }
         }
 
-        msg!("User {:?} joined channel {:?}", participant.participant, channel.name);
+        msg!(
+            "User {:?} joined channel {:?}",
+            participant.participant,
+            channel.name
+        );
         Ok(())
     }
 
     // Leave a channel
-    pub fn leave_channel(
-        ctx: Context<LeaveChannel>,
-    ) -> Result<()> {
+    pub fn leave_channel(ctx: Context<LeaveChannel>) -> Result<()> {
         let channel = &mut ctx.accounts.channel_account;
         let participant = &mut ctx.accounts.participant_account;
 
@@ -601,7 +625,11 @@ pub mod pod_com {
         // Update channel participant count
         channel.current_participants -= 1;
 
-        msg!("User {:?} left channel {:?}", participant.participant, channel.name);
+        msg!(
+            "User {:?} left channel {:?}",
+            participant.participant,
+            channel.name
+        );
         Ok(())
     }
 
@@ -611,7 +639,7 @@ pub mod pod_com {
         content: String,
         message_type: MessageType,
         reply_to: Option<Pubkey>,
-        nonce: u64,
+        _nonce: u64,
     ) -> Result<()> {
         let participant = &ctx.accounts.participant_account;
         let channel = &ctx.accounts.channel_account;
@@ -631,14 +659,17 @@ pub mod pod_com {
         // Enhanced rate limiting with sliding window approach
         let current_time = clock.unix_timestamp;
         let time_window = 60; // 1 minute window
-        
+
         // Check if last message was within the current minute window
         if participant.last_message_at > 0 {
             let time_since_last = current_time - participant.last_message_at;
-            let messages_in_window = if time_since_last < time_window {
+            let _messages_in_window = if time_since_last < time_window {
                 // Within same minute window, check message count
-                let estimated_messages = participant.messages_sent % RATE_LIMIT_MESSAGES_PER_MINUTE as u64;
-                if estimated_messages >= RATE_LIMIT_MESSAGES_PER_MINUTE as u64 && time_since_last < time_window {
+                let estimated_messages =
+                    participant.messages_sent % RATE_LIMIT_MESSAGES_PER_MINUTE as u64;
+                if estimated_messages >= RATE_LIMIT_MESSAGES_PER_MINUTE as u64
+                    && time_since_last < time_window
+                {
                     return Err(PodComError::RateLimitExceeded.into());
                 }
                 estimated_messages + 1
@@ -646,7 +677,7 @@ pub mod pod_com {
                 // New time window, reset counter
                 1
             };
-            
+
             // Additional check: minimum time between messages (1 second)
             if time_since_last < 1 {
                 return Err(PodComError::RateLimitExceeded.into());
@@ -675,10 +706,7 @@ pub mod pod_com {
     }
 
     // Invite user to private channel
-    pub fn invite_to_channel(
-        ctx: Context<InviteToChannel>,
-        invitee: Pubkey,
-    ) -> Result<()> {
+    pub fn invite_to_channel(ctx: Context<InviteToChannel>, invitee: Pubkey) -> Result<()> {
         let channel = &ctx.accounts.channel_account;
         let invitation = &mut ctx.accounts.invitation_account;
         let clock = Clock::get()?;
@@ -703,14 +731,16 @@ pub mod pod_com {
         invitation.is_accepted = false;
         invitation.bump = ctx.bumps.invitation_account;
 
-        msg!("Invitation sent to {:?} for channel {:?}", invitee, channel.name);
+        msg!(
+            "Invitation sent to {:?} for channel {:?}",
+            invitee,
+            channel.name
+        );
         Ok(())
     }
 
     // Get channel participants (view function - would be called off-chain)
-    pub fn get_channel_participants(
-        _ctx: Context<GetChannelParticipants>,
-    ) -> Result<Vec<Pubkey>> {
+    pub fn get_channel_participants(_ctx: Context<GetChannelParticipants>) -> Result<Vec<Pubkey>> {
         // This would typically be implemented as a view function
         // For now, we'll use this as a placeholder that can be called off-chain
         // The actual participant data would be queried via getProgramAccounts
@@ -853,8 +883,8 @@ pub struct SendMessage<'info> {
         payer = signer,
         space = 8 + 32 + 32 + 32 + 1 + 8 + 8 + 1 + 1 + 7,
         seeds = [
-            b"message", 
-            sender_agent.key().as_ref(), 
+            b"message",
+            sender_agent.key().as_ref(),
             recipient.as_ref(),
             &payload_hash,
             &[match message_type { MessageType::Text => 0, MessageType::Data => 1, MessageType::Command => 2, MessageType::Response => 3, MessageType::Custom(x) => 4 + x }],
@@ -893,12 +923,12 @@ pub struct UpdateMessageStatus<'info> {
             message_account.sender.as_ref(),
             message_account.recipient.as_ref(),
             &message_account.payload_hash,
-            &[match &message_account.message_type { 
-                MessageType::Text => 0, 
-                MessageType::Data => 1, 
-                MessageType::Command => 2, 
-                MessageType::Response => 3, 
-                MessageType::Custom(x) => 4 + x 
+            &[match &message_account.message_type {
+                MessageType::Text => 0,
+                MessageType::Data => 1,
+                MessageType::Command => 2,
+                MessageType::Response => 3,
+                MessageType::Custom(x) => 4 + x
             }],
         ],
         bump = message_account.bump,

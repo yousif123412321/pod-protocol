@@ -8,14 +8,14 @@ import {
   AGENT_CAPABILITIES,
   getCapabilityNames,
 } from "@pod-com/sdk";
-import { 
-  createCommandHandler, 
-  handleDryRun, 
-  createSpinner, 
-  showSuccess, 
+import {
+  createCommandHandler,
+  handleDryRun,
+  createSpinner,
+  showSuccess,
   getTableConfig,
   formatValue,
-  validatePublicKey
+  validatePublicKey,
 } from "../utils/shared";
 import { createClient, getWallet } from "../utils/client";
 import ora from "ora";
@@ -33,70 +33,77 @@ export class AgentCommands {
       .option("-c, --capabilities <value>", "Agent capabilities as number")
       .option("-m, --metadata <uri>", "Metadata URI")
       .option("-i, --interactive", "Interactive registration")
-      .action(createCommandHandler("register agent", async (client, wallet, globalOpts, options) => {
-        let capabilities = options.capabilities
-          ? parseInt(options.capabilities, 10)
-          : 0;
-        let metadataUri = options.metadata || "";
+      .action(
+        createCommandHandler(
+          "register agent",
+          async (client, wallet, globalOpts, options) => {
+            let capabilities = options.capabilities
+              ? parseInt(options.capabilities, 10)
+              : 0;
+            let metadataUri = options.metadata || "";
 
-        if (options.interactive) {
-          const answers = await inquirer.prompt([
-            {
-              type: "checkbox",
-              name: "capabilities",
-              message: "Select agent capabilities:",
-              choices: [
-                { name: "Trading", value: AGENT_CAPABILITIES.TRADING },
-                { name: "Analysis", value: AGENT_CAPABILITIES.ANALYSIS },
+            if (options.interactive) {
+              const answers = await inquirer.prompt([
                 {
-                  name: "Data Processing",
-                  value: AGENT_CAPABILITIES.DATA_PROCESSING,
+                  type: "checkbox",
+                  name: "capabilities",
+                  message: "Select agent capabilities:",
+                  choices: [
+                    { name: "Trading", value: AGENT_CAPABILITIES.TRADING },
+                    { name: "Analysis", value: AGENT_CAPABILITIES.ANALYSIS },
+                    {
+                      name: "Data Processing",
+                      value: AGENT_CAPABILITIES.DATA_PROCESSING,
+                    },
+                    {
+                      name: "Content Generation",
+                      value: AGENT_CAPABILITIES.CONTENT_GENERATION,
+                    },
+                  ],
                 },
                 {
-                  name: "Content Generation",
-                  value: AGENT_CAPABILITIES.CONTENT_GENERATION,
+                  type: "input",
+                  name: "metadataUri",
+                  message: "Metadata URI (optional):",
+                  default: "",
                 },
-              ],
-            },
-            {
-              type: "input",
-              name: "metadataUri",
-              message: "Metadata URI (optional):",
-              default: "",
-            },
-          ]);
+              ]);
 
-          capabilities = answers.capabilities.reduce(
-            (acc: number, cap: number) => acc | cap,
-            0,
-          );
-          metadataUri = answers.metadataUri;
-        }
+              capabilities = answers.capabilities.reduce(
+                (acc: number, cap: number) => acc | cap,
+                0
+              );
+              metadataUri = answers.metadataUri;
+            }
 
-        if (!metadataUri) {
-          metadataUri = `https://pod-com.org/agents/${Date.now()}`;
-        }
+            if (!metadataUri) {
+              metadataUri = `https://pod-com.org/agents/${Date.now()}`;
+            }
 
-        const spinner = createSpinner("Registering agent...");
+            const spinner = createSpinner("Registering agent...");
 
-        if (handleDryRun(globalOpts, spinner, "Agent registration", {
-          "Capabilities": getCapabilityNames(capabilities).join(", "),
-          "Metadata URI": metadataUri
-        })) {
-          return;
-        }
+            if (
+              handleDryRun(globalOpts, spinner, "Agent registration", {
+                Capabilities: getCapabilityNames(capabilities).join(", "),
+                "Metadata URI": metadataUri,
+              })
+            ) {
+              return;
+            }
 
-        const signature = await client.registerAgent(wallet, {
-          capabilities,
-          metadataUri,
-        });
+            const signature = await client.registerAgent(wallet, {
+              capabilities,
+              metadataUri,
+            });
 
-        showSuccess(spinner, "Agent registered successfully!", {
-          "Transaction": signature,
-          "Capabilities": getCapabilityNames(capabilities).join(", "),
-          "Metadata URI": metadataUri
-        });
-      }));
+            showSuccess(spinner, "Agent registered successfully!", {
+              Transaction: signature,
+              Capabilities: getCapabilityNames(capabilities).join(", "),
+              "Metadata URI": metadataUri,
+            });
+          }
+        )
+      );
 
     // Show agent info
     agent
@@ -148,12 +155,12 @@ export class AgentCommands {
                   alignment: "center",
                   content: chalk.blue.bold("Agent Information"),
                 },
-              }),
+              })
           );
         } catch (error: any) {
           console.error(
             chalk.red("Failed to fetch agent info:"),
-            error.message,
+            error.message
           );
           process.exit(1);
         }
@@ -191,7 +198,7 @@ export class AgentCommands {
             spinner.succeed("Dry run: Agent update prepared");
             console.log(
               chalk.cyan("Updates:"),
-              JSON.stringify(updateOptions, null, 2),
+              JSON.stringify(updateOptions, null, 2)
             );
             return;
           }
@@ -247,8 +254,8 @@ export class AgentCommands {
                     alignment: "center",
                     content: chalk.blue.bold("Registered Agents"),
                   },
-                },
-              ),
+                }
+              )
           );
         } catch (error: any) {
           console.error(chalk.red("Failed to list agents:"), error.message);

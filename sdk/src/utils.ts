@@ -1,10 +1,16 @@
 import { PublicKey } from "@solana/web3.js";
 import { PROGRAM_ID, MessageType, AGENT_CAPABILITIES } from "./types";
 
+// Re-export types for convenience
+export { MessageType } from "./types";
+
 /**
  * Calculate PDA for an agent account
  */
-export function findAgentPDA(wallet: PublicKey, programId: PublicKey = PROGRAM_ID): [PublicKey, number] {
+export function findAgentPDA(
+  wallet: PublicKey,
+  programId: PublicKey = PROGRAM_ID
+): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("agent"), wallet.toBuffer()],
     programId
@@ -22,26 +28,33 @@ export function findMessagePDA(
   programId: PublicKey = PROGRAM_ID
 ): [PublicKey, number] {
   let messageTypeId: number;
-  
+
   // Handle both enum and object formats
-  if (typeof messageType === 'string') {
+  if (typeof messageType === "string") {
     messageTypeId = getMessageTypeId(messageType as MessageType);
   } else {
     // Handle object format from program
-    messageTypeId = messageType.text !== undefined ? 0 :
-                   messageType.data !== undefined ? 1 :
-                   messageType.command !== undefined ? 2 :
-                   messageType.response !== undefined ? 3 :
-                   typeof messageType.custom === 'number' ? 4 + messageType.custom : 0;
+    messageTypeId =
+      messageType.text !== undefined
+        ? 0
+        : messageType.data !== undefined
+        ? 1
+        : messageType.command !== undefined
+        ? 2
+        : messageType.response !== undefined
+        ? 3
+        : typeof messageType.custom === "number"
+        ? 4 + messageType.custom
+        : 0;
   }
-  
+
   return PublicKey.findProgramAddressSync(
     [
       Buffer.from("message"),
       senderAgent.toBuffer(),
       recipient.toBuffer(),
       Buffer.from(payloadHash),
-      Buffer.from([messageTypeId])
+      Buffer.from([messageTypeId]),
     ],
     programId
   );
@@ -78,7 +91,10 @@ export function findEscrowPDA(
 /**
  * Convert MessageType enum to numeric ID
  */
-export function getMessageTypeId(messageType: MessageType, customValue?: number): number {
+export function getMessageTypeId(
+  messageType: MessageType,
+  customValue?: number
+): number {
   switch (messageType) {
     case MessageType.Text:
       return 0;
@@ -98,20 +114,26 @@ export function getMessageTypeId(messageType: MessageType, customValue?: number)
 /**
  * Convert numeric ID back to MessageType
  */
-export function getMessageTypeFromId(id: number): { type: MessageType; customValue?: number } {
+export function getMessageTypeFromId(id: number): {
+  type: MessageType;
+  customValue?: number;
+} {
   if (id === 0) return { type: MessageType.Text };
   if (id === 1) return { type: MessageType.Data };
   if (id === 2) return { type: MessageType.Command };
   if (id === 3) return { type: MessageType.Response };
   if (id >= 4) return { type: MessageType.Custom, customValue: id - 4 };
-  
+
   throw new Error(`Unknown message type ID: ${id}`);
 }
 
 /**
  * Convert MessageType enum to program format (object with empty record)
  */
-export function convertMessageTypeToProgram(messageType: MessageType, customValue?: number): any {
+export function convertMessageTypeToProgram(
+  messageType: MessageType,
+  customValue?: number
+): any {
   switch (messageType) {
     case MessageType.Text:
       return { text: {} };
@@ -131,12 +153,16 @@ export function convertMessageTypeToProgram(messageType: MessageType, customValu
 /**
  * Convert program format back to MessageType enum
  */
-export function convertMessageTypeFromProgram(programType: any): { type: MessageType; customValue?: number } {
+export function convertMessageTypeFromProgram(programType: any): {
+  type: MessageType;
+  customValue?: number;
+} {
   if (programType.text !== undefined) return { type: MessageType.Text };
   if (programType.data !== undefined) return { type: MessageType.Data };
   if (programType.command !== undefined) return { type: MessageType.Command };
   if (programType.response !== undefined) return { type: MessageType.Response };
-  if (programType.custom !== undefined) return { type: MessageType.Custom, customValue: programType.custom };
+  if (programType.custom !== undefined)
+    return { type: MessageType.Custom, customValue: programType.custom };
   return { type: MessageType.Text };
 }
 
@@ -155,8 +181,11 @@ export function getMessageTypeIdFromObject(msg: any): number {
 /**
  * Create a SHA-256 hash of message payload
  */
-export async function hashPayload(payload: string | Uint8Array): Promise<Uint8Array> {
-  const data = typeof payload === "string" ? new TextEncoder().encode(payload) : payload;
+export async function hashPayload(
+  payload: string | Uint8Array
+): Promise<Uint8Array> {
+  const data =
+    typeof payload === "string" ? new TextEncoder().encode(payload) : payload;
   const hash = await crypto.subtle.digest("SHA-256", data);
   return new Uint8Array(hash);
 }
@@ -164,21 +193,30 @@ export async function hashPayload(payload: string | Uint8Array): Promise<Uint8Ar
 /**
  * Check if agent has specific capability
  */
-export function hasCapability(capabilities: number, capability: number): boolean {
+export function hasCapability(
+  capabilities: number,
+  capability: number
+): boolean {
   return (capabilities & capability) !== 0;
 }
 
 /**
  * Add capability to existing capabilities
  */
-export function addCapability(capabilities: number, capability: number): number {
+export function addCapability(
+  capabilities: number,
+  capability: number
+): number {
   return capabilities | capability;
 }
 
 /**
  * Remove capability from existing capabilities
  */
-export function removeCapability(capabilities: number, capability: number): number {
+export function removeCapability(
+  capabilities: number,
+  capability: number
+): number {
   return capabilities & ~capability;
 }
 
@@ -187,7 +225,7 @@ export function removeCapability(capabilities: number, capability: number): numb
  */
 export function getCapabilityNames(capabilities: number): string[] {
   const names: string[] = [];
-  
+
   if (hasCapability(capabilities, AGENT_CAPABILITIES.TRADING)) {
     names.push("Trading");
   }
@@ -212,7 +250,7 @@ export function getCapabilityNames(capabilities: number): string[] {
   if (hasCapability(capabilities, AGENT_CAPABILITIES.CUSTOM_4)) {
     names.push("Custom 4");
   }
-  
+
   return names;
 }
 
@@ -246,7 +284,7 @@ export function isValidPublicKey(address: string): boolean {
  * Sleep for specified milliseconds
  */
 export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -258,21 +296,21 @@ export async function retry<T>(
   baseDelay: number = 1000
 ): Promise<T> {
   let lastError: Error;
-  
+
   for (let i = 0; i <= maxRetries; i++) {
     try {
       return await fn();
     } catch (error) {
       lastError = error as Error;
-      
+
       if (i === maxRetries) {
         throw lastError;
       }
-      
+
       const delay = baseDelay * Math.pow(2, i);
       await sleep(delay);
     }
   }
-  
+
   throw lastError!;
 }

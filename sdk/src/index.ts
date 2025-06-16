@@ -1,6 +1,6 @@
 /**
  * POD-COM SDK - TypeScript SDK for AI Agent Communication Protocol
- * 
+ *
  * This SDK provides a complete interface for interacting with the POD-COM protocol
  * on Solana, enabling AI agents to register, communicate, and transact with each other.
  */
@@ -26,7 +26,7 @@ export {
   type SendMessageOptions,
   type CreateChannelOptions,
   type DepositEscrowOptions,
-  type WithdrawEscrowOptions
+  type WithdrawEscrowOptions,
 } from "./types";
 
 // Utility functions
@@ -46,7 +46,7 @@ export {
   solToLamports,
   isValidPublicKey,
   sleep,
-  retry
+  retry,
 } from "./utils";
 
 // Re-export commonly used Solana types for convenience

@@ -16,11 +16,11 @@ interface CliConfig {
  */
 export function loadConfig(): CliConfig {
   const configPath = join(homedir(), ".config", "pod-com", "config.json");
-  
+
   if (!existsSync(configPath)) {
     return {
       network: "devnet",
-      keypairPath: join(homedir(), ".config", "solana", "id.json")
+      keypairPath: join(homedir(), ".config", "solana", "id.json"),
     };
   }
 
@@ -28,10 +28,12 @@ export function loadConfig(): CliConfig {
     const configData = readFileSync(configPath, "utf8");
     return JSON.parse(configData);
   } catch (error) {
-    console.warn(chalk.yellow("Warning: Could not read config file, using defaults"));
+    console.warn(
+      chalk.yellow("Warning: Could not read config file, using defaults")
+    );
     return {
       network: "devnet",
-      keypairPath: join(homedir(), ".config", "solana", "id.json")
+      keypairPath: join(homedir(), ".config", "solana", "id.json"),
     };
   }
 }
@@ -44,11 +46,17 @@ export function loadKeypair(keypairPath?: string): Keypair {
   const path = keypairPath || config.keypairPath;
 
   // Expand ~ to home directory
-  const expandedPath = path.startsWith("~") ? join(homedir(), path.slice(1)) : path;
+  const expandedPath = path.startsWith("~")
+    ? join(homedir(), path.slice(1))
+    : path;
 
   if (!existsSync(expandedPath)) {
     console.error(chalk.red("Error: Keypair file not found:"), expandedPath);
-    console.log(chalk.yellow("Tip: Generate a new keypair with 'pod config generate-keypair'"));
+    console.log(
+      chalk.yellow(
+        "Tip: Generate a new keypair with 'pod config generate-keypair'"
+      )
+    );
     process.exit(1);
   }
 
@@ -56,8 +64,13 @@ export function loadKeypair(keypairPath?: string): Keypair {
     const keypairData = JSON.parse(readFileSync(expandedPath, "utf8"));
     return Keypair.fromSecretKey(new Uint8Array(keypairData));
   } catch (error) {
-    console.error(chalk.red("Error: Invalid keypair file format:"), expandedPath);
-    console.log(chalk.yellow("Tip: Ensure the file contains a valid Solana keypair"));
+    console.error(
+      chalk.red("Error: Invalid keypair file format:"),
+      expandedPath
+    );
+    console.log(
+      chalk.yellow("Tip: Ensure the file contains a valid Solana keypair")
+    );
     process.exit(1);
   }
 }
@@ -115,9 +128,9 @@ export function formatSol(lamports: number): string {
  * Format transaction signature for display
  */
 export function formatSignature(signature: string): string {
-  return signature.length > 20 ? 
-    signature.slice(0, 8) + "..." + signature.slice(-8) : 
-    signature;
+  return signature.length > 20
+    ? signature.slice(0, 8) + "..." + signature.slice(-8)
+    : signature;
 }
 
 /**
@@ -126,7 +139,11 @@ export function formatSignature(signature: string): string {
 export function isValidPublicKey(key: string): boolean {
   try {
     // Base58 check - Solana public keys are 44 characters in base58
-    return key.length >= 32 && key.length <= 44 && /^[1-9A-HJ-NP-Za-km-z]+$/.test(key);
+    return (
+      key.length >= 32 &&
+      key.length <= 44 &&
+      /^[1-9A-HJ-NP-Za-km-z]+$/.test(key)
+    );
   } catch {
     return false;
   }

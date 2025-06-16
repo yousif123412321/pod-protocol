@@ -22,7 +22,12 @@ export function handleCommandError(error: any, action: string): never {
  */
 export function createCommandHandler<T extends any[]>(
   action: string,
-  handler: (client: PodComClient, wallet: any, globalOpts: GlobalOptions, ...args: T) => Promise<void>
+  handler: (
+    client: PodComClient,
+    wallet: any,
+    globalOpts: GlobalOptions,
+    ...args: T
+  ) => Promise<void>
 ) {
   return async (globalOpts: GlobalOptions, ...args: T) => {
     try {
@@ -66,7 +71,11 @@ export function createSpinner(message: string): Ora {
 /**
  * Success message with spinner
  */
-export function showSuccess(spinner: Ora, message: string, details?: Record<string, any>): void {
+export function showSuccess(
+  spinner: Ora,
+  message: string,
+  details?: Record<string, any>
+): void {
   spinner.succeed(message);
   if (details) {
     Object.entries(details).forEach(([key, value]) => {
@@ -88,18 +97,21 @@ export const getTableConfig = (title: string) => ({
 /**
  * Format value for display with appropriate styling
  */
-export function formatValue(value: any, type: 'address' | 'number' | 'text' | 'boolean' = 'text'): string {
+export function formatValue(
+  value: any,
+  type: "address" | "number" | "text" | "boolean" = "text"
+): string {
   if (value === null || value === undefined) {
-    return chalk.gray('N/A');
+    return chalk.gray("N/A");
   }
 
   switch (type) {
-    case 'address':
+    case "address":
       return chalk.yellow(value.toString());
-    case 'number':
+    case "number":
       return chalk.cyan(value.toString());
-    case 'boolean':
-      return value ? chalk.green('✓') : chalk.red('✗');
+    case "boolean":
+      return value ? chalk.green("✓") : chalk.red("✗");
     default:
       return value.toString();
   }

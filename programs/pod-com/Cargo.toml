@@ -27,9 +27,9 @@ anchor-lang = { version = "=0.31.1", default-features = false, features = ["init
 # spl-token = { version = "=4.0.0", optional = true, default-features = false }
 # spl-associated-token-account = { version = "=2.0.0", optional = true, default-features = false }
 
-# Serialization
-borsh = { version = "=1.5.7" }
-borsh-derive = "=0.10.3"
+# Serialization - using the one from anchor-lang to avoid conflicts
+# borsh = { version = "=1.5.7" }
+# borsh-derive = "=0.10.3"
 
 # Error handling
 thiserror = "=1.0.52"

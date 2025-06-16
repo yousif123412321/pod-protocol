@@ -33,7 +33,7 @@ describe("POD-COM Clean Tests", () => {
     // Airdrop SOL to test wallet
     const airdropSignature = await provider.connection.requestAirdrop(
       testWallet.publicKey,
-      2 * LAMPORTS_PER_SOL,
+      2 * LAMPORTS_PER_SOL
     );
 
     const latestBlockhash = await provider.connection.getLatestBlockhash();
@@ -75,7 +75,7 @@ describe("POD-COM Clean Tests", () => {
       testWallet.publicKey,
       PAYLOAD_HASH,
       messageType,
-      program.programId,
+      program.programId
     );
 
     const tx = await program.methods
@@ -92,10 +92,11 @@ describe("POD-COM Clean Tests", () => {
     expect(tx).toBeTruthy();
 
     // Verify the message was created
-    const messageAccount =
-      await program.account.messageAccount.fetch(messagePDA);
+    const messageAccount = await program.account.messageAccount.fetch(
+      messagePDA
+    );
     expect(Array.from(messageAccount.payloadHash)).toEqual(
-      Array.from(PAYLOAD_HASH),
+      Array.from(PAYLOAD_HASH)
     );
     expect(messageAccount.sender.equals(testWallet.publicKey)).toBe(true);
     expect(messageAccount.recipient.equals(testWallet.publicKey)).toBe(true);
@@ -116,8 +117,9 @@ describe("POD-COM Clean Tests", () => {
     expect(tx).toBeTruthy();
 
     // Verify the message status was updated
-    const messageAccount =
-      await program.account.messageAccount.fetch(messagePDA);
+    const messageAccount = await program.account.messageAccount.fetch(
+      messagePDA
+    );
     expect("delivered" in messageAccount.status).toBe(true);
   });
 });

@@ -6,21 +6,21 @@ import { table } from "table";
 import { PublicKey } from "@solana/web3.js";
 import { PodComClient, MessageType, MessageStatus } from "@pod-com/sdk";
 import { createClient, getWallet } from "../utils/client";
-import { 
-  createCommandHandler, 
-  handleDryRun, 
-  createSpinner, 
-  showSuccess, 
+import {
+  createCommandHandler,
+  handleDryRun,
+  createSpinner,
+  showSuccess,
   getTableConfig,
   formatValue,
-  GlobalOptions
+  GlobalOptions,
 } from "../utils/shared";
-import { 
-  validatePublicKey, 
-  validateMessage, 
-  validateEnum, 
+import {
+  validatePublicKey,
+  validateMessage,
+  validateEnum,
   validatePositiveInteger,
-  ValidationError 
+  ValidationError,
 } from "../utils/validation";
 
 export class MessageCommands {
@@ -44,117 +44,133 @@ export class MessageCommands {
       .option(
         "-t, --type <type>",
         "Message type (text, data, command, response, custom)",
-        "text",
+        "text"
       )
       .option(
         "-c, --custom-value <number>",
-        "Custom value for custom message types",
+        "Custom value for custom message types"
       )
       .option("-i, --interactive", "Interactive message creation")
-      .action(createCommandHandler("send message", async (client, wallet, globalOpts, options) => {
-        await this.handleSend(client, wallet, globalOpts, options);
-      }));
+      .action(
+        createCommandHandler(
+          "send message",
+          async (client, wallet, globalOpts, options) => {
+            await this.handleSend(client, wallet, globalOpts, options);
+          }
+        )
+      );
   }
 
-  private async handleSend(client: PodComClient, wallet: any, globalOpts: any, options: any) {
+  private async handleSend(
+    client: PodComClient,
+    wallet: any,
+    globalOpts: any,
+    options: any
+  ) {
     let recipient = options.recipient;
     let payload = options.payload;
     let messageType = options.type as MessageType;
-    let customValue = options.customValue ? parseInt(options.customValue, 10) : 0;
+    let customValue = options.customValue
+      ? parseInt(options.customValue, 10)
+      : 0;
 
-      if (options.interactive) {
-        const answers = await inquirer.prompt([
-          {
-            type: "input",
-            name: "recipient",
-            message: "Recipient agent address:",
-            validate: (input) => {
-              try {
-                new PublicKey(input);
-                return true;
-              } catch {
-                return "Please enter a valid Solana public key";
-              }
+    if (options.interactive) {
+      const answers = await inquirer.prompt([
+        {
+          type: "input",
+          name: "recipient",
+          message: "Recipient agent address:",
+          validate: (input) => {
+            try {
+              new PublicKey(input);
+              return true;
+            } catch {
+              return "Please enter a valid Solana public key";
+            }
+          },
+        },
+        {
+          type: "list",
+          name: "messageType",
+          message: "Message type:",
+          choices: [
+            {
+              name: "Text - Plain text message",
+              value: MessageType.Text,
             },
-          },
-          {
-            type: "list",
-            name: "messageType",
-            message: "Message type:",
-            choices: [
-              {
-                name: "Text - Plain text message",
-                value: MessageType.Text,
-              },
-              {
-                name: "Data - Structured data transfer",
-                value: MessageType.Data,
-              },
-              {
-                name: "Command - Command/instruction",
-                value: MessageType.Command,
-              },
-              {
-                name: "Response - Response to command",
-                value: MessageType.Response,
-              },
-              {
-                name: "Custom - Custom message type",
-                value: MessageType.Custom,
-              },
-            ],
-          },
-          {
-            type: "editor",
-            name: "payload",
-            message: "Message content:",
-            default: "",
-          },
-          {
-            type: "number",
-            name: "customValue",
-            message: "Custom value (for custom message types):",
-            default: 0,
-            when: (answers) => answers.messageType === MessageType.Custom,
-          },
-        ]);
+            {
+              name: "Data - Structured data transfer",
+              value: MessageType.Data,
+            },
+            {
+              name: "Command - Command/instruction",
+              value: MessageType.Command,
+            },
+            {
+              name: "Response - Response to command",
+              value: MessageType.Response,
+            },
+            {
+              name: "Custom - Custom message type",
+              value: MessageType.Custom,
+            },
+          ],
+        },
+        {
+          type: "editor",
+          name: "payload",
+          message: "Message content:",
+          default: "",
+        },
+        {
+          type: "number",
+          name: "customValue",
+          message: "Custom value (for custom message types):",
+          default: 0,
+          when: (answers) => answers.messageType === MessageType.Custom,
+        },
+      ]);
 
-        recipient = answers.recipient;
-        payload = answers.payload;
-        messageType = answers.messageType;
-        customValue = answers.customValue || 0;
-      }
+      recipient = answers.recipient;
+      payload = answers.payload;
+      messageType = answers.messageType;
+      customValue = answers.customValue || 0;
+    }
 
-      if (!recipient || !payload) {
-        throw new ValidationError("Recipient and payload are required");
-      }
+    if (!recipient || !payload) {
+      throw new ValidationError("Recipient and payload are required");
+    }
 
-      const recipientKey = validatePublicKey(recipient, "recipient");
-      const validatedPayload = validateMessage(payload);
+    const recipientKey = validatePublicKey(recipient, "recipient");
+    const validatedPayload = validateMessage(payload);
 
-      const spinner = createSpinner("Sending message...");
+    const spinner = createSpinner("Sending message...");
 
-      if (handleDryRun(globalOpts, spinner, "Message send", {
-        "Recipient": recipientKey.toBase58(),
-        "Type": messageType,
-        "Content": validatedPayload.slice(0, 100) + (validatedPayload.length > 100 ? "..." : ""),
-        "Custom Value": customValue > 0 ? customValue : "N/A"
-      })) {
-        return;
-      }
+    if (
+      handleDryRun(globalOpts, spinner, "Message send", {
+        Recipient: recipientKey.toBase58(),
+        Type: messageType,
+        Content:
+          validatedPayload.slice(0, 100) +
+          (validatedPayload.length > 100 ? "..." : ""),
+        "Custom Value": customValue > 0 ? customValue : "N/A",
+      })
+    ) {
+      return;
+    }
 
-      const signature = await client.sendMessage(wallet, {
-        recipient: recipientKey,
-        payload: validatedPayload,
-        messageType,
-        customValue,
-      });
+    const signature = await client.sendMessage(wallet, {
+      recipient: recipientKey,
+      payload: validatedPayload,
+      messageType,
+      customValue,
+    });
 
-      showSuccess(spinner, "Message sent successfully!", {
-        "Transaction": signature,
-        "Recipient": recipientKey.toBase58(),
-        "Type": messageType
-      });
+    showSuccess(spinner, "Message sent successfully!", {
+      Transaction: signature,
+      Recipient: recipientKey.toBase58(),
+      Type: messageType,
+    });
   }
 
   private registerInfo(message: Command) {
@@ -183,29 +199,38 @@ export class MessageCommands {
       spinner.succeed("Message information retrieved");
 
       const data = [
-        ["Message ID", formatValue(messageData.pubkey.toBase58(), 'address')],
-        ["Sender", formatValue(messageData.sender.toBase58(), 'address')],
-        ["Recipient", formatValue(messageData.recipient.toBase58(), 'address')],
-        ["Type", formatValue(messageData.messageType, 'text')],
-        ["Status", formatValue(messageData.status, 'text')],
+        ["Message ID", formatValue(messageData.pubkey.toBase58(), "address")],
+        ["Sender", formatValue(messageData.sender.toBase58(), "address")],
+        ["Recipient", formatValue(messageData.recipient.toBase58(), "address")],
+        ["Type", formatValue(messageData.messageType, "text")],
+        ["Status", formatValue(messageData.status, "text")],
         [
           "Payload",
-          formatValue(messageData.payload.slice(0, 100) +
-            (messageData.payload.length > 100 ? "..." : ""), 'text'),
+          formatValue(
+            messageData.payload.slice(0, 100) +
+              (messageData.payload.length > 100 ? "..." : ""),
+            "text"
+          ),
         ],
-        ["Timestamp", formatValue(new Date(messageData.timestamp * 1000).toLocaleString(), 'text')],
+        [
+          "Timestamp",
+          formatValue(
+            new Date(messageData.timestamp * 1000).toLocaleString(),
+            "text"
+          ),
+        ],
         [
           "Expires At",
-          formatValue(messageData.expiresAt
-            ? new Date(messageData.expiresAt * 1000).toLocaleString()
-            : "Never", 'text'),
+          formatValue(
+            messageData.expiresAt
+              ? new Date(messageData.expiresAt * 1000).toLocaleString()
+              : "Never",
+            "text"
+          ),
         ],
       ];
 
-      console.log(
-        "\n" +
-          table(data, getTableConfig("Message Information")),
-      );
+      console.log("\n" + table(data, getTableConfig("Message Information")));
     } catch (error: any) {
       console.error(chalk.red("Failed to fetch message info:"), error.message);
       process.exit(1);
@@ -219,7 +244,7 @@ export class MessageCommands {
       .option("-m, --message <messageId>", "Message ID")
       .option(
         "-s, --status <status>",
-        "New status (pending, delivered, read, failed)",
+        "New status (pending, delivered, read, failed)"
       )
       .action((options, cmd) => this.handleStatus(options, cmd));
   }
@@ -234,35 +259,41 @@ export class MessageCommands {
 
       const messageKey = validatePublicKey(options.message, "message ID");
       const validStatuses = ["pending", "delivered", "read", "failed"] as const;
-      const validatedStatus = validateEnum(options.status, validStatuses, "status");
+      const validatedStatus = validateEnum(
+        options.status,
+        validStatuses,
+        "status"
+      );
 
       const spinner = createSpinner("Updating message status...");
 
       const client = await createClient(globalOpts.network);
       const wallet = getWallet(globalOpts.keypair);
 
-      if (handleDryRun(globalOpts, spinner, "Message status update", {
-        "Message": options.message,
-        "New Status": validatedStatus
-      })) {
+      if (
+        handleDryRun(globalOpts, spinner, "Message status update", {
+          Message: options.message,
+          "New Status": validatedStatus,
+        })
+      ) {
         return;
       }
 
       const signature = await client.updateMessageStatus(
         wallet,
         messageKey,
-        validatedStatus as MessageStatus,
+        validatedStatus as MessageStatus
       );
 
       showSuccess(spinner, "Message status updated successfully!", {
-        "Transaction": signature,
-        "Message": options.message,
-        "New Status": validatedStatus
+        Transaction: signature,
+        Message: options.message,
+        "New Status": validatedStatus,
       });
     } catch (error: any) {
       console.error(
         chalk.red("Failed to update message status:"),
-        error.message,
+        error.message
       );
       process.exit(1);
     }
@@ -274,16 +305,16 @@ export class MessageCommands {
       .description("List messages for an agent")
       .option(
         "-a, --agent [address]",
-        "Agent address (defaults to current wallet)",
+        "Agent address (defaults to current wallet)"
       )
       .option(
         "-l, --limit <number>",
         "Maximum number of messages to show",
-        "10",
+        "10"
       )
       .option(
         "-f, --filter <status>",
-        "Filter by status (pending, delivered, read, failed)",
+        "Filter by status (pending, delivered, read, failed)"
       )
       .action((options, cmd) => this.handleList(options, cmd));
   }
@@ -308,7 +339,7 @@ export class MessageCommands {
       const messages = await client.getAgentMessages(
         agentAddress,
         limit,
-        options.filter as MessageStatus,
+        options.filter as MessageStatus
       );
 
       if (messages.length === 0) {
@@ -319,20 +350,23 @@ export class MessageCommands {
       spinner.succeed(`Found ${messages.length} messages`);
 
       const data = messages.map((msg: any) => [
-        formatValue(msg.pubkey.toBase58().slice(0, 8) + "...", 'address'),
-        formatValue(msg.sender.toBase58().slice(0, 8) + "...", 'address'),
-        formatValue(msg.recipient.toBase58().slice(0, 8) + "...", 'address'),
-        formatValue(msg.messageType, 'text'),
-        formatValue(msg.status, 'text'),
-        formatValue(new Date(msg.timestamp * 1000).toLocaleDateString(), 'text'),
+        formatValue(msg.pubkey.toBase58().slice(0, 8) + "...", "address"),
+        formatValue(msg.sender.toBase58().slice(0, 8) + "...", "address"),
+        formatValue(msg.recipient.toBase58().slice(0, 8) + "...", "address"),
+        formatValue(msg.messageType, "text"),
+        formatValue(msg.status, "text"),
+        formatValue(
+          new Date(msg.timestamp * 1000).toLocaleDateString(),
+          "text"
+        ),
       ]);
 
       console.log(
         "\n" +
           table(
             [["ID", "Sender", "Recipient", "Type", "Status", "Date"], ...data],
-            getTableConfig("Messages"),
-          ),
+            getTableConfig("Messages")
+          )
       );
     } catch (error: any) {
       console.error(chalk.red("Failed to list messages:"), error.message);
