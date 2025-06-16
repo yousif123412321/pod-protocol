@@ -4,13 +4,13 @@
   "description": "POD-COM: AI Agent Communication Protocol on Solana",
   "main": "index.js",
   "scripts": {
-    "build": "anchor build",
-    "test": "anchor test",
+    "build": "CARGO_BUILD_TARGET=x86_64-unknown-linux-gnu anchor build && cp target/idl/pod_com.json sdk/src/",
+    "test": "CARGO_BUILD_TARGET=x86_64-unknown-linux-gnu anchor test",
     "deploy": "anchor deploy",
     "build:all": "bun run build && cd sdk && bun run build && cd ../cli && bun run build",
     "clean": "anchor clean && rm -rf target/ && cd sdk && rm -rf dist/ && cd ../cli && rm -rf dist/",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
-    "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
+    "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" --write",
     "dev": "anchor test --skip-deploy",
     "docs": "anchor build && typedoc --out docs/api sdk/src/index.ts"
   },
@@ -57,7 +57,7 @@
     "chai": "^5.2.0",
     "chai-as-promised": "^8.0.1",
     "mocha": "^11.6.0",
-    "prettier": "^2.6.2",
+    "prettier": "^3.0.0",
     "ts-mocha": "^10.0.0",
     "typescript": "^5.7.3",
     "typedoc": "^0.25.0"

@@ -2,85 +2,69 @@ name: Rust
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main, develop]
   pull_request:
-    branches: [ "main" ]
+    branches: [main, develop]
 
 env:
   CARGO_TERM_COLOR: always
+  SOLANA_VERSION: "2.2.17"
+  ANCHOR_VERSION: "0.31.1"
+  CARGO_BUILD_TARGET: x86_64-unknown-linux-gnu
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        include:
-          - name: Linux x86_64
-            runner: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            use-cross: false
-          - name: Linux aarch64  
-            runner: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            use-cross: true
-          - name: macOS x86_64
-            runner: macos-latest
-            target: x86_64-apple-darwin
-            use-cross: false
-          - name: macOS aarch64
-            runner: macos-latest
-            target: aarch64-apple-darwin
-            use-cross: false
-          - name: Windows x86_64
-            runner: windows-latest
-            target: x86_64-pc-windows-msvc
-            use-cross: false
-
-    runs-on: ${{ matrix.runner }}
-    name: Build for ${{ matrix.name }}
+  test:
+    runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: ${{ matrix.target }}
+      - uses: actions/checkout@v4
 
-    - name: Install LLD linker (Linux)
-      if: runner.os == 'Linux'
-      run: sudo apt-get update && sudo apt-get install -y lld
-        
-    - name: Install cross
-      if: matrix.use-cross
-      uses: taiki-e/install-action@v2
-      with:
-        tool: cross
-        
-    - name: Cache cargo registry
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ matrix.runner }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        
-    - name: Build with cargo
-      if: ${{ !matrix.use-cross }}
-      run: cargo build --verbose --target ${{ matrix.target }}
-      
-    - name: Set linker environment for x86_64
-      if: matrix.use-cross && matrix.target == 'x86_64-unknown-linux-gnu'
-      run: echo "RUSTFLAGS=-C linker=x86_64-linux-gnu-gcc" >> $GITHUB_ENV
-      
-    - name: Set linker environment for aarch64  
-      if: matrix.use-cross && matrix.target == 'aarch64-unknown-linux-gnu'
-      run: echo "RUSTFLAGS=-C linker=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
-        
-    - name: Build with cross
-      if: matrix.use-cross
-      run: cross build --verbose --target ${{ matrix.target }}
-      
-    - name: Run tests
-      if: ${{ !matrix.use-cross }}
-      run: cargo test --verbose --target ${{ matrix.target }}
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+
+      - name: Setup Solana
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Setup Anchor
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor avm --force
+          avm install ${{ env.ANCHOR_VERSION }}
+          avm use ${{ env.ANCHOR_VERSION }}
+
+      - name: Setup Solana keypair
+        run: |
+          mkdir -p ~/.config/solana
+          solana-keygen new --no-bip39-passphrase -o ~/.config/solana/id.json
+          solana config set --url localhost
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            programs/pod-com/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Check Rust formatting
+        run: cargo fmt --check
+        working-directory: programs/pod-com
+
+      - name: Run Clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+        working-directory: programs/pod-com
+
+      - name: Run unit tests
+        run: cargo test
+        working-directory: programs/pod-com
+
+      - name: Build Anchor program
+        run: anchor build
