@@ -17,7 +17,7 @@ jobs:
           - name: Linux x86_64
             runner: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            use-cross: true
+            use-cross: false
           - name: Linux aarch64  
             runner: ubuntu-latest
             target: aarch64-unknown-linux-gnu
@@ -69,6 +69,14 @@ jobs:
       if: ${{ !matrix.use-cross }}
       run: cargo build --verbose --target ${{ matrix.target }}
       
+    - name: Set linker environment for x86_64
+      if: matrix.use-cross && matrix.target == 'x86_64-unknown-linux-gnu'
+      run: echo "RUSTFLAGS=-C linker=x86_64-linux-gnu-gcc" >> $GITHUB_ENV
+      
+    - name: Set linker environment for aarch64  
+      if: matrix.use-cross && matrix.target == 'aarch64-unknown-linux-gnu'
+      run: echo "RUSTFLAGS=-C linker=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
+        
     - name: Build with cross
       if: matrix.use-cross
       run: cross build --verbose --target ${{ matrix.target }}
