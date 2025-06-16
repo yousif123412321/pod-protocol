@@ -20,6 +20,104 @@ import {
   ValidationError,
 } from "../utils/validation";
 
+// Helper for interactive channel/amount prompts
+async function promptChannelAndAmount({ interactive, channel, amount, lamports, all, withdraw = false }) {
+  let channelId = channel;
+  let amt = 0;
+  let withdrawAll = all;
+
+  if (interactive) {
+    const questions: any[] = [
+      {
+        type: "input",
+        name: "channelId",
+        message: "Channel ID:",
+        validate: (input: string) => {
+          try {
+            new PublicKey(input);
+            return true;
+          } catch {
+            return "Please enter a valid channel ID";
+          }
+        },
+      },
+    ];
+    if (withdraw) {
+      questions.push({
+        type: "confirm",
+        name: "withdrawAll",
+        message: "Withdraw all available funds?",
+        default: false,
+      });
+    }
+    questions.push({
+      type: "list",
+      name: "unit",
+      message: "Amount unit:",
+      choices: [
+        { name: "SOL", value: "sol" },
+        { name: "Lamports", value: "lamports" },
+      ],
+      when: (answers: any) => !withdraw || !answers.withdrawAll,
+    });
+    questions.push({
+      type: "number",
+      name: "amount",
+      message: "Amount:",
+      validate: (input: number) => (input > 0 ? true : "Amount must be greater than 0"),
+      when: (answers: any) => !withdraw || !answers.withdrawAll,
+    });
+    const answers = await inquirer.prompt(questions);
+    channelId = answers.channelId;
+    withdrawAll = withdraw ? answers.withdrawAll : false;
+    amt = withdraw && answers.withdrawAll
+      ? 0
+      : answers.unit === "sol"
+      ? solToLamports(answers.amount)
+      : answers.amount;
+  } else {
+    if (!channelId) {
+      throw new ValidationError("Channel ID is required");
+    }
+    if (withdraw && !withdrawAll) {
+      validateAmountOptions(amount, lamports, withdraw);
+      amt = getAmountFromOptions(amount, lamports);
+    } else if (!withdraw) {
+      validateAmountOptions(amount, lamports, withdraw);
+      amt = getAmountFromOptions(amount, lamports);
+    }
+  }
+  return { channelId, amount: amt, withdrawAll };
+}
+
+function validateAmountOptions(amount, lamports, withdraw = false) {
+  if (amount && lamports) {
+    throw new ValidationError(
+      "Specify either --amount (SOL) or --lamports, not both"
+    );
+  }
+  if (!withdraw && !amount && !lamports) {
+    throw new ValidationError(
+      "Amount is required (use --amount for SOL or --lamports)"
+    );
+  }
+  if (withdraw && !amount && !lamports) {
+    throw new ValidationError(
+      "Amount is required (use --amount for SOL, --lamports, or --all)"
+    );
+  }
+}
+
+function getAmountFromOptions(amount, lamports) {
+  if (amount) {
+    const solAmount = validateSolAmount(amount, "SOL amount");
+    return solToLamports(solAmount);
+  } else if (lamports) {
+    return validatePositiveInteger(lamports, "lamports amount");
+  }
+  return 0;
+}
+
 export class EscrowCommands {
   register(program: Command) {
     const escrow = program
@@ -100,71 +198,15 @@ export class EscrowCommands {
     globalOpts: GlobalOptions,
     options: any
   ) {
-    let channelId = options.channel;
-    let amount: number = 0;
-
-    if (options.interactive) {
-      const answers = await inquirer.prompt([
-        {
-          type: "input",
-          name: "channelId",
-          message: "Channel ID:",
-          validate: (input: string) => {
-            try {
-              new PublicKey(input);
-              return true;
-            } catch {
-              return "Please enter a valid channel ID";
-            }
-          },
-        },
-        {
-          type: "list",
-          name: "unit",
-          message: "Amount unit:",
-          choices: [
-            { name: "SOL", value: "sol" },
-            { name: "Lamports", value: "lamports" },
-          ],
-        },
-        {
-          type: "number",
-          name: "amount",
-          message: (answers) => `Amount in ${answers.unit.toUpperCase()}:`,
-          validate: (input: number) =>
-            input > 0 ? true : "Amount must be greater than 0",
-        },
-      ]);
-
-      channelId = answers.channelId;
-      amount =
-        answers.unit === "sol" ? solToLamports(answers.amount) : answers.amount;
-    } else {
-      if (!channelId) {
-        throw new ValidationError("Channel ID is required");
-      }
-
-      if (options.amount && options.lamports) {
-        throw new ValidationError(
-          "Specify either --amount (SOL) or --lamports, not both"
-        );
-      }
-
-      if (options.amount) {
-        const solAmount = validateSolAmount(options.amount, "SOL amount");
-        amount = solToLamports(solAmount);
-      } else if (options.lamports) {
-        amount = validatePositiveInteger(options.lamports, "lamports amount");
-      } else {
-        throw new ValidationError(
-          "Amount is required (use --amount for SOL or --lamports)"
-        );
-      }
-    }
-
+    const { channelId, amount } = await promptChannelAndAmount({
+      interactive: options.interactive,
+      channel: options.channel,
+      amount: options.amount,
+      lamports: options.lamports,
+      all: options.all,
+    });
     const channelKey = validatePublicKey(channelId, "channel ID");
     const spinner = createSpinner("Depositing to escrow...");
-
     if (
       handleDryRun(globalOpts, spinner, "Escrow deposit", {
         Channel: channelId,
@@ -173,12 +215,10 @@ export class EscrowCommands {
     ) {
       return;
     }
-
     const signature = await client.depositEscrow(wallet, {
       channel: channelKey,
       amount,
     });
-
     showSuccess(spinner, "Escrow deposit successful!", {
       Transaction: signature,
       Channel: channelId,
@@ -192,86 +232,16 @@ export class EscrowCommands {
     globalOpts: GlobalOptions,
     options: any
   ) {
-    let channelId = options.channel;
-    let amount: number = 0;
-    let withdrawAll = options.all;
-
-    if (options.interactive) {
-      const answers = await inquirer.prompt([
-        {
-          type: "input",
-          name: "channelId",
-          message: "Channel ID:",
-          validate: (input: string) => {
-            try {
-              new PublicKey(input);
-              return true;
-            } catch {
-              return "Please enter a valid channel ID";
-            }
-          },
-        },
-        {
-          type: "confirm",
-          name: "withdrawAll",
-          message: "Withdraw all available funds?",
-          default: false,
-        },
-        {
-          type: "list",
-          name: "unit",
-          message: "Amount unit:",
-          choices: [
-            { name: "SOL", value: "sol" },
-            { name: "Lamports", value: "lamports" },
-          ],
-          when: (answers) => !answers.withdrawAll,
-        },
-        {
-          type: "number",
-          name: "amount",
-          message: (answers) => `Amount in ${answers.unit?.toUpperCase()}:`,
-          validate: (input: number) =>
-            input > 0 ? true : "Amount must be greater than 0",
-          when: (answers) => !answers.withdrawAll,
-        },
-      ]);
-
-      channelId = answers.channelId;
-      withdrawAll = answers.withdrawAll;
-      amount = answers.withdrawAll
-        ? 0
-        : answers.unit === "sol"
-        ? solToLamports(answers.amount)
-        : answers.amount;
-    } else {
-      if (!channelId) {
-        throw new ValidationError("Channel ID is required");
-      }
-
-      if (!withdrawAll) {
-        if (options.amount && options.lamports) {
-          throw new ValidationError(
-            "Specify either --amount (SOL) or --lamports, not both"
-          );
-        }
-
-        if (options.amount) {
-          const solAmount = validateSolAmount(options.amount, "SOL amount");
-          amount = solToLamports(solAmount);
-        } else if (options.lamports) {
-          amount = validatePositiveInteger(options.lamports, "lamports amount");
-        } else {
-          throw new ValidationError(
-            "Amount is required (use --amount for SOL, --lamports, or --all)"
-          );
-        }
-      }
-    }
-
+    let { channelId, amount, withdrawAll } = await promptChannelAndAmount({
+      interactive: options.interactive,
+      channel: options.channel,
+      amount: options.amount,
+      lamports: options.lamports,
+      all: options.all,
+      withdraw: true,
+    });
     const channelKey = validatePublicKey(channelId, "channel ID");
     const spinner = createSpinner("Withdrawing from escrow...");
-
     // If withdrawing all, get current balance first
     if (withdrawAll) {
       const escrowData = await client.getEscrow(channelKey, wallet.publicKey);
@@ -281,7 +251,6 @@ export class EscrowCommands {
       }
       amount = escrowData.balance;
     }
-
     if (
       handleDryRun(globalOpts, spinner, "Escrow withdrawal", {
         Channel: channelId,
@@ -292,12 +261,10 @@ export class EscrowCommands {
     ) {
       return;
     }
-
     const signature = await client.withdrawEscrow(wallet, {
       channel: channelKey,
       amount,
     });
-
     showSuccess(spinner, "Escrow withdrawal successful!", {
       Transaction: signature,
       Channel: channelId,
