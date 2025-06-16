@@ -11,12 +11,31 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-    - name: Build
+    
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      
+    - name: Add target for cross-compilation
+      run: rustup target add aarch64-apple-darwin
+      
+    - name: Cache cargo registry
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        
+    - name: Build for Linux (native)
       run: cargo build --verbose
+      
+    - name: Build for macOS ARM64 (cross-compile)
+      run: cargo build --target aarch64-apple-darwin --verbose
+      
     - name: Run tests
       run: cargo test --verbose
