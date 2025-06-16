@@ -1,0 +1,37 @@
+name: 'Setup Solana Environment'
+description: 'GitHub Action to setup Solana CLI, Anchor CLI, Rust, and dependencies for building and testing Solana programs'
+inputs:
+  solana-version:
+    description: 'Version of Solana CLI to install'
+    required: false
+    default: '1.18.8'
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Rust
+      shell: bash
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source $HOME/.cargo/env
+    - name: Install Solana CLI
+      shell: bash
+      run: |
+        sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+        export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+        solana --version
+    - name: Install Anchor CLI
+      shell: bash
+      run: |
+        cargo install --git https://github.com/coral-xyz/anchor --tag v0.31.1 anchor-cli
+        anchor --version
+    - name: Install dependencies
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential pkg-config libudev-dev llvm libclang-dev protobuf-compiler libssl-dev
+    - name: Verify installations
+      shell: bash
+      run: |
+        rustc --version
+        solana --version
+        anchor --version

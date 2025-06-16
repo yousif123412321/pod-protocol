@@ -11,11 +11,13 @@
   ],
   "scripts": {
     "build": "rollup -c",
-    "dev": "rollup -c -w",
+    "dev": "rollup -c -w", 
     "test": "bun test",
     "lint": "eslint src --ext .ts",
-    "prepublishOnly": "bun run build"
+    "prepublishOnly": "bun run build",
+    "publish": "bun publish"
   },
+  "packageManager": "bun@1.0.0",
   "keywords": [
     "solana",
     "ai",

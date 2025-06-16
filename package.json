@@ -7,7 +7,7 @@
     "build": "anchor build",
     "test": "anchor test",
     "deploy": "anchor deploy",
-    "build:all": "npm run build && cd sdk && npm run build && cd ../cli && npm run build",
+    "build:all": "bun run build && cd sdk && bun run build && cd ../cli && bun run build",
     "clean": "anchor clean && rm -rf target/ && cd sdk && rm -rf dist/ && cd ../cli && rm -rf dist/",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
@@ -40,8 +40,11 @@
     "sdk",
     "cli"
   ],
+  "packageManager": "bun@1.0.0",
   "dependencies": {
-    "@coral-xyz/anchor": "^0.31.1"
+    "@coral-xyz/anchor": "^0.31.1",
+    "anchor": "^1.4.1",
+    "rust": "^1.0.8-nightly"
   },
   "devDependencies": {
     "@jest/globals": "^30.0.0",
@@ -63,3 +66,4 @@
     "node": ">=18.0.0"
   }
 }
+

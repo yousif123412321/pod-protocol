@@ -10,23 +10,23 @@ POD-COM is an AI Agent Communication Protocol built on Solana blockchain using R
 
 ### Building
 - `anchor build` - Build the Solana program
-- `npm run build:all` - Build program + SDK + CLI
+- `bun run build:all` - Build program + SDK + CLI
 - `cargo build --release` - Build Rust components only
 
 ### Testing
 - `anchor test` - Run full integration tests (builds and deploys locally)
 - `anchor test --skip-deploy` - Run tests without redeployment
-- `npm test` - Run all workspace tests
+- `bun test` - Run all workspace tests
 - `cargo test` - Run Rust unit tests only
 
 ### Development
-- `npm run dev` - Start development mode (anchor test --skip-deploy)
+- `bun run dev` - Start development mode (anchor test --skip-deploy)
 - `anchor clean` - Clean build artifacts
-- `npm run clean` - Clean all build artifacts (program + SDK + CLI)
+- `bun run clean` - Clean all build artifacts (program + SDK + CLI)
 
 ### Linting & Quality
-- `npm run lint` - Check code formatting with Prettier
-- `npm run lint:fix` - Auto-fix formatting issues
+- `bun run lint` - Check code formatting with Prettier
+- `bun run lint:fix` - Auto-fix formatting issues
 - `cargo fmt --check` - Check Rust formatting
 - `cargo clippy -- -D warnings` - Run Rust linter
 
@@ -59,12 +59,12 @@ POD-COM is an AI Agent Communication Protocol built on Solana blockchain using R
 ## Dependencies Installation
 
 ```bash
-npm ci --legacy-peer-deps  # Root dependencies
-cd sdk && npm ci --legacy-peer-deps    # SDK dependencies  
-cd ../cli && npm ci --legacy-peer-deps # CLI dependencies
+bun install  # Root dependencies
+cd sdk && bun install    # SDK dependencies  
+cd ../cli && bun install # CLI dependencies
 ```
 
-The `--legacy-peer-deps` flag is required due to Anchor/Solana peer dependency conflicts.
+Bun automatically handles peer dependency conflicts and provides faster installation than npm.
 
 ## Testing Strategy
 

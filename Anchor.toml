@@ -1,6 +1,6 @@
 [toolchain]
-# Using Yarn as the package manager (Bun is not directly supported by Anchor yet)
-package_manager = "yarn"
+# Using Bun as the package manager for better performance
+package_manager = "bun"
 
 [features]
 # Enable resolution of Anchor feature flags

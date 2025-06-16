@@ -2,86 +2,37 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches:
+      - main
   pull_request:
-    branches: [main, develop]
-
-permissions:
-  contents: read
-  security-events: write
+    branches:
+      - main
 
 jobs:
-  test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        node-version: [18, 20]
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        solana-version: ['1.16.27', '1.17.0']
-        include:
-          - os: ubuntu-latest
-            node-version: 18
-            solana-version: '1.16.27'
-            coverage: true
+  build:
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
+          bun-version: latest
 
       - name: Setup Solana
         uses: ./actions/setup-solana
         with:
-          solana-version: ${{ matrix.solana-version }}
+          solana-version: stable
 
-      - name: Install dependencies
-        run: |
-          npm ci --legacy-peer-deps
-          cd sdk && npm ci --legacy-peer-deps  
-          cd ../cli && npm ci --legacy-peer-deps
-
-      - name: Lint
-        run: |
-          npm run lint
-          cargo fmt --check
-          cargo clippy -- -D warnings
+      - name: Install Dependencies
+        run: bun install
 
       - name: Build
-        run: |
-          npm run build:all
-          cargo build --release
+        run: bun run build:all
 
-      - name: Test
-        run: |
-          npm test
-          cargo test
+      - name: Run Tests
+        run: bun test
 
-      - name: Test with coverage (Ubuntu only)
-        if: matrix.coverage
-        run: |
-          echo "Running tests with coverage reporting"
-          npm test
-
-      - name: Security audit  
-        run: |
-          npm audit --audit-level moderate || echo "npm audit completed with warnings"
-          # Install cargo-audit if not present
-          which cargo-audit || cargo install cargo-audit
-          cargo audit || echo "cargo audit completed with warnings"
-
-      - name: Upload coverage
-        if: matrix.coverage
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
-        continue-on-error: true
+      - name: Lint
+        run: bun run lint

@@ -24,19 +24,21 @@ jobs:
         with:
           components: rustfmt, clippy
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
       - name: Install dependencies
-        run: |
-          npm ci --legacy-peer-deps
-          cd sdk && npm ci --legacy-peer-deps
-          cd ../cli && npm ci --legacy-peer-deps
+        run: bun install
 
       - name: Run ESLint
         run: |
-          cd sdk && npm run lint
-          cd ../cli && npm run lint
+          cd sdk && bun run lint
+          cd ../cli && bun run lint
 
       - name: Run Prettier check
-        run: npm run lint
+        run: bun run lint
 
       - name: Run Rust formatting check
         run: cargo fmt --check
@@ -46,7 +48,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          npm test
+          bun test
           cargo test
 
       # Optional: Upload coverage to Codecov (requires CODECOV_TOKEN secret)
