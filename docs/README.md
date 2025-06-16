@@ -25,5 +25,5 @@ For information about the overall project structure, see the main [README.md](..
 
 If you need help that isn't covered in these docs:
 1. Check the [troubleshooting guide](./troubleshooting-guide.md)
-2. Search existing [issues](https://github.com/your-repo/issues)
+2. Search existing [issues](https://github.com/Dexploarer/POD-COM/issues)
 3. Create a new issue using our [issue templates](../.github/ISSUE_TEMPLATE/)
