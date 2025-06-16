@@ -12,17 +12,20 @@ permissions:
 env:
   SOLANA_VERSION: "2.2.17"
   ANCHOR_VERSION: "0.31.1"
+  BUN_VERSION: "latest"
 
 jobs:
   lint:
     runs-on: ubuntu-latest
+    name: "🎨 Code Style & Linting"
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: ${{ env.BUN_VERSION }}
 
       - name: Install dependencies
         run: |
@@ -30,18 +33,60 @@ jobs:
           cd sdk && bun install
           cd ../cli && bun install
 
-      - name: Run linting
+      - name: Run prettier check
         run: bun run lint
 
-  build:
+      - name: Run TypeScript linting (SDK)
+        working-directory: sdk
+        run: bun run lint
+
+      - name: Run TypeScript linting (CLI)
+        working-directory: cli
+        run: bun run lint
+
+  security:
     runs-on: ubuntu-latest
+    name: "🔒 Security Audit"
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          bun install
+          cd sdk && bun install
+          cd ../cli && bun install
+
+      - name: Run security audit (Root)
+        run: bun audit
+        continue-on-error: false
+
+      - name: Run security audit (SDK)
+        working-directory: sdk
+        run: bun audit
+        continue-on-error: false
+
+      - name: Run security audit (CLI)
+        working-directory: cli
+        run: bun audit
+        continue-on-error: false
+
+  build:
+    runs-on: ubuntu-latest
+    name: "🏗️ Build & Compile"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -49,11 +94,10 @@ jobs:
           toolchain: stable
 
       - name: Setup Solana
-        run: |
-          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
-          echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+        uses: ./actions/setup-solana
+        with:
+          solana-version: ${{ env.SOLANA_VERSION }}
 
-<<<<<<< dependabot/github_actions/actions/cache-4
       - name: Cache Rust dependencies
         uses: actions/cache@v4
         with:
@@ -61,20 +105,18 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
+            programs/pod-com/target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-=======
-      - name: Setup Anchor
-        run: |
-          cargo install --git https://github.com/coral-xyz/anchor avm --force
-          avm install ${{ env.ANCHOR_VERSION }}
-          avm use ${{ env.ANCHOR_VERSION }}
->>>>>>> main
 
-      - name: Setup Solana keypair
-        run: |
-          mkdir -p ~/.config/solana
-          solana-keygen new --no-bip39-passphrase -o ~/.config/solana/id.json
-          solana config set --url localhost
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+            sdk/node_modules
+            cli/node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
 
       - name: Install dependencies
         run: |
@@ -82,21 +124,45 @@ jobs:
           cd sdk && bun install
           cd ../cli && bun install
 
-      - name: Build programs
+      - name: Verify build setup
+        run: bun run build:verify
+
+      - name: Build Anchor programs
+        run: bun run build:safe
+
+      - name: Build IDL
+        run: bun run build:idl
+
+      - name: Build SDK
+        working-directory: sdk
         run: bun run build
 
-      - name: Build all packages
-        run: bun run build:all
+      - name: Build CLI
+        working-directory: cli
+        run: bun run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            target/deploy/
+            target/idl/
+            sdk/dist/
+            cli/dist/
 
   test:
     runs-on: ubuntu-latest
+    name: "🧪 Test Suite"
+    needs: [build]
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: ${{ env.BUN_VERSION }}
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -104,21 +170,14 @@ jobs:
           toolchain: stable
 
       - name: Setup Solana
-        run: |
-          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
-          echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+        uses: ./actions/setup-solana
+        with:
+          solana-version: ${{ env.SOLANA_VERSION }}
 
-      - name: Setup Anchor
-        run: |
-          cargo install --git https://github.com/coral-xyz/anchor avm --force
-          avm install ${{ env.ANCHOR_VERSION }}
-          avm use ${{ env.ANCHOR_VERSION }}
-
-      - name: Setup Solana keypair
-        run: |
-          mkdir -p ~/.config/solana
-          solana-keygen new --no-bip39-passphrase -o ~/.config/solana/id.json
-          solana config set --url localhost
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
 
       - name: Install dependencies
         run: |
@@ -126,10 +185,27 @@ jobs:
           cd sdk && bun install
           cd ../cli && bun install
 
+      - name: Setup Solana keypair
+        run: |
+          mkdir -p ~/.config/solana
+          solana-keygen new --no-bip39-passphrase -o ~/.config/solana/id.json
+          solana config set --url localhost
+
       - name: Start Solana test validator
         run: |
-          - name: Run unit tests
-            run: bun run test --skip-deploy --url localhost
+          solana-test-validator --reset --quiet &
+          sleep 10
 
       - name: Run unit tests
-        run: bun run test --skip-deploy
+        run: bun run test
+
+      - name: Run SDK tests
+        working-directory: sdk
+        run: bun run test
+
+      - name: Run CLI tests
+        working-directory: cli
+        run: bun run test
+
+      - name: Stop Solana test validator
+        run: pkill -f solana-test-validator || true

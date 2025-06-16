@@ -1,0 +1,197 @@
+name: Super-Linter
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  checks: write
+  statuses: write
+
+env:
+  DEFAULT_BRANCH: main
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  super-lint:
+    name: "🎨 Code Quality & Linting"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: |
+          bun install
+          cd sdk && bun install
+          cd ../cli && bun install
+
+      - name: Run Super-Linter
+        uses: super-linter/super-linter@v7
+        env:
+          DEFAULT_BRANCH: ${{ env.DEFAULT_BRANCH }}
+          GITHUB_TOKEN: ${{ env.GITHUB_TOKEN }}
+          
+          # Language validation
+          VALIDATE_ALL_CODEBASE: false
+          VALIDATE_TYPESCRIPT_ES: true
+          VALIDATE_TYPESCRIPT_STANDARD: true
+          VALIDATE_JAVASCRIPT_ES: true
+          VALIDATE_RUST_2021: true
+          VALIDATE_JSON: true
+          VALIDATE_YAML: true
+          VALIDATE_MARKDOWN: true
+          VALIDATE_DOCKERFILE: true
+          VALIDATE_SHELL: true
+          
+          # Rust specific
+          VALIDATE_RUST_CLIPPY: true
+          RUST_CLIPPY_CONFIG_FILE: .clippy.toml
+          
+          # TypeScript/JavaScript specific
+          TYPESCRIPT_ES_CONFIG_FILE: tsconfig.json
+          JAVASCRIPT_ES_CONFIG_FILE: .eslintrc.js
+          
+          # File filters
+          FILTER_REGEX_EXCLUDE: |
+            .*node_modules/.*
+            .*target/.*
+            .*dist/.*
+            .*\.lock
+            .*\.log
+            .*\.so
+          
+          # Severity
+          SUPPRESS_POSSUM: true
+          DISABLE_ERRORS: false
+          
+  rust-specific-linting:
+    name: "🦀 Rust Linting (Detailed)"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Setup Solana
+        uses: ./actions/setup-solana
+        with:
+          solana-version: "2.2.17"
+          anchor-version: "0.31.1"
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            programs/pod-com/target
+          key: ${{ runner.os }}-clippy-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Check Rust formatting
+        run: |
+          echo "🎨 Checking Rust code formatting..."
+          cargo fmt --all -- --check
+        working-directory: programs/pod-com
+
+      - name: Run Clippy with all features
+        run: |
+          echo "📎 Running Clippy lints..."
+          cargo clippy --all-targets --all-features --workspace -- -D warnings
+        working-directory: programs/pod-com
+
+      - name: Check for common Solana anti-patterns
+        run: |
+          echo "🔍 Checking for Solana-specific issues..."
+          # Check for unsafe code blocks
+          if grep -r "unsafe" programs/pod-com/src/ --include="*.rs"; then
+            echo "⚠️ Found unsafe blocks - please review"
+          fi
+          
+          # Check for unwrap() calls which can panic
+          if grep -r "\.unwrap()" programs/pod-com/src/ --include="*.rs"; then
+            echo "⚠️ Found unwrap() calls - consider using proper error handling"
+          fi
+          
+          # Check for missing error handling
+          if grep -r "todo!()" programs/pod-com/src/ --include="*.rs"; then
+            echo "⚠️ Found todo!() macros - complete implementation"
+          fi
+        continue-on-error: true
+
+  typescript-linting:
+    name: "📝 TypeScript/JavaScript Linting"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: |
+          bun install
+          cd sdk && bun install
+          cd ../cli && bun install
+
+      - name: Run TypeScript compiler check (SDK)
+        working-directory: sdk
+        run: |
+          echo "🔍 TypeScript compiler check (SDK)..."
+          npx tsc --noEmit
+
+      - name: Run TypeScript compiler check (CLI)
+        working-directory: cli
+        run: |
+          echo "🔍 TypeScript compiler check (CLI)..."
+          npx tsc --noEmit
+
+      - name: Run ESLint (SDK)
+        working-directory: sdk
+        run: |
+          echo "📏 ESLint check (SDK)..."
+          bun run lint
+        continue-on-error: true
+
+      - name: Run ESLint (CLI)
+        working-directory: cli
+        run: |
+          echo "📏 ESLint check (CLI)..."
+          bun run lint
+        continue-on-error: true
+
+      - name: Check for Solana/Web3.js best practices
+        run: |
+          echo "🔍 Checking for Solana/Web3.js best practices..."
+          
+          # Check for proper error handling with Solana
+          if grep -r "\.catch()" sdk/src/ cli/src/ --include="*.ts" --include="*.js"; then
+            echo "✅ Found proper error handling"
+          else
+            echo "⚠️ Consider adding proper error handling for Solana operations"
+          fi
+          
+          # Check for connection management
+          if grep -r "Connection" sdk/src/ --include="*.ts"; then
+            echo "✅ Found Connection usage"
+          fi
+        continue-on-error: true

@@ -1,37 +1,75 @@
 name: 'Setup Solana Environment'
-description: 'GitHub Action to setup Solana CLI, Anchor CLI, Rust, and dependencies for building and testing Solana programs'
+description: 'GitHub Action to setup Solana CLI, Anchor CLI, Rust, and dependencies for POD-COM-1 platform'
 inputs:
   solana-version:
     description: 'Version of Solana CLI to install'
     required: false
-    default: '1.18.8'
+    default: '2.2.17'
+  anchor-version:
+    description: 'Version of Anchor CLI to install'
+    required: false
+    default: '0.31.1'
 runs:
   using: 'composite'
   steps:
+    - name: Cache Rust installation
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          ~/.rustup
+        key: ${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
+        
     - name: Install Rust
       shell: bash
       run: |
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-        source $HOME/.cargo/env
+        if ! command -v rustc &> /dev/null; then
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source $HOME/.cargo/env
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        fi
+        
     - name: Install Solana CLI
       shell: bash
       run: |
-        sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+        if ! command -v solana &> /dev/null; then
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+        fi
         export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
         solana --version
-    - name: Install Anchor CLI
+        
+    - name: Install Anchor CLI via AVM
       shell: bash
       run: |
-        cargo install --git https://github.com/coral-xyz/anchor --tag v0.31.1 anchor-cli
+        export PATH="$HOME/.cargo/bin:$PATH"
+        if ! command -v avm &> /dev/null; then
+          cargo install --git https://github.com/coral-xyz/anchor avm --force
+        fi
+        if ! command -v anchor &> /dev/null || ! anchor --version | grep -q "${{ inputs.anchor-version }}"; then
+          avm install ${{ inputs.anchor-version }}
+          avm use ${{ inputs.anchor-version }}
+        fi
         anchor --version
-    - name: Install dependencies
+        
+    - name: Install system dependencies
       shell: bash
       run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential pkg-config libudev-dev llvm libclang-dev protobuf-compiler libssl-dev
+        if [[ "$RUNNER_OS" == "Linux" ]]; then
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libudev-dev llvm libclang-dev protobuf-compiler libssl-dev
+        elif [[ "$RUNNER_OS" == "macOS" ]]; then
+          brew install protobuf
+        fi
+        
     - name: Verify installations
       shell: bash
       run: |
+        echo "🦀 Rust version:"
         rustc --version
+        echo "⚡ Solana version:"
         solana --version
+        echo "⚓ Anchor version:"
         anchor --version
+        echo "✅ All tools installed successfully!"

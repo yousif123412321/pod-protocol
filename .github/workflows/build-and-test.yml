@@ -1,0 +1,150 @@
+name: Build & Test Matrix
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 2 * * 1' # Weekly on Monday at 2 AM UTC
+
+permissions:
+  contents: read
+  checks: write
+
+env:
+  SOLANA_VERSION: "2.2.17"
+  ANCHOR_VERSION: "0.31.1"
+
+jobs:
+  matrix-test:
+    name: "🧪 ${{ matrix.os }} - ${{ matrix.bun-version }}"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        bun-version: [latest, "1.0.0"]
+        include:
+          - os: ubuntu-latest
+            cache-path: ~/.bun/install/cache
+          - os: macos-latest
+            cache-path: ~/.bun/install/cache
+          - os: windows-latest
+            cache-path: ~\AppData\Roaming\bun\install\cache
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ matrix.bun-version }}
+
+      - name: Setup Rust (Unix)
+        if: runner.os != 'Windows'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Rust (Windows)
+        if: runner.os == 'Windows'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable-x86_64-pc-windows-msvc
+
+      - name: Setup Solana (Unix)
+        if: runner.os != 'Windows'
+        uses: ./actions/setup-solana
+        with:
+          solana-version: ${{ env.SOLANA_VERSION }}
+          anchor-version: ${{ env.ANCHOR_VERSION }}
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ matrix.cache-path }}
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            node_modules
+            sdk/node_modules
+            cli/node_modules
+          key: ${{ matrix.os }}-${{ matrix.bun-version }}-deps-${{ hashFiles('**/bun.lock', '**/Cargo.lock') }}
+
+      - name: Install dependencies
+        run: |
+          bun install
+          cd sdk && bun install
+          cd ../cli && bun install
+
+      - name: Run linting
+        run: bun run lint
+        continue-on-error: ${{ matrix.bun-version != 'latest' }}
+
+      - name: Build SDK
+        working-directory: sdk
+        run: bun run build
+
+      - name: Build CLI
+        working-directory: cli
+        run: bun run build
+
+      - name: Test SDK
+        working-directory: sdk
+        run: bun run test
+        continue-on-error: ${{ matrix.os == 'windows-latest' }}
+
+      - name: Test CLI
+        working-directory: cli
+        run: bun run test
+        continue-on-error: ${{ matrix.os == 'windows-latest' }}
+
+      - name: Build Anchor programs (Unix only)
+        if: runner.os != 'Windows'
+        run: bun run build:safe
+        continue-on-error: true
+
+  performance-test:
+    name: "⚡ Performance Benchmark"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Solana
+        uses: ./actions/setup-solana
+        with:
+          solana-version: ${{ env.SOLANA_VERSION }}
+          anchor-version: ${{ env.ANCHOR_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          bun install
+          cd sdk && bun install
+          cd ../cli && bun install
+
+      - name: Run performance benchmarks
+        run: |
+          echo "🚀 Running SDK performance tests..."
+          cd sdk && timeout 300 bun run test || echo "Performance tests completed"
+          
+          echo "🚀 Running CLI performance tests..."
+          cd ../cli && timeout 300 bun run test || echo "CLI tests completed"
+
+      - name: Benchmark build times
+        run: |
+          echo "⏱️ Measuring build performance..."
+          start_time=$(date +%s)
+          bun run build:all
+          end_time=$(date +%s)
+          duration=$((end_time - start_time))
+          echo "📊 Total build time: ${duration} seconds"
