@@ -16,7 +16,8 @@
     "declarationMap": true,
     "sourceMap": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "noErrorTruncation": false
   },
   "include": [
     "src/**/*"
