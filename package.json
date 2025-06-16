@@ -19,8 +19,7 @@
     "docs": "anchor build && typedoc --out docs/api sdk/src/index.ts",
     "verify:build": "bun scripts/verify-build.js",
     "ci:build": "bun run build:verify && bun run build:all",
-    "pretest": "bun run build:verify",
-    "postinstall": "bun install --cwd sdk && bun install --cwd cli"
+    "pretest": "bun run build:verify"
   },
   "keywords": [
     "solana",
@@ -57,7 +56,6 @@
     "chalk": "^5.4.1",
     "commander": "^14.0.0",
     "inquirer": "^12.6.3",
-    "rust": "^1.0.8-nightly",
     "table": "^6.9.0"
   },
   "devDependencies": {
@@ -70,7 +68,6 @@
     "@types/estree": "^1.0.8",
     "@types/istanbul-lib-report": "^3.0.3",
     "@types/istanbul-reports": "^3.0.4",
-    "@types/jest": "^29.5.14",
     "@types/json-schema": "^7.0.15",
     "@types/mocha": "^10.0.10",
     "@types/node": "^24.0.3",
