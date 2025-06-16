@@ -4,8 +4,11 @@
   "description": "POD-COM: AI Agent Communication Protocol on Solana",
   "main": "index.js",
   "scripts": {
-    "build": "anchor build --no-idl && anchor idl build --no-build || echo 'IDL generation failed, but program compiled successfully'",
+    "build": "anchor build",
     "build:safe": "anchor build --no-idl",
+    "build:idl": "anchor idl build",
+    "build:full": "bun run build:safe && bun run build:idl",
+    "build:verify": "bun run build:full && bun run verify:build",
     "test": "anchor test",
     "deploy": "anchor deploy",
     "build:all": "bun run build:safe && cd sdk && bun run build && cd ../cli && bun run build",
@@ -13,7 +16,11 @@
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" --write",
     "dev": "anchor test --skip-deploy",
-    "docs": "anchor build && typedoc --out docs/api sdk/src/index.ts"
+    "docs": "anchor build && typedoc --out docs/api sdk/src/index.ts",
+    "verify:build": "bun scripts/verify-build.js",
+    "ci:build": "bun run build:verify && bun run build:all",
+    "pretest": "bun run build:verify",
+    "postinstall": "bun install --cwd sdk && bun install --cwd cli"
   },
   "keywords": [
     "solana",
