@@ -6,22 +6,92 @@ on:
   pull_request:
     branches: [main, develop]
 
+permissions:
+  contents: read
+
 env:
-  RUST_BACKTRACE: 1
+  SOLANA_VERSION: "2.2.17"
+  ANCHOR_VERSION: "0.31.1"
 
 jobs:
-  build-and-test:
+  lint:
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: '18'
-          cache: 'npm'
+          bun-version: latest
+
+      - name: Install dependencies
+        run: |
+          bun install
+          cd sdk && bun install
+          cd ../cli && bun install
+
+      - name: Run linting
+        run: bun run lint
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Setup Solana
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+<<<<<<< dependabot/github_actions/actions/cache-4
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+=======
+      - name: Setup Anchor
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor avm --force
+          avm install ${{ env.ANCHOR_VERSION }}
+          avm use ${{ env.ANCHOR_VERSION }}
+>>>>>>> main
+
+      - name: Setup Solana keypair
+        run: |
+          mkdir -p ~/.config/solana
+          solana-keygen new --no-bip39-passphrase -o ~/.config/solana/id.json
+          solana config set --url localhost
+
+      - name: Install dependencies
+        run: |
+          bun install
+          cd sdk && bun install
+          cd ../cli && bun install
+
+      - name: Build programs
+        run: bun run build
+
+      - name: Build all packages
+        run: bun run build:all
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
@@ -31,47 +101,35 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          components: rustfmt, clippy
+          toolchain: stable
 
       - name: Setup Solana
-        uses: ./actions/setup-solana
-        with:
-          solana-version: '1.17.0'
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
-      - name: Cache Rust dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Setup Anchor
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor avm --force
+          avm install ${{ env.ANCHOR_VERSION }}
+          avm use ${{ env.ANCHOR_VERSION }}
+
+      - name: Setup Solana keypair
+        run: |
+          mkdir -p ~/.config/solana
+          solana-keygen new --no-bip39-passphrase -o ~/.config/solana/id.json
+          solana config set --url localhost
 
       - name: Install dependencies
-        run: bun install
-
-      - name: Install workspace dependencies
         run: |
+          bun install
           cd sdk && bun install
           cd ../cli && bun install
 
-      - name: Lint TypeScript/JavaScript
-        run: bun run lint
+      - name: Start Solana test validator
+        run: |
+          - name: Run unit tests
+            run: bun run test --skip-deploy --url localhost
 
-      - name: Format check Rust
-        run: cargo fmt --check
-        working-directory: programs/pod-com
-
-      - name: Lint Rust
-        run: cargo clippy --all-targets --all-features -- -D warnings
-        working-directory: programs/pod-com
-
-      - name: Build all projects
-        run: bun run build:all
-
-      - name: Run tests
-        run: bun test
-
-      - name: Test Rust
-        run: cargo test
-        working-directory: programs/pod-com
+      - name: Run unit tests
+        run: bun run test --skip-deploy

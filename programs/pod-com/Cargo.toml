@@ -32,7 +32,7 @@ anchor-lang = { version = "=0.31.1", default-features = false, features = ["init
 # borsh-derive = "=0.10.3"
 
 # Error handling
-thiserror = "=1.0.52"
+thiserror = "=2.0.12"
 
 # Explicitly disable any features that might pull in getrandom/rand
 [package.metadata.docs.rs]

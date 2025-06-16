@@ -22,7 +22,7 @@ jobs:
           node-version: '18'
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
@@ -50,7 +50,7 @@ jobs:
       # Optional: Upload coverage to Codecov (requires CODECOV_TOKEN secret)
       - name: Upload coverage to Codecov
         if: env.CODECOV_TOKEN != ''
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
