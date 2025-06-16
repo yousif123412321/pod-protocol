@@ -18,21 +18,21 @@ const findAgentPDA = (wallet) => {
 async function debug() {
   try {
     console.log("Wallet pubkey:", wallet.publicKey.toBase58());
-    
+
     const [agentPDA] = findAgentPDA(wallet.publicKey);
     console.log("Agent PDA:", agentPDA.toBase58());
-    
+
     const agentAccount = await program.account.agentAccount.fetch(agentPDA);
     console.log("Agent account data:");
     console.log("- pubkey:", agentAccount.pubkey.toBase58());
     console.log("- capabilities:", agentAccount.capabilities.toString());
     console.log("- metadataUri:", agentAccount.metadataUri);
     console.log("- reputation:", agentAccount.reputation.toString());
-    
+
     // Test message PDA calculation with different approaches
     const messageType = { text: {} };
     const payloadHash = new Uint8Array(32).fill(1);
-    
+
     // Approach 1: Using wallet pubkey
     const [messagePDA1] = PublicKey.findProgramAddressSync(
       [
@@ -40,12 +40,12 @@ async function debug() {
         wallet.publicKey.toBuffer(),
         wallet.publicKey.toBuffer(),
         Buffer.from(payloadHash),
-        Buffer.from([0]) // Text = 0
+        Buffer.from([0]), // Text = 0
       ],
       program.programId
     );
     console.log("Message PDA (wallet pubkey):", messagePDA1.toBase58());
-    
+
     // Approach 2: Using agent PDA
     const [messagePDA2] = PublicKey.findProgramAddressSync(
       [
@@ -53,12 +53,12 @@ async function debug() {
         agentPDA.toBuffer(),
         wallet.publicKey.toBuffer(),
         Buffer.from(payloadHash),
-        Buffer.from([0]) // Text = 0
+        Buffer.from([0]), // Text = 0
       ],
       program.programId
     );
     console.log("Message PDA (agent PDA):", messagePDA2.toBase58());
-    
+
     // Approach 3: Using agent.pubkey from the account
     const [messagePDA3] = PublicKey.findProgramAddressSync(
       [
@@ -66,12 +66,11 @@ async function debug() {
         agentAccount.pubkey.toBuffer(),
         wallet.publicKey.toBuffer(),
         Buffer.from(payloadHash),
-        Buffer.from([0]) // Text = 0
+        Buffer.from([0]), // Text = 0
       ],
       program.programId
     );
     console.log("Message PDA (agent.pubkey):", messagePDA3.toBase58());
-    
   } catch (error) {
     console.error("Error:", error.message);
   }
