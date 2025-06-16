@@ -29,9 +29,7 @@ This document outlines all the dependency issues that were identified and resolv
 ```
 
 ### Updated CI Configuration
-- Removed hardcoded `CARGO_BUILD_TARGET` environment variable
-- Kept platform-agnostic build approach
-- Maintained multi-platform compatibility in rust.yml workflow
+- Maintained multi-platform compatibility in .github/workflows/ci.yml workflow
 
 ## Verification Results
 
