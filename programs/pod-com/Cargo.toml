@@ -1,7 +1,7 @@
 [package]
 name = "pod-com"
 version = "0.1.0"
-description = "POD-COM: AI Agent Communication Protocol"
+description = "PoD Protocol (Prompt or Die): AI Agent Communication Protocol"
 edition = "2021"
 
 [lib]

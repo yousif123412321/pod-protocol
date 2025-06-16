@@ -1,7 +1,7 @@
 {
-  "name": "@pod-com/cli",
+      "name": "@pod-protocol/cli",
   "version": "1.0.0",
-  "description": "Command-line interface for POD-COM AI Agent Communication Protocol",
+  "description": "Command-line interface for PoD Protocol (Prompt or Die) AI Agent Communication Protocol",
   "main": "dist/index.js",
   "bin": {
     "pod": "dist/index.js",
@@ -29,7 +29,7 @@
   "author": "POD-COM Team",
   "license": "MIT",
   "dependencies": {
-    "@pod-com/sdk": "file:../sdk",
+    "@pod-protocol/sdk": "file:../sdk",
     "@solana/web3.js": "^1.95.4",
     "commander": "^14.0.0",
     "chalk": "^5.3.0",

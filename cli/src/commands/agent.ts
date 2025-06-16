@@ -7,7 +7,7 @@ import {
   PodComClient,
   AGENT_CAPABILITIES,
   getCapabilityNames,
-} from "@pod-com/sdk";
+} from "@pod-protocol/sdk";
 import {
   createCommandHandler,
   handleDryRun,

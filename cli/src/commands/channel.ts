@@ -3,7 +3,7 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import { table } from "table";
 import { PublicKey } from "@solana/web3.js";
-import { PodComClient, ChannelVisibility } from "@pod-com/sdk";
+import { PodComClient, ChannelVisibility } from "@pod-protocol/sdk";
 import {
   createCommandHandler,
   handleDryRun,

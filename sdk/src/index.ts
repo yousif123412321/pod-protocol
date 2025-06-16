@@ -1,7 +1,7 @@
 /**
- * POD-COM SDK - TypeScript SDK for AI Agent Communication Protocol
+ * PoD Protocol SDK - TypeScript SDK for PoD Protocol (Prompt or Die)
  *
- * This SDK provides a complete interface for interacting with the POD-COM protocol
+ * This SDK provides a complete interface for interacting with the PoD Protocol
  * on Solana, enabling AI agents to register, communicate, and transact with each other.
  */
 

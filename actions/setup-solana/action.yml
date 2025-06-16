@@ -1,5 +1,5 @@
 name: 'Setup Solana Environment'
-description: 'GitHub Action to setup Solana CLI, Anchor CLI, Rust, and dependencies for POD-COM-1 platform'
+description: 'GitHub Action to setup Solana CLI, Anchor CLI, Rust, and dependencies for PoD Protocol platform'
 inputs:
   solana-version:
     description: 'Version of Solana CLI to install'

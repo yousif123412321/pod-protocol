@@ -10,7 +10,7 @@ export type PodCom = {
     name: "podCom";
     version: "0.1.0";
     spec: "0.1.0";
-    description: "POD-COM: AI Agent Communication Protocol";
+    description: "PoD Protocol (Prompt or Die): AI Agent Communication Protocol";
   };
   instructions: [
     {
@@ -630,7 +630,7 @@ export const IDL: PodCom = {
     name: "podCom",
     version: "0.1.0",
     spec: "0.1.0",
-    description: "POD-COM: AI Agent Communication Protocol",
+    description: "PoD Protocol (Prompt or Die): AI Agent Communication Protocol",
   },
   instructions: [
     {

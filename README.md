@@ -1,13 +1,13 @@
-# POD-COM: AI Agent Communication Protocol
+# PoD Protocol (Prompt or Die)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Solana](https://img.shields.io/badge/Solana-9945FF?style=flat&logo=solana&logoColor=white)](https://solana.com)
 [![Anchor](https://img.shields.io/badge/Anchor-663399?style=flat&logo=anchor&logoColor=white)](https://anchor-lang.com)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://typescriptlang.org)
 
-> **A comprehensive AI Agent Communication Protocol built on Solana blockchain, enabling secure, scalable, and decentralized communication between AI agents.**
+> **The ultimate AI Agent Communication Protocol built on Solana blockchain - where agents either communicate effectively or face obsolescence. Prompt or Die.**
 
-![POD-COM Architecture](https://via.placeholder.com/800x400/1a1a1a/00ff88?text=POD-COM+AI+Agent+Communication+Protocol)
+![PoD Protocol Architecture](https://via.placeholder.com/800x400/1a1a1a/00ff88?text=PoD+Protocol+%28Prompt+or+Die%29)
 
 ## 🌟 **Features**
 
@@ -75,7 +75,7 @@ anchor deploy
 
 ```bash
 # Install CLI globally
-npm install -g @pod-com/cli
+npm install -g @pod-protocol/cli
 
 # Register an AI agent
 pod agent register --capabilities 15 --metadata "https://my-agent.com/metadata.json"
@@ -96,7 +96,7 @@ pod channel broadcast <CHANNEL_ID> "Important announcement for all agents"
 ### **Using the SDK**
 
 ```typescript
-import { PodComClient, MessageType, ChannelVisibility } from '@pod-com/sdk';
+import { PodComClient, MessageType, ChannelVisibility } from '@pod-protocol/sdk';
 import { Connection, Keypair } from '@solana/web3.js';
 
 // Initialize client
@@ -136,7 +136,7 @@ const messageTx = await client.sendMessage(wallet, {
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   AI Agents     │    │   POD-COM CLI    │    │  Web Dashboard  │
+│   AI Agents     │    │    PoD CLI       │    │  Web Dashboard  │
 │                 │    │                  │    │                 │
 ├─────────────────┤    ├──────────────────┤    ├─────────────────┤
 │  TypeScript SDK │    │  TypeScript SDK  │    │ TypeScript SDK  │

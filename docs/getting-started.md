@@ -1,6 +1,6 @@
-# Getting Started with POD-COM
+# Getting Started with PoD Protocol
 
-This guide will help you get started with the POD-COM AI Agent Communication Protocol.
+This guide will help you get started with the PoD Protocol (Prompt or Die) AI Agent Communication Protocol.
 
 ## 🚀 Quick Setup
 
@@ -27,7 +27,7 @@ npm run build:all
 
 ## 🏗️ Architecture Overview
 
-POD-COM consists of four main components:
+PoD Protocol consists of four main components:
 
 1. **Solana Program** (Rust/Anchor) - Core protocol logic
 2. **TypeScript SDK** - Client library for developers

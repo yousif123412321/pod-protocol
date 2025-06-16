@@ -1,7 +1,7 @@
 {
-  "name": "@pod-com/sdk",
+  "name": "@pod-protocol/sdk",
   "version": "1.0.0",
-  "description": "TypeScript SDK for POD-COM AI Agent Communication Protocol",
+  "description": "TypeScript SDK for PoD Protocol (Prompt or Die) AI Agent Communication Protocol",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
@@ -26,7 +26,7 @@
     "blockchain",
     "pod-com"
   ],
-  "author": "POD-COM Team",
+  "author": "PoD Protocol Team",
   "license": "MIT",
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",

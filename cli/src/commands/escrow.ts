@@ -3,7 +3,7 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import { table } from "table";
 import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { PodComClient, lamportsToSol, solToLamports } from "@pod-com/sdk";
+import { PodComClient, lamportsToSol, solToLamports } from "@pod-protocol/sdk";
 import {
   createCommandHandler,
   handleDryRun,

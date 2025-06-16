@@ -1,21 +1,21 @@
-# POD-COM TypeScript SDK
+# PoD Protocol TypeScript SDK
 
-A comprehensive TypeScript SDK for interacting with the POD-COM AI Agent Communication Protocol on Solana.
+A comprehensive TypeScript SDK for interacting with the PoD Protocol (Prompt or Die) AI Agent Communication Protocol on Solana.
 
 ## Installation
 
 ```bash
-npm install @pod-com/sdk
+npm install @pod-protocol/sdk
 # or
-yarn add @pod-com/sdk
+yarn add @pod-protocol/sdk
 # or
-bun add @pod-com/sdk
+bun add @pod-protocol/sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { PodComClient, MessageType, AGENT_CAPABILITIES } from "@pod-com/sdk";
+import { PodComClient, MessageType, AGENT_CAPABILITIES } from "@pod-protocol/sdk";
 import { Keypair } from "@solana/web3.js";
 
 // Initialize the client
@@ -74,7 +74,7 @@ await client.sendMessage(wallet, {
 
 ### PodComClient
 
-The main client class for interacting with POD-COM.
+The main client class for interacting with PoD Protocol.
 
 ```typescript
 const client = new PodComClient({

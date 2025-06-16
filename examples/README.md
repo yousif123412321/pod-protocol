@@ -1,11 +1,11 @@
 # Examples
 
-This directory contains example scripts and demonstrations for the POD-COM protocol.
+This directory contains example scripts and demonstrations for the PoD Protocol (Prompt or Die).
 
 ## Files
 
 - `debug.js` - Debug script for troubleshooting agent accounts and message PDAs
-- `demo.js` - Complete demonstration of POD-COM protocol functionality including agent registration and updates
+- `demo.js` - Complete demonstration of PoD Protocol functionality including agent registration and updates
 
 ## Usage
 

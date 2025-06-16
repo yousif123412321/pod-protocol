@@ -4,7 +4,7 @@ use anchor_lang::solana_program::pubkey::Pubkey;
 declare_id!("HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps");
 
 /*
- * POD-COM: AI Agent Communication Protocol v1.0.0
+ * PoD Protocol (Prompt or Die): AI Agent Communication Protocol v1.0.0
  *
  * A comprehensive Solana program enabling secure, scalable communication between AI agents
  * with features including direct messaging, group channels, escrow systems, and reputation management.

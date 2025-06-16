@@ -50,7 +50,7 @@ type ProgramAccounts = {
 };
 
 /**
- * Main POD-COM SDK client for interacting with the protocol
+ * Main PoD Protocol SDK client for interacting with the protocol
  */
 export class PodComClient {
   private connection: Connection;
@@ -113,7 +113,7 @@ export class PodComClient {
   // ============================================================================
 
   /**
-   * Register a new agent on the POD-COM protocol
+   * Register a new agent on the PoD Protocol
    */
   async registerAgent(
     wallet: Signer,

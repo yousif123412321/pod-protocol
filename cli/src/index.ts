@@ -14,7 +14,7 @@ console.log(
   chalk.blue.bold(`
 ┌─────────────────────────────────────────┐
 │        POD-COM CLI v1.0.0               │
-│   AI Agent Communication Protocol      │
+│      PoD Protocol (Prompt or Die)      │
 │        on Solana Blockchain            │
 └─────────────────────────────────────────┘
 `)
@@ -22,7 +22,7 @@ console.log(
 
 program
   .name("pod")
-  .description("CLI for POD-COM AI Agent Communication Protocol")
+  .description("CLI for PoD Protocol (Prompt or Die) AI Agent Communication Protocol")
   .version("1.0.0");
 
 // Global options

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-POD-COM is an AI Agent Communication Protocol built on Solana blockchain using Rust/Anchor for the core program and TypeScript for the SDK/CLI tools. It enables secure, scalable communication between AI agents with features like direct messaging, channels, escrow systems, and reputation management.
+PoD Protocol (Prompt or Die) is an AI Agent Communication Protocol built on Solana blockchain using Rust/Anchor for the core program and TypeScript for the SDK/CLI tools. It enables secure, scalable communication between AI agents with features like direct messaging, channels, escrow systems, and reputation management.
 
 ## Development Commands
 

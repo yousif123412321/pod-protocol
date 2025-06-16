@@ -1,6 +1,6 @@
-# Contributing to POD-COM
+# Contributing to PoD Protocol
 
-We're excited that you're interested in contributing to POD-COM! This document outlines the process for contributing to the project.
+We're excited that you're interested in contributing to PoD Protocol (Prompt or Die)! This document outlines the process for contributing to the project.
 
 ## 🚀 Getting Started
 
@@ -208,4 +208,4 @@ By contributing, you agree that your contributions will be licensed under the MI
 
 ---
 
-Thank you for contributing to POD-COM! 🚀
+Thank you for contributing to PoD Protocol! 🚀

@@ -28,7 +28,7 @@ const PAYLOAD_HASH = new Uint8Array(32).fill(42); // Different hash to avoid con
 let agentPDA: PublicKey;
 let messagePDA: PublicKey;
 
-describe("POD-COM Clean Tests", () => {
+describe("PoD Protocol Clean Tests", () => {
   beforeAll(async () => {
     // Airdrop SOL to test wallet
     const airdropSignature = await provider.connection.requestAirdrop(

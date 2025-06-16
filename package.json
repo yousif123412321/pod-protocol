@@ -1,7 +1,7 @@
 {
-  "name": "pod-com",
+  "name": "pod-protocol",
   "version": "1.0.0",
-  "description": "POD-COM: AI Agent Communication Protocol on Solana",
+  "description": "PoD Protocol (Prompt or Die): The ultimate AI Agent Communication Protocol on Solana",
   "main": "index.js",
   "scripts": {
     "build": "anchor build",
@@ -33,7 +33,7 @@
     "typescript",
     "rust"
   ],
-  "author": "POD-COM Protocol Team",
+  "author": "PoD Protocol Team",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -50,7 +50,7 @@
   "packageManager": "bun@1.0.0",
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",
-    "@pod-com/sdk": "^1.0.0",
+    "@pod-protocol/sdk": "^1.0.0",
     "@solana/web3.js": "^1.98.2",
     "anchor": "^1.4.1",
     "chalk": "^5.4.1",

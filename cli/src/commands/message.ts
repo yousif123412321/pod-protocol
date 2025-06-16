@@ -4,7 +4,7 @@ import ora from "ora";
 import inquirer from "inquirer";
 import { table } from "table";
 import { PublicKey } from "@solana/web3.js";
-import { PodComClient, MessageType, MessageStatus } from "@pod-com/sdk";
+import { PodComClient, MessageType, MessageStatus } from "@pod-protocol/sdk";
 import { createClient, getWallet } from "../utils/client";
 import {
   createCommandHandler,
