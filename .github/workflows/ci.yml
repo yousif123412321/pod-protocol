@@ -53,11 +53,22 @@ jobs:
           sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
           echo "/home/runner/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
 
+<<<<<<< dependabot/github_actions/actions/cache-4
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+=======
       - name: Setup Anchor
         run: |
           cargo install --git https://github.com/coral-xyz/anchor avm --force
           avm install ${{ env.ANCHOR_VERSION }}
           avm use ${{ env.ANCHOR_VERSION }}
+>>>>>>> main
 
       - name: Setup Solana keypair
         run: |
