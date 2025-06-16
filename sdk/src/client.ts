@@ -36,8 +36,7 @@ import {
   convertMessageTypeFromProgram,
   retry,
 } from "./utils";
-import { PodCom } from "./pod_com";
-import IDL from "./pod_com.json";
+import { PodCom, IDL } from "./pod_com";
 
 // Type definitions for program accounts
 type ProgramAccounts = {
@@ -87,7 +86,7 @@ export class PodComClient {
       commitment: this.commitment,
     });
 
-    this.program = new Program(IDL as any, provider);
+    this.program = new Program(IDL as any, provider) as Program<any>;
   }
 
   private ensureInitialized(): Program<any> {
@@ -100,11 +99,13 @@ export class PodComClient {
   // Helper method to safely access account methods
   private getAccount(accountName: string) {
     const program = this.ensureInitialized();
-    const account = (program.account as any)[accountName];
-    if (!account) {
-      throw new Error(`Account type '${accountName}' not found in program`);
-    }
-    return account;
+    return (program.account as any)[accountName];
+  }
+
+  // Helper function to safely handle program methods with type assertion
+  private getProgramMethods() {
+    const program = this.ensureInitialized();
+    return program.methods as any;
   }
 
   // ============================================================================
@@ -118,15 +119,15 @@ export class PodComClient {
     wallet: Signer,
     options: CreateAgentOptions
   ): Promise<string> {
-    const program = this.ensureInitialized();
     const [agentPDA] = findAgentPDA(wallet.publicKey, this.programId);
 
     return retry(async () => {
-      const tx = await program.methods
+      const methods = this.getProgramMethods();
+      const tx = await methods
         .registerAgent(new BN(options.capabilities), options.metadataUri)
         .accounts({
           agentAccount: agentPDA,
-          signer: wallet.publicKey,
+          wallet: wallet.publicKey,
           systemProgram: anchor.web3.SystemProgram.programId,
         })
         .signers([wallet])
@@ -143,18 +144,20 @@ export class PodComClient {
     wallet: Signer,
     options: UpdateAgentOptions
   ): Promise<string> {
-    const program = this.ensureInitialized();
     const [agentPDA] = findAgentPDA(wallet.publicKey, this.programId);
 
     return retry(async () => {
-      const tx = await program.methods
+      const methods = this.getProgramMethods();
+      const tx = await methods
         .updateAgent(
-          options.capabilities ? new BN(options.capabilities) : null,
-          options.metadataUri || null
+          options.capabilities !== undefined
+            ? new BN(options.capabilities)
+            : null,
+          options.metadataUri !== undefined ? options.metadataUri : null
         )
         .accounts({
           agentAccount: agentPDA,
-          signer: wallet.publicKey,
+          wallet: wallet.publicKey,
         })
         .signers([wallet])
         .rpc({ commitment: this.commitment });
@@ -167,17 +170,16 @@ export class PodComClient {
    * Get agent account data
    */
   async getAgent(walletPublicKey: PublicKey): Promise<AgentAccount | null> {
-    const program = this.ensureInitialized();
     const [agentPDA] = findAgentPDA(walletPublicKey, this.programId);
 
     try {
       const account = await this.getAccount("agentAccount").fetch(agentPDA);
       return {
-        pubkey: account.pubkey,
+        pubkey: agentPDA,
         capabilities: account.capabilities.toNumber(),
         metadataUri: account.metadataUri,
-        reputation: account.reputation.toNumber(),
-        lastUpdated: account.lastUpdated.toNumber(),
+        reputation: account.reputation?.toNumber() || 0,
+        lastUpdated: account.lastUpdated?.toNumber() || account.updatedAt?.toNumber() || Date.now(),
         bump: account.bump,
       };
     } catch (error: any) {
@@ -192,18 +194,17 @@ export class PodComClient {
    * Get all registered agents
    */
   async getAllAgents(limit: number = 100): Promise<AgentAccount[]> {
-    const program = this.ensureInitialized();
-
     try {
       const accounts = await this.getAccount("agentAccount").all();
+
       return accounts
         .slice(0, limit)
         .map(({ account, publicKey }: { account: any; publicKey: any }) => ({
-          pubkey: account.pubkey,
+          pubkey: publicKey,
           capabilities: account.capabilities.toNumber(),
           metadataUri: account.metadataUri,
-          reputation: account.reputation.toNumber(),
-          lastUpdated: account.lastUpdated.toNumber(),
+          reputation: account.reputation?.toNumber() || 0,
+          lastUpdated: account.lastUpdated?.toNumber() || account.updatedAt?.toNumber() || Date.now(),
           bump: account.bump,
         }));
     } catch (error) {
@@ -223,14 +224,16 @@ export class PodComClient {
     wallet: Signer,
     options: SendMessageOptions
   ): Promise<string> {
-    const program = this.ensureInitialized();
     const [senderAgentPDA] = findAgentPDA(wallet.publicKey, this.programId);
 
+    // Hash the payload
     const payloadHash = await hashPayload(options.payload);
+
     const messageTypeObj = this.convertMessageType(
       options.messageType,
       options.customValue
     );
+
     const [messagePDA] = findMessagePDA(
       senderAgentPDA,
       options.recipient,
@@ -240,8 +243,13 @@ export class PodComClient {
     );
 
     return retry(async () => {
-      const tx = await program.methods
-        .sendMessage(options.recipient, Array.from(payloadHash), messageTypeObj)
+      const methods = this.getProgramMethods();
+      const tx = await methods
+        .sendMessage(
+          options.payload,
+          messageTypeObj,
+          null // replyTo - not in current SendMessageOptions
+        )
         .accounts({
           messageAccount: messagePDA,
           senderAgent: senderAgentPDA,
@@ -263,17 +271,14 @@ export class PodComClient {
     messagePDA: PublicKey,
     newStatus: MessageStatus
   ): Promise<string> {
-    const program = this.ensureInitialized();
-    const [recipientAgentPDA] = findAgentPDA(wallet.publicKey, this.programId);
-
     const statusObj = this.convertMessageStatus(newStatus);
 
     return retry(async () => {
-      const tx = await program.methods
+      const methods = this.getProgramMethods();
+      const tx = await methods
         .updateMessageStatus(statusObj)
         .accounts({
           messageAccount: messagePDA,
-          recipientAgent: recipientAgentPDA,
           signer: wallet.publicKey,
         })
         .signers([wallet])
@@ -287,8 +292,6 @@ export class PodComClient {
    * Get message account data
    */
   async getMessage(messagePDA: PublicKey): Promise<MessageAccount | null> {
-    const program = this.ensureInitialized();
-
     try {
       const account = await this.getAccount("messageAccount").fetch(messagePDA);
       return this.convertMessageAccountFromProgram(account, messagePDA);
@@ -308,8 +311,6 @@ export class PodComClient {
     limit: number = 50,
     statusFilter?: MessageStatus
   ): Promise<MessageAccount[]> {
-    const program = this.ensureInitialized();
-
     try {
       const filters: GetProgramAccountsFilter[] = [];
 
@@ -353,7 +354,6 @@ export class PodComClient {
     wallet: Signer,
     options: CreateChannelOptions
   ): Promise<string> {
-    const program = this.ensureInitialized();
     const [channelPDA] = findChannelPDA(
       wallet.publicKey,
       options.name,
@@ -363,7 +363,8 @@ export class PodComClient {
     const visibilityObj = this.convertChannelVisibility(options.visibility);
 
     return retry(async () => {
-      const tx = await program.methods
+      const methods = this.getProgramMethods();
+      const tx = await methods
         .createChannel(
           options.name,
           options.description,
@@ -387,8 +388,6 @@ export class PodComClient {
    * Get channel account data
    */
   async getChannel(channelPDA: PublicKey): Promise<ChannelAccount | null> {
-    const program = this.ensureInitialized();
-
     try {
       const account = await this.getAccount("channelAccount").fetch(channelPDA);
       return this.convertChannelAccountFromProgram(account, channelPDA);
@@ -407,8 +406,6 @@ export class PodComClient {
     limit: number = 50,
     visibilityFilter?: ChannelVisibility
   ): Promise<ChannelAccount[]> {
-    const program = this.ensureInitialized();
-
     try {
       const accounts = await this.getAccount("channelAccount").all();
 
@@ -439,8 +436,6 @@ export class PodComClient {
     creator: PublicKey,
     limit: number = 50
   ): Promise<ChannelAccount[]> {
-    const program = this.ensureInitialized();
-
     try {
       const accounts = await this.getAccount("channelAccount").all([
         {
@@ -466,8 +461,6 @@ export class PodComClient {
    * Join a channel
    */
   async joinChannel(wallet: Signer, channelPDA: PublicKey): Promise<string> {
-    const program = this.ensureInitialized();
-
     // Derive participant PDA
     const [participantPDA] = this.findParticipantPDA(
       channelPDA,
@@ -494,14 +487,15 @@ export class PodComClient {
       // Invitation doesn't exist, which is fine for public channels
     }
 
-    const tx = await program.methods
+    const methods = this.getProgramMethods();
+    const tx = await methods
       .joinChannel()
       .accounts({
         channelAccount: channelPDA,
         participantAccount: participantPDA,
         invitationAccount: invitationAccount ? invitationPDA : null,
         user: wallet.publicKey,
-        systemProgram: SystemProgram.programId,
+        systemProgram: anchor.web3.SystemProgram.programId,
       })
       .signers([wallet])
       .rpc();
@@ -513,15 +507,14 @@ export class PodComClient {
    * Leave a channel
    */
   async leaveChannel(wallet: Signer, channelPDA: PublicKey): Promise<string> {
-    const program = this.ensureInitialized();
-
     // Derive participant PDA
     const [participantPDA] = this.findParticipantPDA(
       channelPDA,
       wallet.publicKey
     );
 
-    const tx = await program.methods
+    const methods = this.getProgramMethods();
+    const tx = await methods
       .leaveChannel()
       .accounts({
         channelAccount: channelPDA,
@@ -569,7 +562,8 @@ export class PodComClient {
       this.programId
     );
 
-    const tx = await program.methods
+    const methods = this.getProgramMethods();
+    const tx = await methods
       .broadcastMessage(
         content,
         this.convertMessageType(messageType),
@@ -581,7 +575,7 @@ export class PodComClient {
         participantAccount: participantPDA,
         messageAccount: messagePDA,
         user: wallet.publicKey,
-        systemProgram: SystemProgram.programId,
+        systemProgram: anchor.web3.SystemProgram.programId,
       })
       .signers([wallet])
       .rpc();
@@ -597,8 +591,6 @@ export class PodComClient {
     channelPDA: PublicKey,
     invitee: PublicKey
   ): Promise<string> {
-    const program = this.ensureInitialized();
-
     // Derive participant PDA (for inviter)
     const [participantPDA] = this.findParticipantPDA(
       channelPDA,
@@ -611,14 +603,15 @@ export class PodComClient {
       this.programId
     );
 
-    const tx = await program.methods
+    const methods = this.getProgramMethods();
+    const tx = await methods
       .inviteToChannel(invitee)
       .accounts({
         channelAccount: channelPDA,
         participantAccount: participantPDA,
         invitationAccount: invitationPDA,
         inviter: wallet.publicKey,
-        systemProgram: SystemProgram.programId,
+        systemProgram: anchor.web3.SystemProgram.programId,
       })
       .signers([wallet])
       .rpc();
@@ -644,7 +637,7 @@ export class PodComClient {
       bump: number;
     }>
   > {
-    const program = this.ensureInitialized();
+    this.ensureInitialized();
 
     try {
       const accounts = await this.getAccount("channelParticipant").all([
@@ -693,7 +686,7 @@ export class PodComClient {
       bump: number;
     }>
   > {
-    const program = this.ensureInitialized();
+    this.ensureInitialized();
 
     try {
       const accounts = await this.getAccount("channelMessage").all([
@@ -735,7 +728,6 @@ export class PodComClient {
     wallet: Signer,
     options: DepositEscrowOptions
   ): Promise<string> {
-    const program = this.ensureInitialized();
     const [escrowPDA] = findEscrowPDA(
       options.channel,
       wallet.publicKey,
@@ -743,7 +735,8 @@ export class PodComClient {
     );
 
     return retry(async () => {
-      const tx = await program.methods
+      const methods = this.getProgramMethods();
+      const tx = await methods
         .depositEscrow(new BN(options.amount))
         .accounts({
           escrowAccount: escrowPDA,
@@ -765,7 +758,6 @@ export class PodComClient {
     wallet: Signer,
     options: WithdrawEscrowOptions
   ): Promise<string> {
-    const program = this.ensureInitialized();
     const [escrowPDA] = findEscrowPDA(
       options.channel,
       wallet.publicKey,
@@ -773,7 +765,8 @@ export class PodComClient {
     );
 
     return retry(async () => {
-      const tx = await program.methods
+      const methods = this.getProgramMethods();
+      const tx = await methods
         .withdrawEscrow(new BN(options.amount))
         .accounts({
           escrowAccount: escrowPDA,
@@ -794,7 +787,7 @@ export class PodComClient {
     channel: PublicKey,
     depositor: PublicKey
   ): Promise<EscrowAccount | null> {
-    const program = this.ensureInitialized();
+    this.ensureInitialized();
     const [escrowPDA] = findEscrowPDA(channel, depositor, this.programId);
 
     try {
@@ -823,7 +816,7 @@ export class PodComClient {
     depositor: PublicKey,
     limit: number = 50
   ): Promise<EscrowAccount[]> {
-    const program = this.ensureInitialized();
+    this.ensureInitialized();
 
     try {
       const accounts = await this.getAccount("escrowAccount").all([
