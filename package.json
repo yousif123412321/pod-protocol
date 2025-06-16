@@ -65,6 +65,7 @@
     "@types/bn.js": "^5.1.0",
     "@types/chai": "^5.2.2",
     "@types/chai-as-promised": "^8.0.2",
+    "@types/jest": "^30.0.0",
     "@types/connect": "^3.4.38",
     "@types/estree": "^1.0.8",
     "@types/istanbul-lib-report": "^3.0.3",
@@ -76,17 +77,10 @@
     "chai": "^5.2.0",
     "chai-as-promised": "^8.0.1",
     "mocha": "^11.6.0",
-<<<<<<< dependabot/npm_and_yarn/ts-mocha-11.1.0
-    "prettier": "^2.6.2",
-    "ts-mocha": "^11.1.0",
-    "typescript": "^5.7.3",
-    "typedoc": "^0.25.0"
-=======
     "prettier": "^3.0.0",
     "ts-mocha": "^10.0.0",
     "typedoc": "^0.25.0",
     "typescript": "^5.7.3"
->>>>>>> main
   },
   "engines": {
     "node": ">=18.0.0"
