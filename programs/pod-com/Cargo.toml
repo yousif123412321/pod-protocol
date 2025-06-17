@@ -21,9 +21,8 @@ no-log-ix-name = []
 # Core dependencies
 anchor-lang = { version = "=0.31.1", default-features = false, features = ["init-if-needed"] }
 
-# Explicitly avoid pulling in getrandom/rand through solana-program
-# by using anchor-lang's re-exported solana-program
-# solana-program = { version = "=1.17.0", default-features = false }
+# Use solana-program for compatibility with Anchor macros
+solana-program = { version = "=2.3.0", default-features = false }
 
 # Spl dependencies (commented out as they're optional)
 # spl-token = { version = "=4.0.0", optional = true, default-features = false }

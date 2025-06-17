@@ -1,8 +1,11 @@
-// Global allow for Anchor-related config warnings
-#![allow(unexpected_cfgs)]
+// Global allow for Anchor-related config warnings and deprecated methods
+#![allow(unexpected_cfgs, deprecated)]
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::pubkey::Pubkey;
+
+// Import solana_program for macro compatibility
+extern crate solana_program;
 
 declare_id!("HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps");
 
