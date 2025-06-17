@@ -1,6 +1,7 @@
 # Set the default build target to the native architecture
 [build]
-target = "aarch64-apple-darwin"  # or "x86_64-apple-darwin" for Intel Macs
+# target = "aarch64-apple-darwin"  # or "x86_64-apple-darwin" for Intel Macs
+# Commented out to allow auto-detection of native target
 
 # Common build settings
 [profile.release]
@@ -23,7 +24,7 @@ rustflags = [
 
 [target.x86_64-unknown-linux-gnu]
 rustflags = [
-    "-C", "link-arg=-fuse-ld=lld",
+    # "-C", "link-arg=-fuse-ld=lld",  # Commented out - lld not available
     "-C", "link-arg=-Wl,-z,notext",
 ]
 

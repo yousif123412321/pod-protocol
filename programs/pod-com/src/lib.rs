@@ -860,12 +860,12 @@ pub mod pod_com {
 // Contexts
 
 #[derive(Accounts)]
-#[instruction(metadata_uri: String)]
+#[instruction(capabilities: u64, metadata_uri: String)]
 pub struct RegisterAgent<'info> {
     #[account(
         init,
         payer = signer,
-        space = 8 + 32 + 8 + 4 + MAX_METADATA_URI_LENGTH + 8 + 8 + 1 + 7,
+        space = AGENT_ACCOUNT_SPACE,
         seeds = [b"agent", signer.key().as_ref()],
         bump
     )]
@@ -881,7 +881,7 @@ pub struct SendMessage<'info> {
     #[account(
         init,
         payer = signer,
-        space = 8 + 32 + 32 + 32 + 1 + 8 + 8 + 1 + 1 + 7,
+        space = MESSAGE_ACCOUNT_SPACE,
         seeds = [
             b"message",
             sender_agent.key().as_ref(),
@@ -943,12 +943,12 @@ pub struct UpdateMessageStatus<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(name: String)]
+#[instruction(name: String, description: String, visibility: ChannelVisibility, max_participants: u32, fee_per_message: u64)]
 pub struct CreateChannel<'info> {
     #[account(
         init,
         payer = creator,
-        space = 8 + 32 + 4 + 50 + 4 + 200 + 1 + 4 + 4 + 8 + 8 + 8 + 1 + 7,
+        space = CHANNEL_ACCOUNT_SPACE,
         seeds = [b"channel", creator.key().as_ref(), name.as_bytes()],
         bump
     )]
@@ -959,11 +959,12 @@ pub struct CreateChannel<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(amount: u64)]
 pub struct DepositEscrow<'info> {
     #[account(
         init,
         payer = depositor,
-        space = 8 + 32 + 32 + 8 + 8 + 1 + 7,
+        space = ESCROW_ACCOUNT_SPACE,
         seeds = [b"escrow", channel_account.key().as_ref(), depositor.key().as_ref()],
         bump
     )]
@@ -998,7 +999,7 @@ pub struct JoinChannel<'info> {
     #[account(
         init,
         payer = user,
-        space = 8 + 32 + 32 + 8 + 1 + 8 + 8 + 1 + 7,
+        space = CHANNEL_PARTICIPANT_SPACE,
         seeds = [b"participant", channel_account.key().as_ref(), user.key().as_ref()],
         bump
     )]
@@ -1047,7 +1048,7 @@ pub struct BroadcastMessage<'info> {
     #[account(
         init,
         payer = user,
-        space = 8 + 32 + 32 + 4 + MAX_MESSAGE_CONTENT_LENGTH + 1 + 8 + 9 + 33 + 1 + 7,
+        space = CHANNEL_MESSAGE_SPACE,
         seeds = [
             b"channel_message",
             channel_account.key().as_ref(),
@@ -1075,7 +1076,7 @@ pub struct InviteToChannel<'info> {
     #[account(
         init,
         payer = inviter,
-        space = 8 + 32 + 32 + 32 + 8 + 8 + 1 + 1 + 6,
+        space = CHANNEL_INVITATION_SPACE,
         seeds = [b"invitation", channel_account.key().as_ref(), invitee.as_ref()],
         bump
     )]
@@ -1101,7 +1102,7 @@ pub struct UpdateChannel<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(name: String)]
+#[instruction(name: String, description: String, visibility: ChannelVisibility, max_participants: u32, fee_per_message: u64)]
 pub struct CreateChannelV2<'info> {
     #[account(
         seeds = [b"agent", creator.key().as_ref()],
@@ -1112,7 +1113,7 @@ pub struct CreateChannelV2<'info> {
     #[account(
         init,
         payer = creator,
-        space = 8 + 32 + 4 + MAX_CHANNEL_NAME_LENGTH + 4 + MAX_CHANNEL_DESCRIPTION_LENGTH + 1 + 4 + 4 + 8 + 8 + 8 + 1 + 1 + 6,
+        space = CHANNEL_ACCOUNT_SPACE,
         seeds = [b"channel", creator.key().as_ref(), name.as_bytes()],
         bump
     )]
@@ -1120,7 +1121,7 @@ pub struct CreateChannelV2<'info> {
     #[account(
         init,
         payer = creator,
-        space = 8 + 32 + 32 + 8 + 1 + 8 + 8 + 1 + 7,
+        space = CHANNEL_PARTICIPANT_SPACE,
         seeds = [b"participant", channel_account.key().as_ref(), creator.key().as_ref()],
         bump
     )]
