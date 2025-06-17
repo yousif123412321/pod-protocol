@@ -1,3 +1,6 @@
+// Global allow for Anchor-related config warnings
+#![allow(unexpected_cfgs)]
+
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::pubkey::Pubkey;
 
@@ -282,6 +285,7 @@ pub struct MessageAccount {
     _reserved: [u8; 7],            // 7 bytes (padding)
 }
 
+#[allow(deprecated, unexpected_cfgs)]
 #[program]
 pub mod pod_com {
     use super::*;
