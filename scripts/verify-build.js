@@ -43,7 +43,7 @@ async function verifyBuild() {
       try {
         const idl = JSON.parse(idlContent);
         // Support both old and new IDL formats
-        const idlName = idl.name || (idl.metadata && idl.metadata.name);
+const idlName = getIdlName(idl);
         if (!idlName || !idl.instructions) {
           throw new Error(`IDL file ${idlFile} is malformed - missing name or instructions.`);
         }
