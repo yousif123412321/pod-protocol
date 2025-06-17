@@ -24,25 +24,29 @@
   "keywords": [
     "solana",
     "anchor",
-    "ai",
-    "agent",
-    "communication",
-    "protocol",
-    "blockchain",
+    "ai-agents",
+    "agent-communication",
+    "blockchain-protocol",
     "web3",
+    "decentralized",
+    "messaging",
+    "prompt-or-die",
+    "pod-protocol",
     "typescript",
-    "rust"
+    "rust",
+    "sdk",
+    "cli"
   ],
   "author": "PoD Protocol Team",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/pod-com.git"
+    "url": "git+https://github.com/Dexploarer/PoD-Protocol.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/pod-com/issues"
+    "url": "https://github.com/Dexploarer/PoD-Protocol/issues"
   },
-  "homepage": "https://github.com/yourusername/pod-com#readme",
+  "homepage": "https://github.com/Dexploarer/PoD-Protocol#readme",
   "workspaces": [
     "sdk",
     "cli"
@@ -50,7 +54,6 @@
   "packageManager": "bun@1.0.0",
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",
-    "@pod-protocol/sdk": "^1.0.0",
     "@solana/web3.js": "^1.98.2",
     "anchor": "^1.4.1",
     "chalk": "^5.4.1",

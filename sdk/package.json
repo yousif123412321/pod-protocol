@@ -15,19 +15,31 @@
     "dev": "rollup -c -w", 
     "test": "bun test",
     "lint": "eslint src --ext .ts",
-    "prepublishOnly": "bun run build",
-    "publish": "bun publish"
+    "prepublishOnly": "bun run build"
   },
   "packageManager": "bun@1.0.0",
   "keywords": [
     "solana",
-    "ai",
-    "agents",
-    "communication",
-    "blockchain",
-    "pod-com"
+    "ai-agents",
+    "agent-communication",
+    "blockchain-protocol",
+    "web3-sdk",
+    "decentralized-messaging",
+    "prompt-or-die",
+    "pod-protocol",
+    "typescript",
+    "anchor"
   ],
   "author": "PoD Protocol Team",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dexploarer/PoD-Protocol.git",
+    "directory": "sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/Dexploarer/PoD-Protocol/issues"
+  },
+  "homepage": "https://github.com/Dexploarer/PoD-Protocol#readme",
   "license": "MIT",
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",

@@ -44,7 +44,7 @@ export class AgentCommands {
           "register agent",
           async (client, wallet, globalOpts, options) => {
             const { capabilities, metadataUri } = await this.prepareRegistrationData(options);
-            
+
             const spinner = createSpinner("Registering agent...");
 
             if (
@@ -268,27 +268,27 @@ export class AgentCommands {
   }
 
   private displayAgentsList(agents: any[]) {
-    const data = agents.map((agent: any) => [
-      agent.pubkey.toBase58().slice(0, 8) + "...",
-      getCapabilityNames(agent.capabilities).join(", "),
-      agent.reputation.toString(),
-      new Date(agent.lastUpdated * 1000).toLocaleDateString(),
-    ]);
+          const data = agents.map((agent: any) => [
+            agent.pubkey.toBase58().slice(0, 8) + "...",
+            getCapabilityNames(agent.capabilities).join(", "),
+            agent.reputation.toString(),
+            new Date(agent.lastUpdated * 1000).toLocaleDateString(),
+          ]);
 
-    console.log(
-      "\n" +
-        table(
-          [
-            ["Address", "Capabilities", "Reputation", "Last Updated"],
-            ...data,
-          ],
-          {
-            header: {
-              alignment: "center",
-              content: chalk.blue.bold("Registered Agents"),
-            },
-          }
-        )
-    );
+          console.log(
+            "\n" +
+              table(
+                [
+                  ["Address", "Capabilities", "Reputation", "Last Updated"],
+                  ...data,
+                ],
+                {
+                  header: {
+                    alignment: "center",
+                    content: chalk.blue.bold("Registered Agents"),
+                  },
+                }
+              )
+          );
   }
 }

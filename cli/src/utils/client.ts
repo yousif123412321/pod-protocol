@@ -1,4 +1,4 @@
-import { PodComClient } from "@pod-protocol/sdk";
+import { PodComClient } from "pod-protocol-sdk";
 import { getNetworkEndpoint, loadKeypair } from "./config";
 import { Keypair } from "@solana/web3.js";
 

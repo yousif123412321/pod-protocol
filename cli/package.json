@@ -1,5 +1,5 @@
 {
-      "name": "@pod-protocol/cli",
+  "name": "@pod-protocol/cli",
   "version": "1.0.0",
   "description": "Command-line interface for PoD Protocol (Prompt or Die) AI Agent Communication Protocol",
   "main": "dist/index.js",
@@ -15,21 +15,34 @@
     "dev": "tsx src/index.ts",
     "test": "bun test",
     "lint": "eslint src --ext .ts",
-    "publish": "bun publish"
+    "prepublishOnly": "bun run build"
   },
   "packageManager": "bun@1.0.0",
   "keywords": [
     "solana",
-    "ai",
-    "agents",
-    "communication",
-    "cli",
-    "pod-com"
+    "ai-agents",
+    "agent-communication",
+    "blockchain-cli",
+    "web3-tools",
+    "decentralized-messaging",
+    "prompt-or-die",
+    "pod-protocol",
+    "command-line",
+    "cli"
   ],
-  "author": "POD-COM Team",
+  "author": "PoD Protocol Team",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dexploarer/PoD-Protocol.git",
+    "directory": "cli"
+  },
+  "bugs": {
+    "url": "https://github.com/Dexploarer/PoD-Protocol/issues"
+  },
+  "homepage": "https://github.com/Dexploarer/PoD-Protocol#readme",
   "license": "MIT",
   "dependencies": {
-    "@pod-protocol/sdk": "file:../sdk",
+    "@pod-protocol/sdk": "^1.0.0",
     "@solana/web3.js": "^1.95.4",
     "commander": "^14.0.0",
     "chalk": "^5.3.0",
