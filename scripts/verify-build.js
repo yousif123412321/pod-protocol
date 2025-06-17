@@ -38,49 +38,41 @@ async function checkTargetDirectory() {
   }
 }
 
-async function verifyIdlGeneration() {
-  const idlPath = path.join(process.cwd(), 'target', 'idl');
-  if (!fs.existsSync(idlPath)) {
-    throw new Error('❌ IDL directory not found. IDL generation FAILED.');
-  }
-  
-  const idlFiles = fs.readdirSync(idlPath).filter(file => file.endsWith('.json'));
-  if (idlFiles.length === 0) {
-    throw new Error('❌ No IDL files found. IDL generation FAILED.');
-  }
-  
-  console.log(`✅ Found ${idlFiles.length} IDL file(s): ${idlFiles.join(', ')}`);
-  
-  for (const idlFile of idlFiles) {
-    await validateIdlFile(idlPath, idlFile);
-  }
-}
-
-async function validateIdlFile(idlPath, idlFile) {
-  const idlContent = fs.readFileSync(path.join(idlPath, idlFile), 'utf8');
-  
-  try {
-    const idl = JSON.parse(idlContent);
-    if (!idl.name || !idl.instructions) {
-      throw new Error(`IDL file ${idlFile} is malformed - missing name or instructions.`);
+    // 3. Verify IDL generation (CRITICAL - no error suppression)
+    const idlPath = path.join(targetDir, 'idl');
+    if (!fs.existsSync(idlPath)) {
+      throw new Error('❌ IDL directory not found. IDL generation FAILED.');
     }
-    console.log(`✅ IDL ${idlFile} is valid with ${idl.instructions.length} instructions`);
     
-    validateRequiredInstructions(idl, idlFile);
-  } catch (e) {
-    throw new Error(`IDL file ${idlFile} contains invalid JSON: ${e.message}`);
-  }
-}
-
-function validateRequiredInstructions(idl, idlFile) {
-  const instructionNames = idl.instructions.map(inst => inst.name);
-  const requiredInstructions = ['registerAgent', 'sendMessage', 'updateMessageStatus'];
-  const missingInstructions = requiredInstructions.filter(req => !instructionNames.includes(req));
-  
-  if (missingInstructions.length > 0) {
-    console.warn(`⚠️  IDL ${idlFile} missing expected instructions: ${missingInstructions.join(', ')}`);
-  }
-}
+    const idlFiles = fs.readdirSync(idlPath).filter(file => file.endsWith('.json'));
+    if (idlFiles.length === 0) {
+      throw new Error('❌ No IDL files found. IDL generation FAILED.');
+    }
+    
+    console.log(`✅ Found ${idlFiles.length} IDL file(s): ${idlFiles.join(', ')}`);
+    
+    // Validate IDL structure
+    for (const idlFile of idlFiles) {
+      const idlContent = fs.readFileSync(path.join(idlPath, idlFile), 'utf8');
+      try {
+        const idl = JSON.parse(idlContent);
+        if (!idl.name || !idl.instructions) {
+          throw new Error(`IDL file ${idlFile} is malformed - missing name or instructions.`);
+        }
+        console.log(`✅ IDL ${idlFile} is valid with ${idl.instructions.length} instructions`);
+        
+        // Check for essential instruction types
+        const instructionNames = idl.instructions.map(inst => inst.name);
+        const requiredInstructions = ['registerAgent', 'sendMessage', 'updateMessageStatus'];
+        const missingInstructions = requiredInstructions.filter(req => !instructionNames.includes(req));
+        
+        if (missingInstructions.length > 0) {
+          console.warn(`⚠️  IDL ${idlFile} missing expected instructions: ${missingInstructions.join(', ')}`);
+        }
+      } catch (e) {
+        throw new Error(`IDL file ${idlFile} contains invalid JSON: ${e.message}`);
+      }
+    }
 
 async function checkTypeScriptTypes() {
   const typesPath = path.join(process.cwd(), 'target', 'types');
