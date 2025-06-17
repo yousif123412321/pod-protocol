@@ -10,10 +10,10 @@ skip-lint = false
 
 # Program configurations for different clusters
 [programs.localnet]
-pod_com = "AytBW3hwCk2SrWAQkdtSdH36kgDwesvpGWqqCP7jYTko"
+pod_com = "HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps"
 
 [programs.devnet]
-pod_com = "AytBW3hwCk2SrWAQkdtSdH36kgDwesvpGWqqCP7jYTko"
+pod_com = "HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps"
 
 # Registry configuration for Anchor programs
 [registry]

@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program, BN, AnchorProvider } from "@coral-xyz/anchor";
-import { PodCom } from "../target/types/pod_com";
+import { IDL, PodCom } from "../sdk/src/pod_com";
 import {
   PublicKey,
   Keypair,
@@ -11,14 +11,20 @@ import {
 import { expect, test, beforeAll, describe } from "bun:test";
 import { findAgentPDA, findMessagePDA } from "./test-utils";
 
-// Configure the client to use the local cluster.
-const provider = anchor.AnchorProvider.env();
+// Create test wallet and connection for devnet
+const testWallet = Keypair.generate();
+const connection = new Connection("https://api.devnet.solana.com", "confirmed");
+const provider = new AnchorProvider(
+  connection,
+  new anchor.Wallet(testWallet),
+  { commitment: "confirmed" }
+);
 anchor.setProvider(provider);
 
-const program = anchor.workspace.PodCom as Program<PodCom>;
-
-// Generate new keypairs for testing to avoid conflicts
-const testWallet = Keypair.generate();
+const program = new Program(
+  IDL,
+  provider
+) as Program<PodCom>;
 
 // Constants for testing
 const METADATA_URI = "https://example.com/test-agent";
