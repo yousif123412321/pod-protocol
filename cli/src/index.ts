@@ -13,7 +13,7 @@ const program = new Command();
 console.log(
   chalk.blue.bold(`
 ┌─────────────────────────────────────────┐
-│        POD-COM CLI v1.0.0               │
+│        PoD Protocol CLI v1.0.0          │
 │      PoD Protocol (Prompt or Die)      │
 │        on Solana Blockchain            │
 └─────────────────────────────────────────┘

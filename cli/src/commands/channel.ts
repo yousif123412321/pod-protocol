@@ -28,11 +28,22 @@ export class ChannelCommands {
       .command("channel")
       .description("Manage communication channels");
 
-    // Create channel
+    this.setupCreateCommand(channel);
+    this.setupInfoCommand(channel);
+    this.setupListCommand(channel);
+    this.setupJoinCommand(channel);
+    this.setupLeaveCommand(channel);
+    this.setupBroadcastCommand(channel);
+    this.setupInviteCommand(channel);
+    this.setupParticipantsCommand(channel);
+    this.setupMessagesCommand(channel);
+  }
+
+  private setupCreateCommand(channel: Command) {
     channel
       .command("create")
       .description("Create a new communication channel")
-      .option("-n, --name <name>", "Channel name")
+      .option("-n, --name <n>", "Channel name")
       .option("-d, --description <description>", "Channel description")
       .option(
         "-v, --visibility <visibility>",
@@ -50,8 +61,9 @@ export class ChannelCommands {
           }
         )
       );
+  }
 
-    // Show channel info
+  private setupInfoCommand(channel: Command) {
     channel
       .command("info <channelId>")
       .description("Show channel information")
@@ -63,8 +75,9 @@ export class ChannelCommands {
           }
         )
       );
+  }
 
-    // List channels
+  private setupListCommand(channel: Command) {
     channel
       .command("list")
       .description("List available channels")
@@ -86,8 +99,9 @@ export class ChannelCommands {
           }
         )
       );
+  }
 
-    // Join channel
+  private setupJoinCommand(channel: Command) {
     channel
       .command("join <channelId>")
       .description("Join a communication channel")
@@ -99,8 +113,9 @@ export class ChannelCommands {
           }
         )
       );
+  }
 
-    // Leave channel
+  private setupLeaveCommand(channel: Command) {
     channel
       .command("leave <channelId>")
       .description("Leave a communication channel")
@@ -112,8 +127,9 @@ export class ChannelCommands {
           }
         )
       );
+  }
 
-    // Broadcast message to channel
+  private setupBroadcastCommand(channel: Command) {
     channel
       .command("broadcast <channelId> <message>")
       .description("Broadcast a message to a channel")
@@ -138,8 +154,9 @@ export class ChannelCommands {
           }
         )
       );
+  }
 
-    // Invite user to channel
+  private setupInviteCommand(channel: Command) {
     channel
       .command("invite <channelId> <invitee>")
       .description("Invite a user to a private channel")
@@ -157,8 +174,9 @@ export class ChannelCommands {
           }
         )
       );
+  }
 
-    // Show channel participants
+  private setupParticipantsCommand(channel: Command) {
     channel
       .command("participants <channelId>")
       .description("Show channel participants")
@@ -175,8 +193,9 @@ export class ChannelCommands {
           }
         )
       );
+  }
 
-    // Show channel messages
+  private setupMessagesCommand(channel: Command) {
     channel
       .command("messages <channelId>")
       .description("Show channel messages")
@@ -201,59 +220,45 @@ export class ChannelCommands {
     globalOpts: GlobalOptions,
     options: any
   ) {
-    let name = options.name;
-    let description = options.description;
-    let visibility = options.visibility as ChannelVisibility;
-    let maxParticipants = parseInt(options.maxParticipants, 10);
-    let feePerMessage = parseInt(options.fee, 10);
+    try {
+      const channelData = await this.prepareChannelData(options);
+      const spinner = createSpinner("Creating channel...");
+
+      if (
+        handleDryRun(globalOpts, spinner, "Channel creation", {
+          Name: channelData.name,
+          Description: channelData.description,
+          Visibility: channelData.visibility,
+          "Max Participants": channelData.maxParticipants.toString(),
+          "Fee per Message": `${channelData.feePerMessage} lamports`,
+        })
+      ) {
+        return;
+      }
+
+      const signature = await client.createChannel(wallet, channelData);
+
+      showSuccess(spinner, "Channel created successfully!", {
+        Transaction: signature,
+        Name: channelData.name,
+        Description: channelData.description,
+        Visibility: channelData.visibility,
+      });
+    } catch (error: any) {
+      console.error(chalk.red("Failed to create channel:"), error.message);
+      process.exit(1);
+    }
+  }
+
+  private async prepareChannelData(options: any) {
+    let name = options.name || "";
+    let description = options.description || "";
+    let visibility = options.visibility || "public";
+    let maxParticipants = parseInt(options.maxParticipants, 10) || 100;
+    let feePerMessage = parseInt(options.fee, 10) || 1000;
 
     if (options.interactive) {
-      const answers = await inquirer.prompt([
-        {
-          type: "input",
-          name: "name",
-          message: "Channel name:",
-          validate: (input: string) =>
-            input.length > 0 ? true : "Channel name is required",
-        },
-        {
-          type: "input",
-          name: "description",
-          message: "Channel description:",
-          default: "",
-        },
-        {
-          type: "list",
-          name: "visibility",
-          message: "Channel visibility:",
-          choices: [
-            {
-              name: "Public - Anyone can join",
-              value: ChannelVisibility.Public,
-            },
-            {
-              name: "Private - Invitation only",
-              value: ChannelVisibility.Private,
-            },
-          ],
-        },
-        {
-          type: "number",
-          name: "maxParticipants",
-          message: "Maximum participants:",
-          default: 100,
-          validate: (input: number) =>
-            input > 0 ? true : "Must be greater than 0",
-        },
-        {
-          type: "number",
-          name: "feePerMessage",
-          message: "Fee per message (lamports):",
-          default: 1000,
-          validate: (input) => (input >= 0 ? true : "Must be 0 or greater"),
-        },
-      ]);
-
+      const answers = await this.promptForChannelData();
       name = answers.name;
       description = answers.description;
       visibility = answers.visibility;
@@ -261,145 +266,160 @@ export class ChannelCommands {
       feePerMessage = answers.feePerMessage;
     }
 
-    if (!name) {
-      throw new ValidationError("Channel name is required");
-    }
+    this.validateChannelData(name, description, visibility, maxParticipants, feePerMessage);
 
-    const validatedName = validateChannelName(name);
-    const validatedMaxParticipants = validatePositiveInteger(
+    return {
+      name,
+      description,
+      visibility: visibility as ChannelVisibility,
       maxParticipants,
-      "max participants"
-    );
-    const validatedFeePerMessage = validatePositiveInteger(
       feePerMessage,
-      "fee per message"
-    );
+    };
+  }
 
-    const spinner = createSpinner("Creating channel...");
+  private async promptForChannelData() {
+    return await inquirer.prompt([
+      {
+        type: "input",
+        name: "name",
+        message: "Channel name:",
+        validate: (input: string) => input.length > 0 ? true : "Channel name is required",
+      },
+      {
+        type: "input",
+        name: "description",
+        message: "Channel description:",
+        default: "",
+      },
+      {
+        type: "list",
+        name: "visibility",
+        message: "Channel visibility:",
+        choices: [
+          { name: "Public", value: "public" },
+          { name: "Private", value: "private" },
+        ],
+        default: "public",
+      },
+      {
+        type: "number",
+        name: "maxParticipants",
+        message: "Maximum participants:",
+        default: 100,
+        validate: (input: number) => input > 0 ? true : "Must be greater than 0",
+      },
+      {
+        type: "number",
+        name: "feePerMessage",
+        message: "Fee per message (lamports):",
+        default: 1000,
+        validate: (input: number) => input >= 0 ? true : "Must be 0 or greater",
+      },
+    ]);
+  }
 
-    if (
-      handleDryRun(globalOpts, spinner, "Channel creation", {
-        Name: validatedName,
-        Description: description || "No description",
-        Visibility: visibility,
-        "Max Participants": validatedMaxParticipants,
-        "Fee per Message": `${validatedFeePerMessage} lamports`,
-      })
-    ) {
-      return;
-    }
-
-    const signature = await client.createChannel(wallet, {
-      name: validatedName,
-      description: description || "",
-      visibility,
-      maxParticipants: validatedMaxParticipants,
-      feePerMessage: validatedFeePerMessage,
-    });
-
-    showSuccess(spinner, "Channel created successfully!", {
-      Transaction: signature,
-      Name: validatedName,
-      Visibility: visibility,
-    });
+  private validateChannelData(name: string, description: string, visibility: string, maxParticipants: number, feePerMessage: number) {
+    validateChannelName(name);
+    validateEnum(visibility, ["public", "private"], "visibility");
+    validatePositiveInteger(maxParticipants);
+    validatePositiveInteger(feePerMessage);
   }
 
   private async handleInfo(client: PodComClient, channelId: string) {
-    const channelKey = validatePublicKey(channelId, "channel ID");
-    const spinner = createSpinner("Fetching channel information...");
+    try {
+      const spinner = createSpinner("Fetching channel information...");
+      const channelPubkey = new PublicKey(channelId);
+      const channelData = await client.getChannel(channelPubkey);
 
-    const channelData = await client.getChannel(channelKey);
+      if (!channelData) {
+        spinner.fail("Channel not found");
+        return;
+      }
 
-    if (!channelData) {
-      spinner.fail("Channel not found");
-      return;
+      spinner.succeed("Channel information retrieved");
+      this.displayChannelInfo(channelData);
+    } catch (error: any) {
+      console.error(chalk.red("Failed to fetch channel info:"), error.message);
+      process.exit(1);
     }
+  }
 
-    spinner.succeed("Channel information retrieved");
-
+  private displayChannelInfo(channelData: any) {
     const data = [
-      ["Channel ID", formatValue(channelData.pubkey.toBase58(), "address")],
-      ["Name", formatValue(channelData.name, "text")],
-      [
-        "Description",
-        formatValue(channelData.description || "No description", "text"),
-      ],
-      ["Creator", formatValue(channelData.creator.toBase58(), "address")],
-      ["Visibility", formatValue(channelData.visibility, "text")],
-      [
-        "Participants",
-        formatValue(
-          `${channelData.participantCount}/${channelData.maxParticipants}`,
-          "text"
-        ),
-      ],
-      [
-        "Fee per Message",
-        formatValue(`${channelData.feePerMessage} lamports`, "number"),
-      ],
-      [
-        "Created",
-        formatValue(
-          new Date(channelData.createdAt * 1000).toLocaleString(),
-          "text"
-        ),
-      ],
-      ["Active", formatValue(channelData.isActive, "boolean")],
+      ["Public Key", channelData.pubkey.toBase58()],
+      ["Name", channelData.name],
+      ["Description", channelData.description],
+      ["Visibility", channelData.visibility],
+      ["Creator", channelData.creator.toBase58()],
+      ["Participants", `${channelData.currentParticipants}/${channelData.maxParticipants}`],
+      ["Fee per Message", `${channelData.feePerMessage} lamports`],
+      ["Escrow Balance", `${channelData.escrowBalance} lamports`],
+      ["Created At", new Date(channelData.createdAt * 1000).toLocaleString()],
+      ["Active", channelData.isActive ? "Yes" : "No"],
     ];
 
-    console.log("\n" + table(data, getTableConfig("Channel Information")));
+    console.log(
+      "\n" +
+        table(data, {
+          header: {
+            alignment: "center",
+            content: chalk.blue.bold("Channel Information"),
+          },
+        })
+    );
   }
 
   private async handleList(client: PodComClient, wallet: any, options: any) {
-    const limit = validatePositiveInteger(options.limit, "limit");
-    const spinner = createSpinner("Fetching channels...");
+    try {
+      const spinner = createSpinner("Fetching channels...");
+      const limit = parseInt(options.limit, 10) || 10;
+      
+      let channels;
+      if (options.owner) {
+        channels = await client.getChannelsByCreator(wallet.publicKey, limit);
+      } else {
+        const visibilityFilter = options.visibility
+          ? (options.visibility as ChannelVisibility)
+          : undefined;
+        channels = await client.getAllChannels(limit, visibilityFilter);
+      }
 
-    let channels;
-    if (options.owner) {
-      channels = await client.getChannelsByCreator(wallet.publicKey, limit);
-    } else {
-      channels = await client.getAllChannels(
-        limit,
-        options.visibility as ChannelVisibility
-      );
+      if (channels.length === 0) {
+        spinner.succeed("No channels found");
+        return;
+      }
+
+      spinner.succeed(`Found ${channels.length} channels`);
+      this.displayChannelsList(channels);
+    } catch (error: any) {
+      console.error(chalk.red("Failed to list channels:"), error.message);
+      process.exit(1);
     }
+  }
 
-    if (channels.length === 0) {
-      spinner.succeed("No channels found");
-      return;
-    }
-
-    spinner.succeed(`Found ${channels.length} channels`);
-
-    const data = channels.map((ch: any) => [
-      formatValue(ch.pubkey.toBase58().slice(0, 8) + "...", "address"),
-      formatValue(
-        ch.name.slice(0, 20) + (ch.name.length > 20 ? "..." : ""),
-        "text"
-      ),
-      formatValue(ch.visibility, "text"),
-      formatValue(`${ch.participantCount}/${ch.maxParticipants}`, "text"),
-      formatValue(`${ch.feePerMessage}`, "number"),
-      formatValue(ch.isActive, "boolean"),
-      formatValue(new Date(ch.createdAt * 1000).toLocaleDateString(), "text"),
+  private displayChannelsList(channels: any[]) {
+    const data = channels.map((channel) => [
+      channel.pubkey.toBase58().slice(0, 8) + "...",
+      channel.name,
+      channel.visibility,
+      `${channel.currentParticipants}/${channel.maxParticipants}`,
+      `${channel.feePerMessage}`,
+      channel.isActive ? "Yes" : "No",
     ]);
 
     console.log(
       "\n" +
         table(
           [
-            [
-              "ID",
-              "Name",
-              "Visibility",
-              "Participants",
-              "Fee",
-              "Active",
-              "Created",
-            ],
+            ["Address", "Name", "Visibility", "Participants", "Fee", "Active"],
             ...data,
           ],
-          getTableConfig("Channels")
+          {
+            header: {
+              alignment: "center",
+              content: chalk.blue.bold("Available Channels"),
+            },
+          }
         )
     );
   }
@@ -410,23 +430,24 @@ export class ChannelCommands {
     globalOpts: GlobalOptions,
     channelId: string
   ) {
-    const channelKey = validatePublicKey(channelId, "channel ID");
-    const spinner = createSpinner("Joining channel...");
+    try {
+      const spinner = createSpinner("Joining channel...");
+      const channelPubkey = new PublicKey(channelId);
 
-    if (
-      handleDryRun(globalOpts, spinner, "Channel join", {
-        Channel: channelId,
-      })
-    ) {
-      return;
+      if (globalOpts.dryRun) {
+        spinner.succeed("Dry run: Join channel prepared");
+        console.log(chalk.cyan("Channel:"), channelId);
+        return;
+      }
+
+      const signature = await client.joinChannel(wallet, channelPubkey);
+
+      spinner.succeed("Successfully joined channel!");
+      console.log(chalk.green("Transaction:"), signature);
+    } catch (error: any) {
+      console.error(chalk.red("Failed to join channel:"), error.message);
+      process.exit(1);
     }
-
-    const signature = await client.joinChannel(wallet, channelKey);
-
-    showSuccess(spinner, "Successfully joined channel!", {
-      Transaction: signature,
-      Channel: channelId,
-    });
   }
 
   private async handleLeave(
@@ -435,23 +456,24 @@ export class ChannelCommands {
     globalOpts: GlobalOptions,
     channelId: string
   ) {
-    const channelKey = validatePublicKey(channelId, "channel ID");
-    const spinner = createSpinner("Leaving channel...");
+    try {
+      const spinner = createSpinner("Leaving channel...");
+      const channelPubkey = new PublicKey(channelId);
 
-    if (
-      handleDryRun(globalOpts, spinner, "Channel leave", {
-        Channel: channelId,
-      })
-    ) {
-      return;
+      if (globalOpts.dryRun) {
+        spinner.succeed("Dry run: Leave channel prepared");
+        console.log(chalk.cyan("Channel:"), channelId);
+        return;
+      }
+
+      const signature = await client.leaveChannel(wallet, channelPubkey);
+
+      spinner.succeed("Successfully left channel!");
+      console.log(chalk.green("Transaction:"), signature);
+    } catch (error: any) {
+      console.error(chalk.red("Failed to leave channel:"), error.message);
+      process.exit(1);
     }
-
-    const signature = await client.leaveChannel(wallet, channelKey);
-
-    showSuccess(spinner, "Successfully left channel!", {
-      Transaction: signature,
-      Channel: channelId,
-    });
   }
 
   private async handleBroadcast(
@@ -462,36 +484,48 @@ export class ChannelCommands {
     message: string,
     options: any
   ) {
-    const channelKey = validatePublicKey(channelId, "channel ID");
-    const validatedMessage = validateMessage(message);
-    const spinner = createSpinner("Broadcasting message...");
+    try {
+      validateMessage(message);
+      const spinner = createSpinner("Broadcasting message...");
+      const channelPubkey = new PublicKey(channelId);
+      const messageType = this.parseMessageType(options.type);
+      const replyTo = options.replyTo ? new PublicKey(options.replyTo) : undefined;
 
-    if (
-      handleDryRun(globalOpts, spinner, "Message broadcast", {
-        Channel: channelId,
-        Message:
-          validatedMessage.slice(0, 50) +
-          (validatedMessage.length > 50 ? "..." : ""),
-        Type: options.type,
-      })
-    ) {
-      return;
+      if (globalOpts.dryRun) {
+        spinner.succeed("Dry run: Broadcast message prepared");
+        console.log(chalk.cyan("Channel:"), channelId);
+        console.log(chalk.cyan("Message:"), message);
+        console.log(chalk.cyan("Type:"), messageType);
+        if (replyTo) {
+          console.log(chalk.cyan("Reply to:"), replyTo.toBase58());
+        }
+        return;
+      }
+
+      const signature = await client.broadcastMessage(
+        wallet,
+        channelPubkey,
+        message,
+        messageType,
+        replyTo
+      );
+
+      spinner.succeed("Message broadcast successfully!");
+      console.log(chalk.green("Transaction:"), signature);
+    } catch (error: any) {
+      console.error(chalk.red("Failed to broadcast message:"), error.message);
+      process.exit(1);
     }
+  }
 
-    const signature = await client.broadcastMessage(
-      wallet,
-      channelKey,
-      validatedMessage,
-      options.type as any,
-      options.replyTo
-        ? validatePublicKey(options.replyTo, "reply-to message ID")
-        : undefined
-    );
-
-    showSuccess(spinner, "Message broadcast successfully!", {
-      Transaction: signature,
-      Channel: channelId,
-    });
+  private parseMessageType(type: string) {
+    const typeMap: { [key: string]: any } = {
+      text: "Text",
+      data: "Data", 
+      command: "Command",
+      response: "Response",
+    };
+    return typeMap[type.toLowerCase()] || "Text";
   }
 
   private async handleInvite(
@@ -501,30 +535,31 @@ export class ChannelCommands {
     channelId: string,
     invitee: string
   ) {
-    const channelKey = validatePublicKey(channelId, "channel ID");
-    const inviteeKey = validatePublicKey(invitee, "invitee address");
-    const spinner = createSpinner("Sending invitation...");
+    try {
+      validatePublicKey(invitee);
+      const spinner = createSpinner("Sending invitation...");
+      const channelPubkey = new PublicKey(channelId);
+      const inviteePubkey = new PublicKey(invitee);
 
-    if (
-      handleDryRun(globalOpts, spinner, "Invitation", {
-        Channel: channelId,
-        Invitee: invitee,
-      })
-    ) {
-      return;
+      if (globalOpts.dryRun) {
+        spinner.succeed("Dry run: Invitation prepared");
+        console.log(chalk.cyan("Channel:"), channelId);
+        console.log(chalk.cyan("Invitee:"), invitee);
+        return;
+      }
+
+      const signature = await client.inviteToChannel(
+        wallet,
+        channelPubkey,
+        inviteePubkey
+      );
+
+      spinner.succeed("Invitation sent successfully!");
+      console.log(chalk.green("Transaction:"), signature);
+    } catch (error: any) {
+      console.error(chalk.red("Failed to send invitation:"), error.message);
+      process.exit(1);
     }
-
-    const signature = await client.inviteToChannel(
-      wallet,
-      channelKey,
-      inviteeKey
-    );
-
-    showSuccess(spinner, "Invitation sent successfully!", {
-      Transaction: signature,
-      Channel: channelId,
-      Invitee: invitee,
-    });
   }
 
   private async handleParticipants(
@@ -532,31 +567,50 @@ export class ChannelCommands {
     channelId: string,
     options: any
   ) {
-    const channelKey = validatePublicKey(channelId, "channel ID");
-    const limit = validatePositiveInteger(options.limit, "limit");
-    const spinner = createSpinner("Fetching participants...");
+    try {
+      const spinner = createSpinner("Fetching participants...");
+      const channelPubkey = new PublicKey(channelId);
+      const limit = parseInt(options.limit, 10) || 20;
 
-    const participants = await client.getChannelParticipants(channelKey, limit);
+      const participants = await client.getChannelParticipants(
+        channelPubkey,
+        limit
+      );
 
-    if (participants.length === 0) {
-      spinner.succeed("No participants found");
-      return;
+      if (participants.length === 0) {
+        spinner.succeed("No participants found");
+        return;
+      }
+
+      spinner.succeed(`Found ${participants.length} participants`);
+      this.displayParticipantsList(participants);
+    } catch (error: any) {
+      console.error(chalk.red("Failed to fetch participants:"), error.message);
+      process.exit(1);
     }
+  }
 
-    spinner.succeed(`Found ${participants.length} participants`);
-
-    const data = participants.map((p: any) => [
-      formatValue(p.participant.toBase58().slice(0, 8) + "...", "address"),
-      formatValue(p.isActive, "boolean"),
-      formatValue(p.messagesSent.toString(), "number"),
-      formatValue(new Date(p.joinedAt * 1000).toLocaleDateString(), "text"),
+  private displayParticipantsList(participants: any[]) {
+    const data = participants.map((participant) => [
+      participant.participant.toBase58().slice(0, 8) + "...",
+      new Date(participant.joinedAt * 1000).toLocaleDateString(),
+      participant.messagesSent.toString(),
+      participant.isActive ? "Yes" : "No",
     ]);
 
     console.log(
       "\n" +
         table(
-          [["Participant", "Active", "Messages", "Joined"], ...data],
-          getTableConfig("Channel Participants")
+          [
+            ["Participant", "Joined", "Messages", "Active"],
+            ...data,
+          ],
+          {
+            header: {
+              alignment: "center",
+              content: chalk.blue.bold("Channel Participants"),
+            },
+          }
         )
     );
   }
@@ -566,34 +620,49 @@ export class ChannelCommands {
     channelId: string,
     options: any
   ) {
-    const channelKey = validatePublicKey(channelId, "channel ID");
-    const limit = validatePositiveInteger(options.limit, "limit");
-    const spinner = createSpinner("Fetching messages...");
+    try {
+      const spinner = createSpinner("Fetching messages...");
+      const channelPubkey = new PublicKey(channelId);
+      const limit = parseInt(options.limit, 10) || 20;
 
-    const messages = await client.getChannelMessages(channelKey, limit);
+      const messages = await client.getChannelMessages(channelPubkey, limit);
 
-    if (messages.length === 0) {
-      spinner.succeed("No messages found");
-      return;
+      if (messages.length === 0) {
+        spinner.succeed("No messages found");
+        return;
+      }
+
+      spinner.succeed(`Found ${messages.length} messages`);
+      this.displayMessagesList(messages);
+    } catch (error: any) {
+      console.error(chalk.red("Failed to fetch messages:"), error.message);
+      process.exit(1);
     }
+  }
 
-    spinner.succeed(`Found ${messages.length} messages`);
-
-    const data = messages.map((m: any) => [
-      formatValue(m.sender.toBase58().slice(0, 8) + "...", "address"),
-      formatValue(
-        m.content.slice(0, 50) + (m.content.length > 50 ? "..." : ""),
-        "text"
-      ),
-      formatValue(m.messageType, "text"),
-      formatValue(new Date(m.createdAt * 1000).toLocaleString(), "text"),
+  private displayMessagesList(messages: any[]) {
+    const data = messages.map((message) => [
+      message.sender.toBase58().slice(0, 8) + "...",
+      message.content.length > 50
+        ? message.content.substring(0, 47) + "..."
+        : message.content,
+      message.messageType,
+      new Date(message.createdAt * 1000).toLocaleString(),
     ]);
 
     console.log(
       "\n" +
         table(
-          [["Sender", "Content", "Type", "Timestamp"], ...data],
-          getTableConfig("Channel Messages")
+          [
+            ["Sender", "Content", "Type", "Created"],
+            ...data,
+          ],
+          {
+            header: {
+              alignment: "center",
+              content: chalk.blue.bold("Channel Messages"),
+            },
+          }
         )
     );
   }

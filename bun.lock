@@ -5,7 +5,7 @@
       "name": "pod-com",
       "dependencies": {
         "@coral-xyz/anchor": "^0.31.1",
-        "@pod-com/sdk": "^1.0.0",
+        "@pod-protocol/sdk": "^1.0.0",
         "@solana/web3.js": "^1.98.2",
         "anchor": "^1.4.1",
         "chalk": "^5.4.1",
@@ -36,14 +36,14 @@
       },
     },
     "cli": {
-      "name": "@pod-com/cli",
+      "name": "@pod-protocol/cli",
       "version": "1.0.0",
       "bin": {
         "pod": "dist/index.js",
         "pod-com": "dist/index.js",
       },
       "dependencies": {
-        "@pod-com/sdk": "file:../sdk",
+        "@pod-protocol/sdk": "file:../sdk",
         "@solana/web3.js": "^1.95.4",
         "chalk": "^5.3.0",
         "commander": "^14.0.0",
@@ -64,7 +64,7 @@
       },
     },
     "sdk": {
-      "name": "@pod-com/sdk",
+      "name": "@pod-protocol/sdk",
       "version": "1.0.0",
       "dependencies": {
         "@coral-xyz/anchor": "^0.31.1",
@@ -323,9 +323,9 @@
 
     "@pkgr/core": ["@pkgr/core@0.2.7", "", {}, "sha512-YLT9Zo3oNPJoBjBc4q8G2mjU4tqIbf5CEOORbUUr48dCD9q3umJ3IPlVqOqDakPfd2HuwccBaqlGhN4Gmr5OWg=="],
 
-    "@pod-com/cli": ["@pod-com/cli@workspace:cli"],
+    "@pod-protocol/cli": ["@pod-protocol/cli@workspace:cli"],
 
-    "@pod-com/sdk": ["@pod-com/sdk@workspace:sdk"],
+    "@pod-protocol/sdk": ["@pod-protocol/sdk@workspace:sdk"],
 
     "@rollup/plugin-commonjs": ["@rollup/plugin-commonjs@28.0.5", "", { "dependencies": { "@rollup/pluginutils": "^5.0.1", "commondir": "^1.0.1", "estree-walker": "^2.0.2", "fdir": "^6.2.0", "is-reference": "1.2.1", "magic-string": "^0.30.3", "picomatch": "^4.0.2" }, "peerDependencies": { "rollup": "^2.68.0||^3.0.0||^4.0.0" } }, "sha512-lytLp2JgAMwqJY6ve3OSROXr2XuEYHjnsQN3hmnxC+w11dI91LuUw4Yc1kk2FqKXeMG8psoFejFgK+znoij0cg=="],
 
@@ -1127,7 +1127,7 @@
 
     "@jest/types/chalk": ["chalk@4.1.2", "", { "dependencies": { "ansi-styles": "^4.1.0", "supports-color": "^7.1.0" } }, "sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA=="],
 
-    "@pod-com/cli/@pod-com/sdk": ["@pod-com/sdk@file:sdk", { "dependencies": { "@coral-xyz/anchor": "^0.31.1", "@solana/wallet-adapter-base": "^0.9.23", "@solana/web3.js": "^1.95.4" }, "devDependencies": { "@rollup/plugin-commonjs": "^28.0.1", "@rollup/plugin-json": "^6.1.0", "@rollup/plugin-node-resolve": "^16.0.1", "@rollup/plugin-typescript": "^12.1.1", "@types/node": "^24.0.3", "@typescript-eslint/eslint-plugin": "^8.19.0", "@typescript-eslint/parser": "^8.19.0", "eslint": "^9.18.0", "rollup": "^4.28.1", "typescript": "^5.7.3" }, "peerDependencies": { "@solana/web3.js": "^1.95.0" } }],
+    "@pod-protocol/cli/@pod-protocol/sdk": ["@pod-protocol/sdk@file:sdk", { "dependencies": { "@coral-xyz/anchor": "^0.31.1", "@solana/wallet-adapter-base": "^0.9.23", "@solana/web3.js": "^1.95.4" }, "devDependencies": { "@rollup/plugin-commonjs": "^28.0.1", "@rollup/plugin-json": "^6.1.0", "@rollup/plugin-node-resolve": "^16.0.1", "@rollup/plugin-typescript": "^12.1.1", "@types/node": "^24.0.3", "@typescript-eslint/eslint-plugin": "^8.19.0", "@typescript-eslint/parser": "^8.19.0", "eslint": "^9.18.0", "rollup": "^4.28.1", "typescript": "^5.7.3" }, "peerDependencies": { "@solana/web3.js": "^1.95.0" } }],
 
     "@solana/errors/commander": ["commander@13.1.0", "", {}, "sha512-/rFeCpNJQbhSZjGVwO9RFV3xPqbnERS8MmIQzCtD/zl6gpJuV/bMLuN92oG3F7d8oDEHHRrujSXNUr8fpjntKw=="],
 
