@@ -2,6 +2,7 @@
   "name": "@pod-protocol/sdk",
   "version": "1.0.0",
   "description": "TypeScript SDK for PoD Protocol (Prompt or Die) AI Agent Communication Protocol",
+  "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",

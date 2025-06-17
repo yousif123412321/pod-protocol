@@ -2,6 +2,16 @@ import { Connection, PublicKey, Commitment } from "@solana/web3.js";
 import { Program } from "@coral-xyz/anchor";
 
 /**
+ * Configuration object for BaseService constructor
+ */
+export interface BaseServiceConfig {
+  connection: Connection;
+  programId: PublicKey;
+  commitment: Commitment;
+  program?: Program<any>;
+}
+
+/**
  * Base service class with common functionality for all services
  */
 export abstract class BaseService {
@@ -10,16 +20,11 @@ export abstract class BaseService {
   protected commitment: Commitment;
   protected program?: Program<any>;
 
-  constructor(
-    connection: Connection,
-    programId: PublicKey,
-    commitment: Commitment,
-    program?: Program<any>
-  ) {
-    this.connection = connection;
-    this.programId = programId;
-    this.commitment = commitment;
-    this.program = program;
+  constructor(config: BaseServiceConfig) {
+    this.connection = config.connection;
+    this.programId = config.programId;
+    this.commitment = config.commitment;
+    this.program = config.program;
   }
 
   protected ensureInitialized(): Program<any> {

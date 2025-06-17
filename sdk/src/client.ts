@@ -18,13 +18,14 @@ import {
   CreateChannelOptions,
   DepositEscrowOptions,
   WithdrawEscrowOptions,
+  BroadcastMessageOptions,
   MessageStatus,
   ChannelVisibility,
 } from "./types";
 import { PodCom, IDL } from "./pod_com";
 
 // Import services
-import { BaseService } from "./services/base";
+import { BaseService, BaseServiceConfig } from "./services/base";
 import { AgentService } from "./services/agent";
 import { MessageService } from "./services/message";
 
@@ -62,13 +63,7 @@ class ChannelService extends BaseService {
     throw new Error("Channel service not yet implemented");
   }
 
-  async broadcastMessage(
-    wallet: Signer,
-    channelPDA: PublicKey,
-    content: string,
-    messageType: any = "Text",
-    replyTo?: PublicKey
-  ): Promise<string> {
+  async broadcastMessage(wallet: Signer, options: BroadcastMessageOptions): Promise<string> {
     throw new Error("Channel service not yet implemented");
   }
 
@@ -147,10 +142,16 @@ export class PodComClient {
     this.commitment = config.commitment ?? "confirmed";
 
     // Initialize services
-    this.agents = new AgentService(this.connection, this.programId, this.commitment);
-    this.messages = new MessageService(this.connection, this.programId, this.commitment);
-    this.channels = new ChannelService(this.connection, this.programId, this.commitment);
-    this.escrow = new EscrowService(this.connection, this.programId, this.commitment);
+    const serviceConfig: BaseServiceConfig = {
+      connection: this.connection,
+      programId: this.programId,
+      commitment: this.commitment
+    };
+
+    this.agents = new AgentService(serviceConfig);
+    this.messages = new MessageService(serviceConfig);
+    this.channels = new ChannelService(serviceConfig);
+    this.escrow = new EscrowService(serviceConfig);
   }
 
   /**
@@ -307,7 +308,12 @@ export class PodComClient {
     messageType: any = "Text",
     replyTo?: PublicKey
   ): Promise<string> {
-    return this.channels.broadcastMessage(wallet, channelPDA, content, messageType, replyTo);
+    return this.channels.broadcastMessage(wallet, {
+      channelPDA,
+      content,
+      messageType,
+      replyTo
+    });
   }
 
   /**

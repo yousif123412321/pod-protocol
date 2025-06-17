@@ -917,6 +917,51 @@ export const IDL: PodCom = {
           },
         }
       ],
+    },
+    {
+      name: "withdrawEscrow",
+      discriminator: [81, 84, 226, 128, 245, 47, 96, 104],
+      accounts: [
+        {
+          name: "escrowAccount",
+          writable: true,
+          pda: {
+            seeds: [
+              {
+                kind: "const",
+                value: [101, 115, 99, 114, 111, 119],
+              },
+              {
+                kind: "account",
+                path: "channelAccount",
+              },
+              {
+                kind: "account",
+                path: "depositor",
+              }
+            ],
+          },
+        },
+        {
+          name: "channelAccount",
+          writable: true,
+        },
+        {
+          name: "depositor",
+          writable: true,
+          signer: true,
+        },
+        {
+          name: "systemProgram",
+          address: "11111111111111111111111111111111",
+        }
+      ],
+      args: [
+        {
+          name: "amount",
+          type: "u64",
+        }
+      ],
     }
   ],
   accounts: [

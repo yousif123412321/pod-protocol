@@ -266,7 +266,13 @@ export class ChannelCommands {
       feePerMessage = answers.feePerMessage;
     }
 
-    this.validateChannelData(name, description, visibility, maxParticipants, feePerMessage);
+    this.validateChannelData({
+      name,
+      description,
+      visibility,
+      maxParticipants,
+      feePerMessage,
+    });
 
     return {
       name,
@@ -318,11 +324,17 @@ export class ChannelCommands {
     ]);
   }
 
-  private validateChannelData(name: string, description: string, visibility: string, maxParticipants: number, feePerMessage: number) {
-    validateChannelName(name);
-    validateEnum(visibility, ["public", "private"], "visibility");
-    validatePositiveInteger(maxParticipants);
-    validatePositiveInteger(feePerMessage);
+  private validateChannelData(data: {
+    name: string;
+    description: string;
+    visibility: string;
+    maxParticipants: number;
+    feePerMessage: number;
+  }) {
+    validateChannelName(data.name);
+    validateEnum(data.visibility, ["public", "private"], "visibility");
+    validatePositiveInteger(data.maxParticipants);
+    validatePositiveInteger(data.feePerMessage);
   }
 
   private async handleInfo(client: PodComClient, channelId: string) {

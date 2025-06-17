@@ -239,3 +239,17 @@ export interface WithdrawEscrowOptions {
   /** Amount to withdraw in lamports */
   amount: number;
 }
+
+/**
+ * Options for broadcasting a message to a channel
+ */
+export interface BroadcastMessageOptions {
+  /** Channel public key */
+  channelPDA: PublicKey;
+  /** Message content */
+  content: string;
+  /** Message type (defaults to "Text") */
+  messageType?: any;
+  /** Optional reply-to message */
+  replyTo?: PublicKey;
+}
