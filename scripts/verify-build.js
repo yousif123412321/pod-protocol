@@ -47,7 +47,7 @@ const idlName = getIdlName(idl);
         if (!idlName || !idl.instructions) {
           throw new Error(`IDL file ${idlFile} is malformed - missing name or instructions.`);
         }
-        console.log(`✅ IDL ${idlFile} is valid with ${idl.instructions.length} instructions`);
+        console.log(`✅ IDL ${idlFile} is valid with ${idl.instructions.length} instructions and name: ${idlName}`);
         
         // Check for essential instruction types
         const instructionNames = idl.instructions.map(inst => inst.name);
