@@ -1,6 +1,6 @@
 # Set the default build target to the native architecture
 [build]
-target = "aarch64-apple-darwin"  # or "x86_64-apple-darwin" for Intel Macs
+target = "x86_64-unknown-linux-gnu"  # Fixed for Linux platform
 
 # Common build settings
 [profile.release]

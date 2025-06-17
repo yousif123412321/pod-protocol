@@ -42,7 +42,9 @@ async function verifyBuild() {
       const idlContent = fs.readFileSync(path.join(idlPath, idlFile), 'utf8');
       try {
         const idl = JSON.parse(idlContent);
-        if (!idl.name || !idl.instructions) {
+        // Support both old and new IDL formats
+        const idlName = idl.name || (idl.metadata && idl.metadata.name);
+        if (!idlName || !idl.instructions) {
           throw new Error(`IDL file ${idlFile} is malformed - missing name or instructions.`);
         }
         console.log(`✅ IDL ${idlFile} is valid with ${idl.instructions.length} instructions`);
