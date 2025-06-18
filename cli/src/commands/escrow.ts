@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import inquirer from "inquirer";
 import { table } from "table";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, Signer } from "@solana/web3.js";
 import { PodComClient, lamportsToSol, solToLamports } from "@pod-protocol/sdk";
 import {
   createCommandHandler,
@@ -66,7 +66,7 @@ async function promptChannelAndAmount({ interactive, channel, amount, lamports, 
       validate: (input: number) => (input > 0 ? true : "Amount must be greater than 0"),
       when: (answers: Record<string, any>) => !withdraw || !answers.withdrawAll,
     });
-    const answers = await inquirer.prompt(questions);
+    const answers = await inquirer.prompt(questions as any);
     channelId = answers.channelId;
     withdrawAll = withdraw ? answers.withdrawAll : false;
     amt = withdraw && answers.withdrawAll
@@ -193,7 +193,7 @@ export class EscrowCommands {
 
   private async handleDeposit(
     client: PodComClient,
-    wallet: Record<string, any>,
+    wallet: Signer,
     globalOpts: GlobalOptions,
     options: Record<string, any>
   ) {
@@ -227,7 +227,7 @@ export class EscrowCommands {
 
   private async handleWithdraw(
     client: PodComClient,
-    wallet: Record<string, any>,
+    wallet: Signer,
     globalOpts: GlobalOptions,
     options: Record<string, any>
   ) {
@@ -272,7 +272,7 @@ export class EscrowCommands {
     });
   }
 
-  private async handleBalance(client: PodComClient, wallet: Record<string, any>, options: Record<string, any>) {
+  private async handleBalance(client: PodComClient, wallet: Signer, options: Record<string, any>) {
     if (!options.channel) {
       throw new ValidationError("Channel ID is required");
     }
@@ -319,7 +319,7 @@ export class EscrowCommands {
     console.log("\n" + table(data, getTableConfig("Escrow Balance")));
   }
 
-  private async handleList(client: PodComClient, wallet: Record<string, any>, options: Record<string, any>) {
+  private async handleList(client: PodComClient, wallet: Signer, options: Record<string, any>) {
     const limit = validatePositiveInteger(options.limit, "limit");
     const spinner = createSpinner("Fetching escrow accounts...");
 

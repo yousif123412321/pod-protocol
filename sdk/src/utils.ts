@@ -184,24 +184,97 @@ export function getMessageTypeIdFromObject(msg: any): number {
 export async function hashPayload(
   payload: string | Uint8Array
 ): Promise<Uint8Array> {
-  const data =
-    typeof payload === "string" ? new TextEncoder().encode(payload) : payload;
-  const hash = await crypto.subtle.digest("SHA-256", data);
-  return new Uint8Array(hash);
+  const encoder = new TextEncoder();
+  const data = typeof payload === "string" ? encoder.encode(payload) : payload;
+
+  // Use Web Crypto API for hashing
+  if (typeof globalThis !== "undefined" && globalThis.crypto && globalThis.crypto.subtle) {
+    const hashBuffer = await globalThis.crypto.subtle.digest("SHA-256", data);
+    return new Uint8Array(hashBuffer);
+  }
+
+  // Fallback for Node.js environment
+  if (typeof require !== "undefined") {
+    try {
+      const crypto = require("crypto");
+      const hash = crypto.createHash("sha256");
+      hash.update(data);
+      return new Uint8Array(hash.digest());
+    } catch (e) {
+      // Fall back to a simple hashing algorithm if crypto is not available
+      console.warn(
+        "Using fallback hash function. Consider using a proper crypto library."
+      );
+      return simpleHash(data);
+    }
+  }
+
+  // Simple fallback hash (not cryptographically secure)
+  return simpleHash(data);
 }
 
 /**
- * Check if agent has specific capability
+ * Simple hash function fallback (not cryptographically secure)
+ */
+function simpleHash(data: Uint8Array): Uint8Array {
+  const hash = new Uint8Array(32);
+  let a = 1,
+    b = 0;
+
+  for (let i = 0; i < data.length; i++) {
+    a = (a + data[i]) % 65521;
+    b = (b + a) % 65521;
+  }
+
+  // Fill the hash array with computed values
+  for (let i = 0; i < 32; i++) {
+    hash[i] = ((a + b + i) % 256);
+  }
+  
+  return hash;
+}
+
+/**
+ * Retry a function with exponential backoff
+ */
+export async function retry<T>(
+  fn: () => Promise<T>, 
+  maxAttempts: number = 3, 
+  baseDelay: number = 1000
+): Promise<T> {
+  let lastError: Error;
+  
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      
+      if (attempt === maxAttempts) {
+        throw lastError;
+      }
+      
+      // Exponential backoff with jitter
+      const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000;
+      await sleep(delay);
+    }
+  }
+  
+  throw lastError!;
+}
+
+/**
+ * Check if an agent has a specific capability
  */
 export function hasCapability(
   capabilities: number,
   capability: number
 ): boolean {
-  return (capabilities & capability) !== 0;
+  return (capabilities & capability) === capability;
 }
 
 /**
- * Add capability to existing capabilities
+ * Add a capability to an agent's capabilities bitmask
  */
 export function addCapability(
   capabilities: number,
@@ -211,7 +284,7 @@ export function addCapability(
 }
 
 /**
- * Remove capability from existing capabilities
+ * Remove a capability from an agent's capabilities bitmask
  */
 export function removeCapability(
   capabilities: number,
@@ -221,41 +294,32 @@ export function removeCapability(
 }
 
 /**
- * Get human-readable capability names from bitmask
+ * Get capability names from bitmask
  */
 export function getCapabilityNames(capabilities: number): string[] {
   const names: string[] = [];
+  const capabilityMap = {
+    1: "TRADING",
+    2: "ANALYSIS", 
+    4: "DATA_PROCESSING",
+    8: "CONTENT_GENERATION",
+    16: "CUSTOM_1",
+    32: "CUSTOM_2",
+    64: "CUSTOM_3",
+    128: "CUSTOM_4",
+  };
 
-  if (hasCapability(capabilities, AGENT_CAPABILITIES.TRADING)) {
-    names.push("Trading");
-  }
-  if (hasCapability(capabilities, AGENT_CAPABILITIES.ANALYSIS)) {
-    names.push("Analysis");
-  }
-  if (hasCapability(capabilities, AGENT_CAPABILITIES.DATA_PROCESSING)) {
-    names.push("Data Processing");
-  }
-  if (hasCapability(capabilities, AGENT_CAPABILITIES.CONTENT_GENERATION)) {
-    names.push("Content Generation");
-  }
-  if (hasCapability(capabilities, AGENT_CAPABILITIES.CUSTOM_1)) {
-    names.push("Custom 1");
-  }
-  if (hasCapability(capabilities, AGENT_CAPABILITIES.CUSTOM_2)) {
-    names.push("Custom 2");
-  }
-  if (hasCapability(capabilities, AGENT_CAPABILITIES.CUSTOM_3)) {
-    names.push("Custom 3");
-  }
-  if (hasCapability(capabilities, AGENT_CAPABILITIES.CUSTOM_4)) {
-    names.push("Custom 4");
+  for (const [bit, name] of Object.entries(capabilityMap)) {
+    if (hasCapability(capabilities, parseInt(bit))) {
+      names.push(name);
+    }
   }
 
   return names;
 }
 
 /**
- * Format lamports to SOL with specified decimal places
+ * Convert lamports to SOL
  */
 export function lamportsToSol(lamports: number, decimals: number = 9): number {
   return lamports / Math.pow(10, decimals);
@@ -265,11 +329,11 @@ export function lamportsToSol(lamports: number, decimals: number = 9): number {
  * Convert SOL to lamports
  */
 export function solToLamports(sol: number): number {
-  return Math.round(sol * 1e9);
+  return Math.floor(sol * Math.pow(10, 9));
 }
 
 /**
- * Validate Solana public key format
+ * Check if a string is a valid Solana public key
  */
 export function isValidPublicKey(address: string): boolean {
   try {
@@ -281,72 +345,45 @@ export function isValidPublicKey(address: string): boolean {
 }
 
 /**
- * Sleep for specified milliseconds
- */
-export function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
- * Retry function with exponential backoff
- */
-export async function retry<T>(
-  fn: () => Promise<T>,
-  maxRetries: number = 3,
-  baseDelay: number = 1000
-): Promise<T> {
-  let lastError: Error;
-
-  for (let i = 0; i <= maxRetries; i++) {
-    try {
-      return await fn();
-    } catch (error) {
-      lastError = error as Error;
-
-      if (i === maxRetries) {
-        throw lastError;
-      }
-
-      const delay = baseDelay * Math.pow(2, i);
-      await sleep(delay);
-    }
-  }
-
-  throw lastError!;
-}
-
-/**
- * Convert BN timestamp to number with fallback options
- * Handles common timestamp conversion patterns used across services
+ * Convert timestamp to number, handling BN and other formats
  */
 export function convertTimestamp(
-  primaryField?: any,
-  fallbackField?: any,
-  defaultValue: number = Date.now()
+  timestamp: any,
+  fallback?: any
 ): number {
-  return primaryField?.toNumber() || fallbackField?.toNumber() || defaultValue;
+  if (timestamp && typeof timestamp.toNumber === 'function') {
+    return timestamp.toNumber();
+  }
+  if (fallback && typeof fallback.toNumber === 'function') {
+    return fallback.toNumber();
+  }
+  return timestamp || fallback || Date.now();
 }
 
 /**
- * Get timestamp from account with common field name patterns
- * Handles timestamp/createdAt field variations
+ * Get timestamp from account data
  */
 export function getAccountTimestamp(account: any): number {
   return convertTimestamp(account.timestamp, account.createdAt);
 }
 
 /**
- * Get creation timestamp from account with common field name patterns
- * Handles createdAt/timestamp field variations (reverse order for createdAt)
+ * Get creation timestamp from account data
  */
 export function getAccountCreatedAt(account: any): number {
   return convertTimestamp(account.createdAt, account.timestamp);
 }
 
 /**
- * Get last updated timestamp from account with common field name patterns
- * Handles lastUpdated/updatedAt field variations
+ * Get last updated timestamp from account data
  */
 export function getAccountLastUpdated(account: any): number {
   return convertTimestamp(account.lastUpdated, account.updatedAt);
+}
+
+/**
+ * Sleep for a given number of milliseconds
+ */
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

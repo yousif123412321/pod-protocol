@@ -1,4 +1,4 @@
-import { PublicKey, Signer, GetProgramAccountsFilter } from "@solana/web3.js";
+import { PublicKey, Signer, GetProgramAccountsFilter, SystemProgram } from "@solana/web3.js";
 import anchor from "@coral-xyz/anchor";
 import { BaseService } from "./base";
 import { 
@@ -8,6 +8,7 @@ import {
   MessageStatus 
 } from "../types";
 import { 
+  findAgentPDA,
   findMessagePDA, 
   hashPayload, 
   retry,
@@ -22,31 +23,38 @@ import {
  */
 export class MessageService extends BaseService {
   async sendMessage(wallet: Signer, options: SendMessageOptions): Promise<string> {
-    // Hash the payload first
+    const program = this.ensureInitialized();
+
+    // Derive sender agent PDA
+    const [senderAgentPDA] = findAgentPDA(wallet.publicKey, this.programId);
+
+    // Hash the payload
     const payloadHash = await hashPayload(options.payload);
-    
+
+    // Convert message type
+    const messageTypeObj = this.convertMessageType(options.messageType, options.customValue);
+
+    // Find message PDA
     const [messagePDA] = findMessagePDA(
-      wallet.publicKey,
+      senderAgentPDA,
       options.recipient,
       payloadHash,
-      options.messageType,
+      messageTypeObj,
       this.programId
     );
 
     return retry(async () => {
-      const methods = this.getProgramMethods();
-      const tx = await methods
+      const tx = await program.methods
         .sendMessage(
           options.recipient,
-          options.payload,
-          this.convertMessageType(options.messageType, options.customValue),
-          payloadHash,
-          "" // metadata is not in the interface
+          Array.from(payloadHash),
+          messageTypeObj
         )
         .accounts({
           messageAccount: messagePDA,
-          sender: wallet.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId,
+          senderAgent: senderAgentPDA,
+          signer: wallet.publicKey,
+          systemProgram: SystemProgram.programId,
         })
         .signers([wallet])
         .rpc({ commitment: this.commitment });
@@ -131,16 +139,16 @@ export class MessageService extends BaseService {
     }
   }
 
+  // ============================================================================
+  // Helper Methods
+  // ============================================================================
+
   private convertMessageType(messageType: MessageType, customValue?: number): any {
-    if (messageType === MessageType.Custom && customValue !== undefined) {
-      return { type: messageType, customValue };
-    }
     return convertMessageTypeToProgram(messageType, customValue);
   }
 
   private convertMessageTypeFromProgram(programType: any): MessageType {
     const result = convertMessageTypeFromProgram(programType);
-    // The utility function returns an object, we just want the type
     return result.type;
   }
 
@@ -185,4 +193,4 @@ export class MessageService extends BaseService {
       bump: account.bump,
     };
   }
-} 
+}

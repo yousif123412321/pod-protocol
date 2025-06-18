@@ -105,7 +105,7 @@ export class AgentCommands {
 
           spinner.succeed("Agent information retrieved");
           this.displayAgentInfo(agentData);
-        } catch (error: Error) {
+        } catch (error: any) {
           console.error(
             chalk.red("Failed to fetch agent info:"),
             error.message
@@ -149,7 +149,7 @@ export class AgentCommands {
 
           spinner.succeed("Agent updated successfully!");
           console.log(chalk.green("Transaction:"), signature);
-        } catch (error: Error) {
+        } catch (error: any) {
           console.error(chalk.red("Failed to update agent:"), error.message);
           process.exit(1);
         }
@@ -176,7 +176,7 @@ export class AgentCommands {
 
           spinner.succeed(`Found ${agents.length} agents`);
           this.displayAgentsList(agents);
-        } catch (error: Error) {
+        } catch (error: any) {
           console.error(chalk.red("Failed to list agents:"), error.message);
           process.exit(1);
         }
