@@ -2,11 +2,11 @@
 
 import { Command } from "commander";
 import chalk from "chalk";
-import { AgentCommands } from "./commands/agent";
-import { MessageCommands } from "./commands/message";
-import { ChannelCommands } from "./commands/channel";
-import { EscrowCommands } from "./commands/escrow";
-import { ConfigCommands } from "./commands/config";
+import { AgentCommands } from "./commands/agent.js";
+import { MessageCommands } from "./commands/message.js";
+import { ChannelCommands } from "./commands/channel.js";
+import { EscrowCommands } from "./commands/escrow.js";
+import { ConfigCommands } from "./commands/config.js";
 
 const program = new Command();
 

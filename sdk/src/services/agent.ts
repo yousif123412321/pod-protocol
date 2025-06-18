@@ -1,6 +1,6 @@
 import { PublicKey, Signer } from "@solana/web3.js";
-import { BN } from "@coral-xyz/anchor";
-import * as anchor from "@coral-xyz/anchor";
+import anchor from "@coral-xyz/anchor";
+const { BN } = anchor;
 import { BaseService } from "./base";
 import { AgentAccount, CreateAgentOptions, UpdateAgentOptions } from "../types";
 import { findAgentPDA, retry } from "../utils";

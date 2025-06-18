@@ -1,5 +1,7 @@
 import { Connection, PublicKey, Commitment } from "@solana/web3.js";
-import { Program } from "@coral-xyz/anchor";
+import anchor from "@coral-xyz/anchor";
+const { Program } = anchor;
+type AnchorProgram = anchor.Program<any>;
 
 /**
  * Configuration object for BaseService constructor
@@ -8,7 +10,7 @@ export interface BaseServiceConfig {
   connection: Connection;
   programId: PublicKey;
   commitment: Commitment;
-  program?: Program<any>;
+  program?: AnchorProgram;
 }
 
 /**
@@ -18,7 +20,7 @@ export abstract class BaseService {
   protected connection: Connection;
   protected programId: PublicKey;
   protected commitment: Commitment;
-  protected program?: Program<any>;
+  protected program?: AnchorProgram;
 
   constructor(config: BaseServiceConfig) {
     this.connection = config.connection;
@@ -27,7 +29,7 @@ export abstract class BaseService {
     this.program = config.program;
   }
 
-  protected ensureInitialized(): Program<any> {
+  protected ensureInitialized(): AnchorProgram {
     if (!this.program) {
       throw new Error("Client not initialized. Call initialize() first.");
     }
@@ -44,7 +46,7 @@ export abstract class BaseService {
     return program.methods as any;
   }
 
-  setProgram(program: Program<any>) {
+  setProgram(program: AnchorProgram) {
     this.program = program;
   }
 } 

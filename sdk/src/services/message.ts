@@ -1,5 +1,5 @@
 import { PublicKey, Signer, GetProgramAccountsFilter } from "@solana/web3.js";
-import * as anchor from "@coral-xyz/anchor";
+import anchor from "@coral-xyz/anchor";
 import { BaseService } from "./base";
 import { 
   MessageAccount, 

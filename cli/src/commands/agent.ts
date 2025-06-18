@@ -16,8 +16,8 @@ import {
   getTableConfig,
   formatValue,
   validatePublicKey,
-} from "../utils/shared";
-import { createClient, getWallet } from "../utils/client";
+} from "../utils/shared.js";
+import { createClient, getWallet } from "../utils/client.js";
 import ora from "ora";
 
 export class AgentCommands {

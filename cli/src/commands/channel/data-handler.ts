@@ -1,0 +1,75 @@
+import inquirer from "inquirer";
+import { ChannelVisibility } from "@pod-protocol/sdk";
+import { ChannelData } from "./types.js";
+import { ChannelValidators } from "./validators.js";
+
+export class ChannelDataHandler {
+  static async prepareChannelData(options: any): Promise<ChannelData> {
+    let name = options.name || "";
+    let description = options.description || "";
+    let visibility = options.visibility || "public";
+    let maxParticipants = parseInt(options.maxParticipants, 10) || 100;
+    let feePerMessage = parseInt(options.fee, 10) || 1000;
+
+    if (options.interactive) {
+      const answers = await this.promptForChannelData();
+      name = answers.name;
+      description = answers.description;
+      visibility = answers.visibility;
+      maxParticipants = answers.maxParticipants;
+      feePerMessage = answers.feePerMessage;
+    }
+
+    const channelData: ChannelData = {
+      name,
+      description,
+      visibility: visibility as ChannelVisibility,
+      maxParticipants,
+      feePerMessage,
+    };
+
+    ChannelValidators.validateChannelData(channelData);
+    return channelData;
+  }
+
+  private static async promptForChannelData() {
+    return await inquirer.prompt([
+      {
+        type: "input",
+        name: "name",
+        message: "Channel name:",
+        validate: (input: string) => input.length > 0 ? true : "Channel name is required",
+      },
+      {
+        type: "input",
+        name: "description",
+        message: "Channel description:",
+        default: "",
+      },
+      {
+        type: "list",
+        name: "visibility",
+        message: "Channel visibility:",
+        choices: [
+          { name: "Public", value: "public" },
+          { name: "Private", value: "private" },
+        ],
+        default: "public",
+      },
+      {
+        type: "number",
+        name: "maxParticipants",
+        message: "Maximum participants:",
+        default: 100,
+        validate: (input: number) => input > 0 ? true : "Must be greater than 0",
+      },
+      {
+        type: "number",
+        name: "feePerMessage",
+        message: "Fee per message (lamports):",
+        default: 1000,
+        validate: (input: number) => input >= 0 ? true : "Must be 0 or greater",
+      },
+    ]);
+  }
+}

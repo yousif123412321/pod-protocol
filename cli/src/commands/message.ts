@@ -5,7 +5,7 @@ import inquirer from "inquirer";
 import { table } from "table";
 import { PublicKey } from "@solana/web3.js";
 import { PodComClient, MessageType, MessageStatus } from "@pod-protocol/sdk";
-import { createClient, getWallet } from "../utils/client";
+import { createClient, getWallet } from "../utils/client.js";
 import {
   createCommandHandler,
   handleDryRun,
@@ -14,14 +14,14 @@ import {
   getTableConfig,
   formatValue,
   GlobalOptions,
-} from "../utils/shared";
+} from "../utils/shared.js";
 import {
   validatePublicKey,
   validateMessage,
   validateEnum,
   validatePositiveInteger,
   ValidationError,
-} from "../utils/validation";
+} from "../utils/validation.js";
 
 export class MessageCommands {
   register(program: Command) {

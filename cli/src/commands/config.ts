@@ -8,7 +8,7 @@ import { homedir } from "os";
 import { join, dirname } from "path";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import qrcode from "qrcode-terminal";
-import { loadConfig as loadSharedConfig } from "../utils/config";
+import { loadConfig as loadSharedConfig } from "../utils/config.js";
 
 interface CliConfig {
   network: string;

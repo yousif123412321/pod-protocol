@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import ora, { Ora } from "ora";
 import { PodComClient } from "@pod-protocol/sdk";
-import { createClient, getWallet } from "./client";
+import { createClient, getWallet } from "./client.js";
 
 export interface GlobalOptions {
   network?: string;

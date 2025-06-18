@@ -12,13 +12,13 @@ import {
   getTableConfig,
   formatValue,
   GlobalOptions,
-} from "../utils/shared";
+} from "../utils/shared.js";
 import {
   validatePublicKey,
   validateSolAmount,
   validatePositiveInteger,
   ValidationError,
-} from "../utils/validation";
+} from "../utils/validation.js";
 
 // Helper for interactive channel/amount prompts
 async function promptChannelAndAmount({ interactive, channel, amount, lamports, all, withdraw = false }) {

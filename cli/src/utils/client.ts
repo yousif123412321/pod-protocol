@@ -1,5 +1,5 @@
 import { PodComClient } from "@pod-protocol/sdk";
-import { getNetworkEndpoint, loadKeypair } from "./config";
+import { getNetworkEndpoint, loadKeypair } from "./config.js";
 import { Keypair } from "@solana/web3.js";
 
 export async function createClient(network?: string): Promise<PodComClient> {
