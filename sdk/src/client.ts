@@ -246,9 +246,9 @@ export class PodComClient {
       const methods = this.getProgramMethods();
       const tx = await methods
         .sendMessage(
-          options.payload,
-          messageTypeObj,
-          null // replyTo - not in current SendMessageOptions
+          options.recipient,
+          Array.from(payloadHash),
+          messageTypeObj
         )
         .accounts({
           messageAccount: messagePDA,
@@ -461,6 +461,9 @@ export class PodComClient {
    * Join a channel
    */
   async joinChannel(wallet: Signer, channelPDA: PublicKey): Promise<string> {
+    // Derive agent PDA
+    const [agentPDA] = findAgentPDA(wallet.publicKey, this.programId);
+
     // Derive participant PDA
     const [participantPDA] = this.findParticipantPDA(
       channelPDA,
@@ -493,6 +496,7 @@ export class PodComClient {
       .accounts({
         channelAccount: channelPDA,
         participantAccount: participantPDA,
+        agentAccount: agentPDA,
         invitationAccount: invitationAccount ? invitationPDA : null,
         user: wallet.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
@@ -507,6 +511,9 @@ export class PodComClient {
    * Leave a channel
    */
   async leaveChannel(wallet: Signer, channelPDA: PublicKey): Promise<string> {
+    // Derive agent PDA
+    const [agentPDA] = findAgentPDA(wallet.publicKey, this.programId);
+
     // Derive participant PDA
     const [participantPDA] = this.findParticipantPDA(
       channelPDA,
@@ -519,6 +526,7 @@ export class PodComClient {
       .accounts({
         channelAccount: channelPDA,
         participantAccount: participantPDA,
+        agentAccount: agentPDA,
         user: wallet.publicKey,
       })
       .signers([wallet])
@@ -541,6 +549,9 @@ export class PodComClient {
 
     // Generate unique nonce for message
     const nonce = Date.now();
+
+    // Derive agent PDA
+    const [agentPDA] = findAgentPDA(wallet.publicKey, this.programId);
 
     // Derive participant PDA
     const [participantPDA] = this.findParticipantPDA(
@@ -573,6 +584,7 @@ export class PodComClient {
       .accounts({
         channelAccount: channelPDA,
         participantAccount: participantPDA,
+        agentAccount: agentPDA,
         messageAccount: messagePDA,
         user: wallet.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
@@ -591,6 +603,9 @@ export class PodComClient {
     channelPDA: PublicKey,
     invitee: PublicKey
   ): Promise<string> {
+    // Derive agent PDA
+    const [agentPDA] = findAgentPDA(wallet.publicKey, this.programId);
+
     // Derive participant PDA (for inviter)
     const [participantPDA] = this.findParticipantPDA(
       channelPDA,
@@ -609,6 +624,7 @@ export class PodComClient {
       .accounts({
         channelAccount: channelPDA,
         participantAccount: participantPDA,
+        agentAccount: agentPDA,
         invitationAccount: invitationPDA,
         inviter: wallet.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
@@ -949,11 +965,13 @@ export class PodComClient {
     channelPDA: PublicKey,
     userPublicKey: PublicKey
   ): [PublicKey, number] {
+    // Use agent PDA instead of user wallet for participant PDA
+    const [agentPDA] = findAgentPDA(userPublicKey, this.programId);
     return PublicKey.findProgramAddressSync(
       [
         Buffer.from("participant"),
         channelPDA.toBuffer(),
-        userPublicKey.toBuffer(),
+        agentPDA.toBuffer(),
       ],
       this.programId
     );
