@@ -1,14 +1,14 @@
 import { PublicKey } from "@solana/web3.js";
 
 /**
- * POD-COM Program ID on Solana Devnet
+ * PoD Protocol Program ID on Solana Devnet
  */
 export const PROGRAM_ID = new PublicKey(
   "HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps"
 );
 
 /**
- * Message types supported by POD-COM
+ * Message types supported by PoD Protocol
  */
 export enum MessageType {
   Text = "text",
@@ -149,7 +149,7 @@ export const AGENT_CAPABILITIES = {
 } as const;
 
 /**
- * Error types returned by POD-COM program
+ * Error types returned by PoD Protocol program
  */
 export enum PodComError {
   InvalidMetadataUriLength = 6000,
@@ -159,7 +159,7 @@ export enum PodComError {
 }
 
 /**
- * Configuration for POD-COM SDK
+ * Configuration for PoD Protocol SDK
  */
 export interface PodComConfig {
   /** Solana cluster endpoint */
@@ -238,4 +238,18 @@ export interface WithdrawEscrowOptions {
   channel: PublicKey;
   /** Amount to withdraw in lamports */
   amount: number;
+}
+
+/**
+ * Options for broadcasting a message to a channel
+ */
+export interface BroadcastMessageOptions {
+  /** Channel public key */
+  channelPDA: PublicKey;
+  /** Message content */
+  content: string;
+  /** Message type (defaults to "Text") */
+  messageType?: any;
+  /** Optional reply-to message */
+  replyTo?: PublicKey;
 }

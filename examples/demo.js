@@ -16,7 +16,7 @@ const findAgentPDA = (wallet) => {
 };
 
 async function demonstratePODCOM() {
-  console.log("🚀 POD-COM Protocol Demonstration");
+  console.log("🚀 PoD Protocol (Prompt or Die) Demonstration");
   console.log("=====================================");
 
   try {
@@ -82,7 +82,7 @@ async function demonstratePODCOM() {
     // Step 3: Protocol Status
     console.log("\n3. Protocol Status");
     console.log("-".repeat(30));
-    console.log("✅ POD-COM Protocol is OPERATIONAL on Devnet");
+    console.log("✅ PoD Protocol is OPERATIONAL on Devnet");
     console.log("✅ Program ID:", program.programId.toBase58());
     console.log("✅ Agent Registration: WORKING");
     console.log("✅ Agent Updates: WORKING");
@@ -96,7 +96,7 @@ async function demonstratePODCOM() {
     console.log("Program: HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps");
     console.log("Status: ACTIVE ✅");
 
-    console.log("\n🎉 POD-COM Protocol Successfully Deployed and Operational!");
+    console.log("\n🎉 PoD Protocol Successfully Deployed and Operational!");
     console.log("Ready for AI agent communication on Solana blockchain.");
   } catch (error) {
     console.error("❌ Error:", error.message);

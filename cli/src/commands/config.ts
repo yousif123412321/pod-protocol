@@ -6,9 +6,9 @@ import { table } from "table";
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
 import { homedir } from "os";
 import { join, dirname } from "path";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { Keypair } from "@solana/web3.js";
 import qrcode from "qrcode-terminal";
-import { loadConfig as loadSharedConfig } from "../utils/config";
+import { loadConfig as loadSharedConfig } from "../utils/config.js";
 
 interface CliConfig {
   network: string;
@@ -83,7 +83,7 @@ export class ConfigCommands {
                 },
               })
           );
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(chalk.red("Failed to show config:"), error.message);
           process.exit(1);
         }
@@ -112,7 +112,7 @@ export class ConfigCommands {
             chalk.green("✅ Network updated to:"),
             chalk.cyan(network)
           );
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(chalk.red("Failed to set network:"), error.message);
           process.exit(1);
         }
@@ -158,7 +158,7 @@ export class ConfigCommands {
             console.error(chalk.red("Error: Invalid keypair file format"));
             process.exit(1);
           }
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(chalk.red("Failed to set keypair:"), error.message);
           process.exit(1);
         }
@@ -241,11 +241,117 @@ export class ConfigCommands {
           console.log(
             chalk.green("\n✅ Configuration updated to use new keypair")
           );
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(
             chalk.red("Failed to generate keypair:"),
             error.message
           );
+          process.exit(1);
+        }
+      });
+
+    // Airdrop command
+    config
+      .command("airdrop")
+      .description("Request devnet SOL airdrop for development")
+      .option("-a, --amount <sol>", "Amount of SOL to request (default: 2)", "2")
+      .action(async (options) => {
+        try {
+          const currentConfig = this.loadConfig();
+          
+          if (currentConfig.network !== "devnet") {
+            console.error(chalk.red("Error: Airdrop is only available on devnet"));
+            console.log(chalk.yellow("Tip: Switch to devnet with 'pod config set-network devnet'"));
+            return;
+          }
+
+          if (!existsSync(currentConfig.keypairPath)) {
+            console.error(chalk.red("Error: Keypair file not found:"), currentConfig.keypairPath);
+            console.log(chalk.yellow("Tip: Generate a new keypair with 'pod config generate-keypair'"));
+            return;
+          }
+
+          const amount = parseFloat(options.amount);
+          if (amount <= 0 || amount > 5) {
+            console.error(chalk.red("Error: Amount must be between 0.1 and 5 SOL"));
+            return;
+          }
+
+          // Load keypair to get public key
+          const keypairData = JSON.parse(readFileSync(currentConfig.keypairPath, "utf8"));
+          const keypair = Keypair.fromSecretKey(new Uint8Array(keypairData));
+          const publicKey = keypair.publicKey.toBase58();
+
+          console.log(chalk.blue("Requesting airdrop..."));
+          console.log(chalk.cyan("Wallet:"), publicKey);
+          console.log(chalk.cyan("Amount:"), `${amount} SOL`);
+          console.log(chalk.cyan("Network:"), "devnet");
+
+          const spinner = ora("Requesting airdrop...").start();
+
+          try {
+            // Try multiple airdrop sources
+            const endpoints = [
+              "https://api.devnet.solana.com",
+              "https://devnet.solana.com",
+              "https://rpc.solana.com"
+            ];
+
+            let success = false;
+            let signature = "";
+
+            for (const endpoint of endpoints) {
+              try {
+                const response = await fetch(endpoint, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    jsonrpc: "2.0",
+                    id: 1,
+                    method: "requestAirdrop",
+                    params: [publicKey, amount * 1000000000] // Convert SOL to lamports
+                  })
+                });
+
+                const data = await response.json();
+                
+                if (data.result) {
+                  signature = data.result;
+                  success = true;
+                  break;
+                } else if (data.error) {
+                  if (data.error.code === 429) {
+                    continue; // Try next endpoint
+                  }
+                  throw new Error(data.error.message);
+                }
+              } catch {
+                continue; // Try next endpoint
+              }
+            }
+
+            if (success) {
+              spinner.succeed("Airdrop successful!");
+              console.log(chalk.green("Transaction signature:"), signature);
+              console.log(chalk.cyan("Tip: It may take 15-30 seconds for the balance to appear"));
+            } else {
+              spinner.fail("All airdrop sources are rate-limited");
+              console.log(chalk.yellow("\nAlternative options:"));
+              console.log(chalk.cyan("1. Visit:"), "https://faucet.solana.com/");
+              console.log(chalk.cyan("2. Use QuickNode faucet:"), "https://faucet.quicknode.com/solana/devnet");
+              console.log(chalk.cyan("3. Try again in a few hours"));
+              console.log(chalk.cyan("Your wallet address:"), publicKey);
+            }
+
+          } catch (error: Error) {
+            spinner.fail("Airdrop failed");
+            console.error(chalk.red("Error:"), error.message);
+            console.log(chalk.yellow("\nAlternative: Visit https://faucet.solana.com/"));
+            console.log(chalk.cyan("Your wallet address:"), publicKey);
+          }
+
+        } catch (error: Error) {
+          console.error(chalk.red("Failed to request airdrop:"), error.message);
           process.exit(1);
         }
       });
@@ -272,7 +378,7 @@ export class ConfigCommands {
             chalk.green("✅ Custom endpoint set to:"),
             chalk.cyan(url)
           );
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(chalk.red("Failed to set endpoint:"), error.message);
           process.exit(1);
         }
@@ -289,7 +395,7 @@ export class ConfigCommands {
           this.saveConfig(currentConfig);
 
           console.log(chalk.green("✅ Custom endpoint cleared, using default"));
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(chalk.red("Failed to clear endpoint:"), error.message);
           process.exit(1);
         }
@@ -326,7 +432,7 @@ export class ConfigCommands {
 
           this.saveConfig(defaultConfig);
           console.log(chalk.green("✅ Configuration reset to defaults"));
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(chalk.red("Failed to reset config:"), error.message);
           process.exit(1);
         }
@@ -447,7 +553,7 @@ export class ConfigCommands {
           console.log("• Run 'pod status' to check your connection");
           console.log("• Run 'pod agent register' to register as an AI agent");
           console.log("• Run 'pod --help' to see all available commands");
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(chalk.red("Setup failed:"), error.message);
           process.exit(1);
         }

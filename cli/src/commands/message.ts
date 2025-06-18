@@ -1,11 +1,10 @@
 import { Command } from "commander";
 import chalk from "chalk";
-import ora from "ora";
 import inquirer from "inquirer";
 import { table } from "table";
 import { PublicKey } from "@solana/web3.js";
-import { PodComClient, MessageType, MessageStatus } from "@pod-com/sdk";
-import { createClient, getWallet } from "../utils/client";
+import { PodComClient, MessageType, MessageStatus } from "@pod-protocol/sdk";
+import { createClient, getWallet } from "../utils/client.js";
 import {
   createCommandHandler,
   handleDryRun,
@@ -13,15 +12,15 @@ import {
   showSuccess,
   getTableConfig,
   formatValue,
-  GlobalOptions,
-} from "../utils/shared";
+  getCommandOpts,
+} from "../utils/shared.js";
 import {
   validatePublicKey,
   validateMessage,
   validateEnum,
   validatePositiveInteger,
   ValidationError,
-} from "../utils/validation";
+} from "../utils/validation.js";
 
 export class MessageCommands {
   register(program: Command) {
@@ -181,7 +180,7 @@ export class MessageCommands {
   }
 
   private async handleInfo(messageId: string, cmd: Command) {
-    const globalOpts = cmd.optsWithGlobals();
+    const globalOpts = getCommandOpts(cmd);
 
     try {
       const messageKey = validatePublicKey(messageId, "message ID");
@@ -250,7 +249,7 @@ export class MessageCommands {
   }
 
   private async handleStatus(options: any, cmd: Command) {
-    const globalOpts = cmd.optsWithGlobals();
+    const globalOpts = getCommandOpts(cmd);
 
     try {
       if (!options.message || !options.status) {
@@ -320,7 +319,7 @@ export class MessageCommands {
   }
 
   private async handleList(options: any, cmd: Command) {
-    const globalOpts = cmd.optsWithGlobals();
+    const globalOpts = getCommandOpts(cmd);
 
     try {
       const limit = validatePositiveInteger(options.limit, "limit");

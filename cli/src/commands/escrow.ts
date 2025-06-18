@@ -1,9 +1,8 @@
 import { Command } from "commander";
-import chalk from "chalk";
 import inquirer from "inquirer";
 import { table } from "table";
-import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { PodComClient, lamportsToSol, solToLamports } from "@pod-com/sdk";
+import { PublicKey } from "@solana/web3.js";
+import { PodComClient, lamportsToSol, solToLamports } from "@pod-protocol/sdk";
 import {
   createCommandHandler,
   handleDryRun,
@@ -12,13 +11,13 @@ import {
   getTableConfig,
   formatValue,
   GlobalOptions,
-} from "../utils/shared";
+} from "../utils/shared.js";
 import {
   validatePublicKey,
   validateSolAmount,
   validatePositiveInteger,
   ValidationError,
-} from "../utils/validation";
+} from "../utils/validation.js";
 
 // Helper for interactive channel/amount prompts
 async function promptChannelAndAmount({ interactive, channel, amount, lamports, all, withdraw = false }) {
@@ -27,7 +26,7 @@ async function promptChannelAndAmount({ interactive, channel, amount, lamports, 
   let withdrawAll = all;
 
   if (interactive) {
-    const questions: any[] = [
+    const questions: Array<Record<string, any>> = [
       {
         type: "input",
         name: "channelId",
@@ -58,14 +57,14 @@ async function promptChannelAndAmount({ interactive, channel, amount, lamports, 
         { name: "SOL", value: "sol" },
         { name: "Lamports", value: "lamports" },
       ],
-      when: (answers: any) => !withdraw || !answers.withdrawAll,
+      when: (answers: Record<string, any>) => !withdraw || !answers.withdrawAll,
     });
     questions.push({
       type: "number",
       name: "amount",
       message: "Amount:",
       validate: (input: number) => (input > 0 ? true : "Amount must be greater than 0"),
-      when: (answers: any) => !withdraw || !answers.withdrawAll,
+      when: (answers: Record<string, any>) => !withdraw || !answers.withdrawAll,
     });
     const answers = await inquirer.prompt(questions);
     channelId = answers.channelId;
@@ -194,9 +193,9 @@ export class EscrowCommands {
 
   private async handleDeposit(
     client: PodComClient,
-    wallet: any,
+    wallet: Record<string, any>,
     globalOpts: GlobalOptions,
-    options: any
+    options: Record<string, any>
   ) {
     const { channelId, amount } = await promptChannelAndAmount({
       interactive: options.interactive,
@@ -228,11 +227,11 @@ export class EscrowCommands {
 
   private async handleWithdraw(
     client: PodComClient,
-    wallet: any,
+    wallet: Record<string, any>,
     globalOpts: GlobalOptions,
-    options: any
+    options: Record<string, any>
   ) {
-    let { channelId, amount, withdrawAll } = await promptChannelAndAmount({
+    const { channelId, amount: promptAmount, withdrawAll } = await promptChannelAndAmount({
       interactive: options.interactive,
       channel: options.channel,
       amount: options.amount,
@@ -243,6 +242,7 @@ export class EscrowCommands {
     const channelKey = validatePublicKey(channelId, "channel ID");
     const spinner = createSpinner("Withdrawing from escrow...");
     // If withdrawing all, get current balance first
+    let amount = promptAmount;
     if (withdrawAll) {
       const escrowData = await client.getEscrow(channelKey, wallet.publicKey);
       if (!escrowData) {
@@ -272,7 +272,7 @@ export class EscrowCommands {
     });
   }
 
-  private async handleBalance(client: PodComClient, wallet: any, options: any) {
+  private async handleBalance(client: PodComClient, wallet: Record<string, any>, options: Record<string, any>) {
     if (!options.channel) {
       throw new ValidationError("Channel ID is required");
     }
@@ -319,7 +319,7 @@ export class EscrowCommands {
     console.log("\n" + table(data, getTableConfig("Escrow Balance")));
   }
 
-  private async handleList(client: PodComClient, wallet: any, options: any) {
+  private async handleList(client: PodComClient, wallet: Record<string, any>, options: Record<string, any>) {
     const limit = validatePositiveInteger(options.limit, "limit");
     const spinner = createSpinner("Fetching escrow accounts...");
 
@@ -332,7 +332,7 @@ export class EscrowCommands {
 
     spinner.succeed(`Found ${escrows.length} escrow accounts`);
 
-    const data = escrows.map((escrow: any) => [
+    const data = escrows.map((escrow: Record<string, any>) => [
       formatValue(escrow.channel.toBase58().slice(0, 8) + "...", "address"),
       formatValue(`${lamportsToSol(escrow.balance)} SOL`, "number"),
       formatValue(escrow.balance.toString(), "number"),

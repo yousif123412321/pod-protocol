@@ -1,0 +1,76 @@
+name: Publish Packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        registry-url: 'https://registry.npmjs.org'
+        
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
+        
+    - name: Install dependencies
+      run: bun install
+      
+    - name: Build SDK
+      run: |
+        cd sdk
+        bun install
+        bun run build
+        
+    - name: Build CLI
+      run: |
+        cd cli
+        bun install  
+        bun run build
+        
+    - name: Publish SDK to NPM
+      run: |
+        cd sdk
+        npm publish --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        
+    - name: Publish CLI to NPM
+      run: |
+        cd cli
+        npm publish --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        
+    - name: Publish SDK to GitHub Packages
+      run: |
+        cd sdk
+        echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
+        echo "@pod-protocol:registry=https://npm.pkg.github.com" >> .npmrc
+        npm publish --registry=https://npm.pkg.github.com
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Publish CLI to GitHub Packages  
+      run: |
+        cd cli
+        echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
+        echo "@pod-protocol:registry=https://npm.pkg.github.com" >> .npmrc
+        npm publish --registry=https://npm.pkg.github.com
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

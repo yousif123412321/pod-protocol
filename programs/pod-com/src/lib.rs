@@ -1,10 +1,16 @@
+// Global allow for Anchor-related config warnings and deprecated methods
+#![allow(unexpected_cfgs, deprecated)]
+
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::pubkey::Pubkey;
+
+// Import solana_program for macro compatibility
+extern crate solana_program;
 
 declare_id!("HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps");
 
 /*
- * POD-COM: AI Agent Communication Protocol v1.0.0
+ * PoD Protocol (Prompt or Die): AI Agent Communication Protocol v1.0.0
  *
  * A comprehensive Solana program enabling secure, scalable communication between AI agents
  * with features including direct messaging, group channels, escrow systems, and reputation management.
@@ -282,6 +288,7 @@ pub struct MessageAccount {
     _reserved: [u8; 7],            // 7 bytes (padding)
 }
 
+#[allow(deprecated, unexpected_cfgs)]
 #[program]
 pub mod pod_com {
     use super::*;
@@ -860,12 +867,12 @@ pub mod pod_com {
 // Contexts
 
 #[derive(Accounts)]
-#[instruction(metadata_uri: String)]
+#[instruction(capabilities: u64, metadata_uri: String)]
 pub struct RegisterAgent<'info> {
     #[account(
         init,
         payer = signer,
-        space = 8 + 32 + 8 + 4 + MAX_METADATA_URI_LENGTH + 8 + 8 + 1 + 7,
+        space = AGENT_ACCOUNT_SPACE,
         seeds = [b"agent", signer.key().as_ref()],
         bump
     )]
@@ -881,7 +888,7 @@ pub struct SendMessage<'info> {
     #[account(
         init,
         payer = signer,
-        space = 8 + 32 + 32 + 32 + 1 + 8 + 8 + 1 + 1 + 7,
+        space = MESSAGE_ACCOUNT_SPACE,
         seeds = [
             b"message",
             sender_agent.key().as_ref(),
@@ -943,12 +950,12 @@ pub struct UpdateMessageStatus<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(name: String)]
+#[instruction(name: String, description: String, visibility: ChannelVisibility, max_participants: u32, fee_per_message: u64)]
 pub struct CreateChannel<'info> {
     #[account(
         init,
         payer = creator,
-        space = 8 + 32 + 4 + 50 + 4 + 200 + 1 + 4 + 4 + 8 + 8 + 8 + 1 + 7,
+        space = CHANNEL_ACCOUNT_SPACE,
         seeds = [b"channel", creator.key().as_ref(), name.as_bytes()],
         bump
     )]
@@ -959,11 +966,12 @@ pub struct CreateChannel<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(amount: u64)]
 pub struct DepositEscrow<'info> {
     #[account(
         init,
         payer = depositor,
-        space = 8 + 32 + 32 + 8 + 8 + 1 + 7,
+        space = ESCROW_ACCOUNT_SPACE,
         seeds = [b"escrow", channel_account.key().as_ref(), depositor.key().as_ref()],
         bump
     )]
@@ -1065,7 +1073,7 @@ pub struct BroadcastMessage<'info> {
     #[account(
         init,
         payer = user,
-        space = 8 + 32 + 32 + 4 + MAX_MESSAGE_CONTENT_LENGTH + 1 + 8 + 9 + 33 + 1 + 7,
+        space = CHANNEL_MESSAGE_SPACE,
         seeds = [
             b"channel_message",
             channel_account.key().as_ref(),
@@ -1099,7 +1107,7 @@ pub struct InviteToChannel<'info> {
     #[account(
         init,
         payer = inviter,
-        space = 8 + 32 + 32 + 32 + 8 + 8 + 1 + 1 + 6,
+        space = CHANNEL_INVITATION_SPACE,
         seeds = [b"invitation", channel_account.key().as_ref(), invitee.as_ref()],
         bump
     )]
@@ -1125,7 +1133,7 @@ pub struct UpdateChannel<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(name: String)]
+#[instruction(name: String, description: String, visibility: ChannelVisibility, max_participants: u32, fee_per_message: u64)]
 pub struct CreateChannelV2<'info> {
     #[account(
         seeds = [b"agent", creator.key().as_ref()],
@@ -1136,7 +1144,7 @@ pub struct CreateChannelV2<'info> {
     #[account(
         init,
         payer = creator,
-        space = 8 + 32 + 4 + MAX_CHANNEL_NAME_LENGTH + 4 + MAX_CHANNEL_DESCRIPTION_LENGTH + 1 + 4 + 4 + 8 + 8 + 8 + 1 + 1 + 6,
+        space = CHANNEL_ACCOUNT_SPACE,
         seeds = [b"channel", creator.key().as_ref(), name.as_bytes()],
         bump
     )]

@@ -1,89 +1,180 @@
-name: Rust
+name: Rust - Solana Programs
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main, develop]
   pull_request:
-    branches: [ "main" ]
+    branches: [main, develop]
 
 permissions:
   contents: read
 
 env:
   CARGO_TERM_COLOR: always
+  SOLANA_VERSION: "2.2.17"
+  ANCHOR_VERSION: "0.31.1"
 
 jobs:
-  build:
+  rust-checks:
+    name: "🦀 Rust Code Quality"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+
+      - name: Setup Solana
+        uses: ./actions/setup-solana
+        with:
+          solana-version: ${{ env.SOLANA_VERSION }}
+          anchor-version: ${{ env.ANCHOR_VERSION }}
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            programs/pod-com/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Check Rust formatting
+        run: cargo fmt --all -- --check
+        working-directory: programs/pod-com
+
+      - name: Run Clippy lints
+        run: cargo clippy --all-targets --all-features -- -D warnings
+        working-directory: programs/pod-com
+
+      - name: Check Cargo.toml formatting
+        run: |
+          if command -v cargo-sort &> /dev/null; then
+            cargo sort --workspace --check
+          else
+            echo "cargo-sort not available, skipping"
+          fi
+        working-directory: programs/pod-com
+
+  rust-test:
+    name: "🧪 Rust Unit Tests"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Setup Solana
+        uses: ./actions/setup-solana
+        with:
+          solana-version: ${{ env.SOLANA_VERSION }}
+          anchor-version: ${{ env.ANCHOR_VERSION }}
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            programs/pod-com/target
+          key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run Rust unit tests
+        run: cargo test --verbose
+        working-directory: programs/pod-com
+
+      - name: Run Rust doc tests
+        run: cargo test --doc --verbose
+        working-directory: programs/pod-com
+
+  anchor-build:
+    name: "⚓ Anchor Program Build"
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        include:
-          - name: Linux x86_64
-            runner: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            use-cross: false
-          - name: Linux aarch64  
-            runner: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            use-cross: true
-          - name: macOS x86_64
-            runner: macos-latest
-            target: x86_64-apple-darwin
-            use-cross: false
-          - name: macOS aarch64
-            runner: macos-latest
-            target: aarch64-apple-darwin
-            use-cross: false
-          - name: Windows x86_64
-            runner: windows-latest
-            target: x86_64-pc-windows-msvc
-            use-cross: false
-
-    runs-on: ${{ matrix.runner }}
-    name: Build for ${{ matrix.name }}
-
+        build-type: [debug, release]
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: ${{ matrix.target }}
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Install LLD linker (Linux)
-      if: runner.os == 'Linux'
-      run: sudo apt-get update && sudo apt-get install -y lld
-        
-    - name: Install cross
-      if: matrix.use-cross
-      uses: taiki-e/install-action@v2
-      with:
-        tool: cross
-        
-    - name: Cache cargo registry
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ matrix.runner }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        
-    - name: Build with cargo
-      if: ${{ !matrix.use-cross }}
-      run: cargo build --verbose --target ${{ matrix.target }}
-      
-    - name: Set linker environment for x86_64
-      if: matrix.use-cross && matrix.target == 'x86_64-unknown-linux-gnu'
-      run: echo "RUSTFLAGS=-C linker=x86_64-linux-gnu-gcc" >> $GITHUB_ENV
-      
-    - name: Set linker environment for aarch64  
-      if: matrix.use-cross && matrix.target == 'aarch64-unknown-linux-gnu'
-      run: echo "RUSTFLAGS=-C linker=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
-        
-    - name: Build with cross
-      if: matrix.use-cross
-      run: cross build --verbose --target ${{ matrix.target }}
-      
-    - name: Run tests
-      if: ${{ !matrix.use-cross }}
-      run: cargo test --verbose --target ${{ matrix.target }}
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Setup Solana
+        uses: ./actions/setup-solana
+        with:
+          solana-version: ${{ env.SOLANA_VERSION }}
+          anchor-version: ${{ env.ANCHOR_VERSION }}
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            programs/pod-com/target
+          key: ${{ runner.os }}-anchor-${{ matrix.build-type }}-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build Anchor program (Debug)
+        if: matrix.build-type == 'debug'
+        run: anchor build
+
+      - name: Build Anchor program (Release)
+        if: matrix.build-type == 'release'
+        run: anchor build --release
+
+      - name: Verify program builds
+        run: |
+          if [ -f "target/deploy/pod_com.so" ]; then
+            echo "✅ Program binary built successfully"
+            ls -la target/deploy/
+          else
+            echo "❌ Program binary not found"
+            exit 1
+          fi
+
+      - name: Upload program artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: solana-program-${{ matrix.build-type }}
+          path: |
+            target/deploy/*.so
+            target/idl/*.json
+
+  security-audit:
+    name: "🔒 Rust Security Audit"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+
+      - name: Run security audit
+        run: cargo audit
+        working-directory: programs/pod-com
+
+      - name: Check for known vulnerabilities
+        run: |
+          echo "🔍 Checking for known Solana/Anchor vulnerabilities..."
+          # Add specific checks for Solana ecosystem vulnerabilities
+          cargo audit --db advisory-db/
+        working-directory: programs/pod-com
+        continue-on-error: true

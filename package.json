@@ -1,63 +1,83 @@
 {
-  "name": "pod-com",
-  "version": "1.0.0",
-  "description": "POD-COM: AI Agent Communication Protocol on Solana",
+  "name": "pod-protocol",
+  "version": "1.1.4",
+  "description": "PoD Protocol (Prompt or Die): The ultimate AI Agent Communication Protocol on Solana",
+  "type": "module",
   "main": "index.js",
+  "bin": {
+    "pod": "cli/dist/index.js",
+    "pod-com": "cli/dist/index.js"
+  },
   "scripts": {
-    "build": "anchor build",
-    "build:safe": "anchor build --no-idl",
-    "build:idl": "anchor idl build",
+    "build": "~/.cargo/bin/anchor build",
+    "build:safe": "~/.cargo/bin/anchor build --no-idl",
+    "build:idl": "~/.cargo/bin/anchor idl build",
     "build:full": "bun run build:safe && bun run build:idl",
     "build:verify": "bun run build:full && bun run verify:build",
-    "test": "anchor test",
-    "deploy": "anchor deploy",
-    "build:all": "bun run build:safe && cd sdk && bun run build && cd ../cli && bun run build",
-    "clean": "anchor clean && rm -rf target/ && cd sdk && rm -rf dist/ && cd ../cli && rm -rf dist/",
+    "build:all": "cd sdk && bun run build:prod && cd ../cli && bun run build:prod",
+    "prebuild:all": "cd sdk && bun install && cd ../cli && bun install",
+    "build:prod": "bun run clean && bun run build:all",
+    "test": "~/.cargo/bin/anchor test",
+    "test:all": "bun run test && cd sdk && bun run test && cd ../cli && bun run test",
+    "test:coverage": "cd sdk && bun run test:coverage && cd ../cli && bun run test:coverage",
+    "deploy": "~/.cargo/bin/anchor deploy",
+    "deploy:prod": "~/.cargo/bin/anchor deploy --provider.cluster mainnet",
+    "clean": "~/.cargo/bin/anchor clean && rm -rf target/ && cd sdk && bun run clean && cd ../cli && bun run clean",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" --write",
-    "dev": "anchor test --skip-deploy",
-    "docs": "anchor build && typedoc --out docs/api sdk/src/index.ts",
+    "lint:all": "bun run lint && cd sdk && bun run lint && cd ../cli && bun run lint",
+    "dev": "~/.cargo/bin/anchor test --skip-deploy",
+    "docs": "~/.cargo/bin/anchor build && typedoc --out docs/api sdk/src/index.ts",
+    "docs:build": "bun run docs && cd sdk && bun run docs",
     "verify:build": "bun scripts/verify-build.js",
+    "production:test": "node scripts/production-test.js",
+    "production:deploy": "bun run production:test && bun run build:prod",
     "ci:build": "bun run build:verify && bun run build:all",
+    "ci:test": "bun run test:all && bun run lint:all",
     "pretest": "bun run build:verify",
-    "postinstall": "bun install --cwd sdk && bun install --cwd cli"
+    "prepublishOnly": "bun run production:test && bun run build:all"
   },
   "keywords": [
     "solana",
     "anchor",
-    "ai",
-    "agent",
-    "communication",
-    "protocol",
-    "blockchain",
+    "ai-agents",
+    "agent-communication",
+    "blockchain-protocol",
     "web3",
+    "decentralized",
+    "messaging",
+    "prompt-or-die",
+    "pod-protocol",
     "typescript",
-    "rust"
+    "rust",
+    "sdk",
+    "cli"
   ],
-  "author": "POD-COM Protocol Team",
+  "author": "PoD Protocol Team",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/pod-com.git"
+    "url": "git+https://github.com/Dexploarer/PoD-Protocol.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/pod-com/issues"
+    "url": "https://github.com/Dexploarer/PoD-Protocol/issues"
   },
-  "homepage": "https://github.com/yourusername/pod-com#readme",
+  "homepage": "https://github.com/Dexploarer/PoD-Protocol#readme",
   "workspaces": [
     "sdk",
     "cli"
   ],
   "packageManager": "bun@1.0.0",
   "dependencies": {
-    "@coral-xyz/anchor": "^0.31.1",
-    "@pod-com/sdk": "^1.0.0",
-    "@solana/web3.js": "^1.98.2",
-    "anchor": "^1.4.1",
+    "@pod-protocol/cli": "^1.3.11",
+    "@pod-protocol/sdk": "^1.1.8",
+    "@solana/web3.js": "^1.95.4",
+    "@solana/wallet-adapter-base": "^0.9.23",
     "chalk": "^5.4.1",
     "commander": "^14.0.0",
     "inquirer": "^12.6.3",
-    "rust": "^1.75.0",
+    "ora": "^8.1.1",
+    "qrcode-terminal": "^0.12.0",
     "table": "^6.9.0"
   },
   "devDependencies": {
@@ -72,14 +92,14 @@
     "@types/istanbul-reports": "^3.0.4",
     "@types/json-schema": "^7.0.15",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^24.0.3",
+    "@types/node": "^22.7.7",
     "chai": "^5.2.0",
     "chai-as-promised": "^8.0.1",
     "mocha": "^11.6.0",
-    "prettier": "3.5.3",
-    "ts-mocha": "11.1.0",
-    "typedoc": "0.28.5",
-    "typescript": "^5.7.3"
+    "prettier": "^3.0.0",
+    "ts-mocha": "^10.0.0",
+    "typedoc": "^0.25.0",
+    "typescript": "^5.8.3"
   },
   "engines": {
     "node": ">=18.0.0"

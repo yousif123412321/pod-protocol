@@ -314,3 +314,39 @@ export async function retry<T>(
 
   throw lastError!;
 }
+
+/**
+ * Convert BN timestamp to number with fallback options
+ * Handles common timestamp conversion patterns used across services
+ */
+export function convertTimestamp(
+  primaryField?: any,
+  fallbackField?: any,
+  defaultValue: number = Date.now()
+): number {
+  return primaryField?.toNumber() || fallbackField?.toNumber() || defaultValue;
+}
+
+/**
+ * Get timestamp from account with common field name patterns
+ * Handles timestamp/createdAt field variations
+ */
+export function getAccountTimestamp(account: any): number {
+  return convertTimestamp(account.timestamp, account.createdAt);
+}
+
+/**
+ * Get creation timestamp from account with common field name patterns
+ * Handles createdAt/timestamp field variations (reverse order for createdAt)
+ */
+export function getAccountCreatedAt(account: any): number {
+  return convertTimestamp(account.createdAt, account.timestamp);
+}
+
+/**
+ * Get last updated timestamp from account with common field name patterns
+ * Handles lastUpdated/updatedAt field variations
+ */
+export function getAccountLastUpdated(account: any): number {
+  return convertTimestamp(account.lastUpdated, account.updatedAt);
+}

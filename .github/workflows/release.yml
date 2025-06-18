@@ -6,22 +6,25 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+env:
+  SOLANA_VERSION: "2.2.17"
+  ANCHOR_VERSION: "0.31.1"
+
 jobs:
   release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
-      
+    name: "🚀 Release POD-COM Platform"
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          registry-url: 'https://registry.npmjs.org'
+          fetch-depth: 0
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -34,33 +37,93 @@ jobs:
       - name: Setup Solana
         uses: ./actions/setup-solana
         with:
-          solana-version: '1.17.0'
+          solana-version: ${{ env.SOLANA_VERSION }}
+          anchor-version: ${{ env.ANCHOR_VERSION }}
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            node_modules
+            sdk/node_modules
+            cli/node_modules
+          key: ${{ runner.os }}-release-${{ hashFiles('**/bun.lock', '**/Cargo.lock') }}
 
       - name: Install dependencies
-        run: bun install
-
-      - name: Install workspace dependencies
         run: |
+          bun install
           cd sdk && bun install
           cd ../cli && bun install
 
-      - name: Run tests
-        run: bun test
+      - name: Run full test suite
+        run: |
+          echo "🧪 Running comprehensive tests before release..."
+          bun run lint
+          bun run build:verify
+          bun run test
 
       - name: Build all projects
-        run: bun run build:all
+        run: |
+          echo "🏗️ Building all projects..."
+          bun run build:safe
+          bun run build:idl
+          cd sdk && bun run build
+          cd ../cli && bun run build
+
+      - name: Verify build artifacts
+        run: |
+          echo "✅ Verifying build artifacts..."
+          ls -la target/deploy/ || echo "No Solana programs built"
+          ls -la target/idl/ || echo "No IDL files built"
+          ls -la sdk/dist/ || echo "No SDK dist built"
+          ls -la cli/dist/ || echo "No CLI dist built"
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            VERSION="0.0.0-dev"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Release version: $VERSION"
+
+      - name: Update package versions
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          echo "📝 Updating package.json versions to $VERSION"
+          
+          # Update root package.json
+          bun --bun ./scripts/update-version.js $VERSION || echo "Version update script not found, skipping"
+          
+          # Update SDK version
+          cd sdk
+          npm version $VERSION --no-git-tag-version || echo "SDK version update failed"
+          
+          # Update CLI version  
+          cd ../cli
+          npm version $VERSION --no-git-tag-version || echo "CLI version update failed"
 
       - name: Configure npm authentication
+        if: env.NPM_TOKEN != ''
         run: |
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-        if: env.NPM_TOKEN != ''
+          echo "📝 NPM authentication configured"
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           
       - name: Publish SDK to npm
         if: env.NPM_TOKEN != ''
         working-directory: sdk
-        run: npm publish --access public
+        run: |
+          echo "📦 Publishing SDK to npm..."
+          bun run build
+          npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -68,16 +131,95 @@ jobs:
       - name: Publish CLI to npm
         if: env.NPM_TOKEN != ''
         working-directory: cli
-        run: npm publish --access public
+        run: |
+          echo "📦 Publishing CLI to npm..."
+          bun run build
+          npm publish --access public --provenance
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Create release archive
+        run: |
+          echo "📦 Creating release archive..."
+          mkdir -p release-artifacts
+          
+          # Copy program binaries
+          if [ -d "target/deploy" ]; then
+            cp -r target/deploy/ release-artifacts/programs/
+          fi
+          
+          # Copy IDL files
+          if [ -d "target/idl" ]; then
+            cp -r target/idl/ release-artifacts/
+          fi
+          
+          # Copy SDK dist
+          if [ -d "sdk/dist" ]; then
+            cp -r sdk/dist/ release-artifacts/sdk/
+          fi
+          
+          # Copy CLI dist
+          if [ -d "cli/dist" ]; then
+            cp -r cli/dist/ release-artifacts/cli/
+          fi
+          
+          # Create archive
+          tar -czf pod-com-${{ steps.version.outputs.version }}.tar.gz -C release-artifacts .
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          echo "📝 Generating release notes..."
+          cat > release_notes.md << EOF
+          # POD-COM Platform Release ${{ steps.version.outputs.version }}
+          
+          ## 🚀 What's New
+          
+          This release includes updates to the POD-COM AI Agent Communication Protocol.
+          
+          ## 📦 Packages
+          
+          - **SDK**: \`@pod-com/sdk@${{ steps.version.outputs.version }}\`
+          - **CLI**: \`@pod-com/cli@${{ steps.version.outputs.version }}\`
+          
+          ## 🛠️ Installation
+          
+          \`\`\`bash
+          # Install SDK
+          bun add @pod-com/sdk
+          
+          # Install CLI globally
+          bun add -g @pod-com/cli
+          \`\`\`
+          
+          ## 🔧 Solana Program
+          
+          The Solana program artifacts are included in this release.
+          
+          ## 📚 Documentation
+          
+          Visit our [documentation](https://github.com/Dexploarer/POD-COM) for usage examples.
+          EOF
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          body_path: release_notes.md
           draft: false
           prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+          files: |
+            pod-com-${{ steps.version.outputs.version }}.tar.gz
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify Discord (if configured)
+        if: env.DISCORD_WEBHOOK != ''
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d "{\"content\":\"🚀 POD-COM Platform v${{ steps.version.outputs.version }} has been released! Check it out: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}\"}" \
+               ${{ secrets.DISCORD_WEBHOOK }}
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        continue-on-error: true

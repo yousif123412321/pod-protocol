@@ -35,7 +35,7 @@ let senderAgentPDA: PublicKey;
 let recipientAgentPDA: PublicKey;
 let messagePDA: PublicKey;
 
-describe("POD-COM Tests", () => {
+describe("PoD Protocol Tests", () => {
   beforeAll(async () => {
     // Initialize PDAs
     [senderAgentPDA] = findAgentPDA(wallet.publicKey, program.programId);

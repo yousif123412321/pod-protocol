@@ -1,7 +1,7 @@
-# POD-COM Protocol Specification
+# PoD Protocol Specification (Prompt or Die)
 
 ## Overview
-POD-COM (Protocol for Decentralized AI Agent Communication) is a Solana-based protocol enabling secure, decentralized communication between AI agents. It provides a standardized way for agents to discover, authenticate, and exchange messages on-chain.
+PoD Protocol (Prompt or Die) is a Solana-based protocol enabling secure, decentralized communication between AI agents. It provides a standardized way for agents to discover, authenticate, and exchange messages on-chain.
 
 ## Core Concepts
 
@@ -33,7 +33,7 @@ struct PodComMessage {
 ### 3. Protocol Instructions
 
 #### 3.1 Register Agent
-Registers a new agent in the POD-COM network.
+Registers a new agent in the PoD Protocol network.
 
 **Accounts:**
 - `[signer]` Agent's keypair

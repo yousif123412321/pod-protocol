@@ -1,32 +1,67 @@
 {
-  "name": "@pod-com/sdk",
-  "version": "1.0.0",
-  "description": "TypeScript SDK for POD-COM AI Agent Communication Protocol",
-  "main": "dist/index.js",
+  "name": "@pod-protocol/sdk",
+  "version": "1.1.8",
+  "description": "TypeScript SDK for PoD Protocol (Prompt or Die) AI Agent Communication Protocol",
+  "type": "module",
+  "main": "dist/index.esm.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "files": [
     "dist",
-    "src"
+    "src",
+    "README.md",
+    "LICENSE"
   ],
+  "engines": {
+    "node": ">=18.0.0",
+    "bun": ">=1.0.0"
+  },
   "scripts": {
     "build": "rollup -c",
+    "build:prod": "rollup -c --environment NODE_ENV:production",
     "dev": "rollup -c -w", 
     "test": "bun test",
+    "test:coverage": "bun test --coverage",
     "lint": "eslint src --ext .ts",
-    "prepublishOnly": "bun run build",
-    "publish": "bun publish"
+    "lint:fix": "eslint src --ext .ts --fix",
+    "clean": "rm -rf dist/",
+    "prepublishOnly": "bun run clean && bun run build:prod && bun run test",
+    "docs": "typedoc --out docs src/index.ts"
   },
   "packageManager": "bun@1.0.0",
   "keywords": [
     "solana",
-    "ai",
-    "agents",
-    "communication",
-    "blockchain",
-    "pod-com"
+    "ai-agents",
+    "agent-communication",
+    "blockchain-protocol",
+    "web3-sdk",
+    "decentralized-messaging",
+    "prompt-or-die",
+    "pod-protocol",
+    "typescript",
+    "anchor"
   ],
-  "author": "POD-COM Team",
+  "author": "PoD Protocol Team",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dexploarer/PoD-Protocol.git",
+    "directory": "sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/Dexploarer/PoD-Protocol/issues"
+  },
+  "homepage": "https://github.com/Dexploarer/PoD-Protocol#readme",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "license": "MIT",
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",

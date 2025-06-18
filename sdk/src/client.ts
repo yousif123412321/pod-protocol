@@ -3,11 +3,8 @@ import {
   PublicKey,
   Signer,
   Commitment,
-  GetProgramAccountsFilter,
-  SystemProgram,
 } from "@solana/web3.js";
-import * as anchor from "@coral-xyz/anchor";
-import { BN, Program, AnchorProvider, Wallet } from "@coral-xyz/anchor";
+import anchor, { Program, AnchorProvider } from "@coral-xyz/anchor";
 import {
   PROGRAM_ID,
   PodComConfig,
@@ -21,42 +18,121 @@ import {
   CreateChannelOptions,
   DepositEscrowOptions,
   WithdrawEscrowOptions,
-  MessageType,
+  BroadcastMessageOptions,
   MessageStatus,
   ChannelVisibility,
 } from "./types";
-import {
-  findAgentPDA,
-  findMessagePDA,
-  findChannelPDA,
-  findEscrowPDA,
-  hashPayload,
-  getMessageTypeId,
-  convertMessageTypeToProgram,
-  convertMessageTypeFromProgram,
-  retry,
-} from "./utils";
 import { PodCom, IDL } from "./pod_com";
+import type { IdlAccounts } from "@coral-xyz/anchor";
 
-// Type definitions for program accounts
-type ProgramAccounts = {
-  agentAccount: any;
-  messageAccount: any;
-  channelAccount: any;
-  channelParticipant: any;
-  channelMessage: any;
-  channelInvitation: any;
-  escrowAccount: any;
-};
+// Import services
+import { BaseService, BaseServiceConfig } from "./services/base";
+import { AgentService } from "./services/agent";
+import { MessageService } from "./services/message";
 
 /**
- * Main POD-COM SDK client for interacting with the protocol
+ * Channel-related operations service (placeholder for future implementation)
+ */
+class ChannelService extends BaseService {
+  async createChannel(_wallet: Signer, _options: CreateChannelOptions): Promise<string> {
+    throw new Error("Channel service not yet implemented");
+  }
+
+  async getChannel(_channelPDA: PublicKey): Promise<ChannelAccount | null> {
+    throw new Error("Channel service not yet implemented");
+  }
+
+  async getAllChannels(
+    _limit: number = 50,
+    _visibilityFilter?: ChannelVisibility
+  ): Promise<ChannelAccount[]> {
+    throw new Error("Channel service not yet implemented");
+  }
+
+  async getChannelsByCreator(
+    _creator: PublicKey,
+    _limit: number = 50
+  ): Promise<ChannelAccount[]> {
+    throw new Error("Channel service not yet implemented");
+  }
+
+  async joinChannel(_wallet: Signer, _channelPDA: PublicKey): Promise<string> {
+    throw new Error("Channel service not yet implemented");
+  }
+
+  async leaveChannel(_wallet: Signer, _channelPDA: PublicKey): Promise<string> {
+    throw new Error("Channel service not yet implemented");
+  }
+
+  async broadcastMessage(_wallet: Signer, _options: BroadcastMessageOptions): Promise<string> {
+    throw new Error("Channel service not yet implemented");
+  }
+
+  async inviteToChannel(
+    _wallet: Signer,
+    _channelPDA: PublicKey,
+    _invitee: PublicKey
+  ): Promise<string> {
+    throw new Error("Channel service not yet implemented");
+  }
+
+  async getChannelParticipants(
+    _channelPDA: PublicKey,
+    _limit: number = 50
+  ): Promise<Array<IdlAccounts<PodCom>>> {
+    throw new Error("Channel service not yet implemented");
+  }
+
+  async getChannelMessages(
+    _channelPDA: PublicKey,
+    _limit: number = 50
+  ): Promise<Array<IdlAccounts<PodCom>>> {
+    throw new Error("Channel service not yet implemented");
+  }
+}
+
+/**
+ * Escrow-related operations service (placeholder for future implementation)
+ */
+class EscrowService extends BaseService {
+  async depositEscrow(_wallet: Signer, _options: DepositEscrowOptions): Promise<string> {
+    throw new Error("Escrow service not yet implemented");
+  }
+
+  async withdrawEscrow(_wallet: Signer, _options: WithdrawEscrowOptions): Promise<string> {
+    throw new Error("Escrow service not yet implemented");
+  }
+
+  async getEscrow(
+    _channel: PublicKey,
+    _depositor: PublicKey
+  ): Promise<EscrowAccount | null> {
+    throw new Error("Escrow service not yet implemented");
+  }
+
+  async getEscrowsByDepositor(
+    _depositor: PublicKey,
+    _limit: number = 50
+  ): Promise<EscrowAccount[]> {
+    throw new Error("Escrow service not yet implemented");
+  }
+}
+
+/**
+ * Main PoD Protocol SDK client for interacting with the protocol
+ * Refactored to use service-based architecture for better maintainability
  */
 export class PodComClient {
   private connection: Connection;
   private programId: PublicKey;
   private commitment: Commitment;
-  private program?: Program<any>;
+  private program?: Program<PodCom>;
+
+  // Service instances - public for direct access to specific functionality
+  public agents: AgentService;
+  public messages: MessageService;
+  public channels: ChannelService;
+  public escrow: EscrowService;
 
   constructor(config: PodComConfig = {}) {
     this.connection = new Connection(
@@ -65,161 +141,109 @@ export class PodComClient {
     );
     this.programId = config.programId ?? PROGRAM_ID;
     this.commitment = config.commitment ?? "confirmed";
-  }
 
-  /**
-   * Initialize the Anchor program (call this first)
-   */
-  async initialize(): Promise<void> {
-    // Create a dummy wallet for the provider (transactions will use actual signers)
-    const dummyWallet = {
-      publicKey: PublicKey.default,
-      signTransaction: async () => {
-        throw new Error("Use actual signer");
-      },
-      signAllTransactions: async () => {
-        throw new Error("Use actual signer");
-      },
+    // Initialize services
+    const serviceConfig: BaseServiceConfig = {
+      connection: this.connection,
+      programId: this.programId,
+      commitment: this.commitment
     };
 
-    const provider = new AnchorProvider(this.connection, dummyWallet, {
-      commitment: this.commitment,
-    });
-
-    this.program = new Program(IDL as any, provider) as Program<any>;
+    this.agents = new AgentService(serviceConfig);
+    this.messages = new MessageService(serviceConfig);
+    this.channels = new ChannelService(serviceConfig);
+    this.escrow = new EscrowService(serviceConfig);
   }
 
-  private ensureInitialized(): Program<any> {
-    if (!this.program) {
-      throw new Error("Client not initialized. Call initialize() first.");
+  /**
+   * Initialize the Anchor program with a wallet (call this first)
+   */
+  async initialize(wallet?: anchor.Wallet): Promise<void> {
+    try {
+      if (wallet) {
+        // If a wallet is provided, create the program with it
+        const provider = new AnchorProvider(this.connection, wallet, {
+          commitment: this.commitment,
+          skipPreflight: true,
+        });
+        
+        // Validate IDL before creating program
+        if (!IDL) {
+          throw new Error("IDL not found. Ensure the program IDL is properly generated and imported.");
+        }
+        
+        this.program = new Program(IDL, provider) as Program<PodCom>;
+        
+        // Validate program was created successfully
+        if (!this.program) {
+          throw new Error("Failed to create Anchor program instance");
+        }
+        
+        // Set program for all services
+        this.agents.setProgram(this.program);
+        this.messages.setProgram(this.program);
+        this.channels.setProgram(this.program);
+        this.escrow.setProgram(this.program);
+      } else {
+        // No wallet provided - validate IDL before setting on services
+        if (!IDL) {
+          throw new Error("IDL not found. Ensure the program IDL is properly generated and imported.");
+        }
+        
+        // Set IDL for all services
+        this.agents.setIDL(IDL);
+        this.messages.setIDL(IDL);
+        this.channels.setIDL(IDL);
+        this.escrow.setIDL(IDL);
+      }
+      
+      // Validate initialization was successful
+      if (!this.isInitialized()) {
+        throw new Error("Client initialization failed - services not properly configured");
+      }
+      
+    } catch (error: Error) {
+      throw new Error(`Client initialization failed: ${error.message}`);
     }
-    return this.program;
-  }
-
-  // Helper method to safely access account methods
-  private getAccount(accountName: string) {
-    const program = this.ensureInitialized();
-    return (program.account as any)[accountName];
-  }
-
-  // Helper function to safely handle program methods with type assertion
-  private getProgramMethods() {
-    const program = this.ensureInitialized();
-    return program.methods as any;
   }
 
   // ============================================================================
-  // Agent Operations
+  // Legacy API Methods (for backward compatibility)
+  // Delegate to appropriate services
   // ============================================================================
 
   /**
-   * Register a new agent on the POD-COM protocol
+   * @deprecated Use client.agents.registerAgent() instead
    */
-  async registerAgent(
-    wallet: Signer,
-    options: CreateAgentOptions
-  ): Promise<string> {
-    const [agentPDA] = findAgentPDA(wallet.publicKey, this.programId);
-
-    return retry(async () => {
-      const methods = this.getProgramMethods();
-      const tx = await methods
-        .registerAgent(new BN(options.capabilities), options.metadataUri)
-        .accounts({
-          agentAccount: agentPDA,
-          wallet: wallet.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([wallet])
-        .rpc({ commitment: this.commitment });
-
-      return tx;
-    });
+  async registerAgent(wallet: Signer, options: CreateAgentOptions): Promise<string> {
+    return this.agents.registerAgent(wallet, options);
   }
 
   /**
-   * Update an existing agent
+   * @deprecated Use client.agents.updateAgent() instead
    */
-  async updateAgent(
-    wallet: Signer,
-    options: UpdateAgentOptions
-  ): Promise<string> {
-    const [agentPDA] = findAgentPDA(wallet.publicKey, this.programId);
-
-    return retry(async () => {
-      const methods = this.getProgramMethods();
-      const tx = await methods
-        .updateAgent(
-          options.capabilities !== undefined
-            ? new BN(options.capabilities)
-            : null,
-          options.metadataUri !== undefined ? options.metadataUri : null
-        )
-        .accounts({
-          agentAccount: agentPDA,
-          wallet: wallet.publicKey,
-        })
-        .signers([wallet])
-        .rpc({ commitment: this.commitment });
-
-      return tx;
-    });
+  async updateAgent(wallet: Signer, options: UpdateAgentOptions): Promise<string> {
+    return this.agents.updateAgent(wallet, options);
   }
 
   /**
-   * Get agent account data
+   * @deprecated Use client.agents.getAgent() instead
    */
   async getAgent(walletPublicKey: PublicKey): Promise<AgentAccount | null> {
-    const [agentPDA] = findAgentPDA(walletPublicKey, this.programId);
-
-    try {
-      const account = await this.getAccount("agentAccount").fetch(agentPDA);
-      return {
-        pubkey: agentPDA,
-        capabilities: account.capabilities.toNumber(),
-        metadataUri: account.metadataUri,
-        reputation: account.reputation?.toNumber() || 0,
-        lastUpdated: account.lastUpdated?.toNumber() || account.updatedAt?.toNumber() || Date.now(),
-        bump: account.bump,
-      };
-    } catch (error: any) {
-      if (error?.message?.includes("Account does not exist")) {
-        return null;
-      }
-      throw error;
-    }
+    return this.agents.getAgent(walletPublicKey);
   }
 
   /**
-   * Get all registered agents
+   * @deprecated Use client.agents.getAllAgents() instead
    */
   async getAllAgents(limit: number = 100): Promise<AgentAccount[]> {
-    try {
-      const accounts = await this.getAccount("agentAccount").all();
-
-      return accounts
-        .slice(0, limit)
-        .map(({ account, publicKey }: { account: any; publicKey: any }) => ({
-          pubkey: publicKey,
-          capabilities: account.capabilities.toNumber(),
-          metadataUri: account.metadataUri,
-          reputation: account.reputation?.toNumber() || 0,
-          lastUpdated: account.lastUpdated?.toNumber() || account.updatedAt?.toNumber() || Date.now(),
-          bump: account.bump,
-        }));
-    } catch (error) {
-      console.warn("Failed to fetch agents:", error);
-      return [];
-    }
+    return this.agents.getAllAgents(limit);
   }
 
-  // ============================================================================
-  // Message Operations
-  // ============================================================================
-
   /**
-   * Send a message to another agent
+   * @deprecated Use client.messages.sendMessage() instead
    */
+<<<<<<< HEAD
   async sendMessage(
     wallet: Signer,
     options: SendMessageOptions
@@ -261,206 +285,80 @@ export class PodComClient {
 
       return tx;
     });
+=======
+  async sendMessage(wallet: Signer, options: SendMessageOptions): Promise<string> {
+    return this.messages.sendMessage(wallet, options);
+>>>>>>> df85d1e44491e4c3e436028282199d5d8626be9c
   }
 
   /**
-   * Update message status
+   * @deprecated Use client.messages.updateMessageStatus() instead
    */
   async updateMessageStatus(
     wallet: Signer,
     messagePDA: PublicKey,
     newStatus: MessageStatus
   ): Promise<string> {
-    const statusObj = this.convertMessageStatus(newStatus);
-
-    return retry(async () => {
-      const methods = this.getProgramMethods();
-      const tx = await methods
-        .updateMessageStatus(statusObj)
-        .accounts({
-          messageAccount: messagePDA,
-          signer: wallet.publicKey,
-        })
-        .signers([wallet])
-        .rpc({ commitment: this.commitment });
-
-      return tx;
-    });
+    return this.messages.updateMessageStatus(wallet, messagePDA, newStatus);
   }
 
   /**
-   * Get message account data
+   * @deprecated Use client.messages.getMessage() instead
    */
   async getMessage(messagePDA: PublicKey): Promise<MessageAccount | null> {
-    try {
-      const account = await this.getAccount("messageAccount").fetch(messagePDA);
-      return this.convertMessageAccountFromProgram(account, messagePDA);
-    } catch (error: any) {
-      if (error?.message?.includes("Account does not exist")) {
-        return null;
-      }
-      throw error;
-    }
+    return this.messages.getMessage(messagePDA);
   }
 
   /**
-   * Get messages for an agent
+   * @deprecated Use client.messages.getAgentMessages() instead
    */
   async getAgentMessages(
     agentPublicKey: PublicKey,
     limit: number = 50,
     statusFilter?: MessageStatus
   ): Promise<MessageAccount[]> {
-    try {
-      const filters: GetProgramAccountsFilter[] = [];
-
-      // Add filter for sender or recipient (would need custom implementation)
-      // For now, get all messages and filter client-side
-      const accounts = await this.getAccount("messageAccount").all();
-
-      let filteredAccounts = accounts.filter(
-        ({ account }: { account: any }) =>
-          account.sender.equals(agentPublicKey) ||
-          account.recipient.equals(agentPublicKey)
-      );
-
-      if (statusFilter) {
-        const statusObj = this.convertMessageStatus(statusFilter);
-        filteredAccounts = filteredAccounts.filter(
-          ({ account }: { account: any }) =>
-            JSON.stringify(account.status) === JSON.stringify(statusObj)
-        );
-      }
-
-      return filteredAccounts
-        .slice(0, limit)
-        .map(({ account, publicKey }: { account: any; publicKey: any }) =>
-          this.convertMessageAccountFromProgram(account, publicKey)
-        );
-    } catch (error) {
-      console.warn("Failed to fetch messages:", error);
-      return [];
-    }
+    return this.messages.getAgentMessages(agentPublicKey, limit, statusFilter);
   }
 
-  // ============================================================================
-  // Channel Operations
-  // ============================================================================
-
   /**
-   * Create a new communication channel
+   * @deprecated Use client.channels.createChannel() instead
    */
-  async createChannel(
-    wallet: Signer,
-    options: CreateChannelOptions
-  ): Promise<string> {
-    const [channelPDA] = findChannelPDA(
-      wallet.publicKey,
-      options.name,
-      this.programId
-    );
-
-    const visibilityObj = this.convertChannelVisibility(options.visibility);
-
-    return retry(async () => {
-      const methods = this.getProgramMethods();
-      const tx = await methods
-        .createChannel(
-          options.name,
-          options.description,
-          visibilityObj,
-          options.maxParticipants,
-          new BN(options.feePerMessage)
-        )
-        .accounts({
-          channelAccount: channelPDA,
-          creator: wallet.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([wallet])
-        .rpc({ commitment: this.commitment });
-
-      return tx;
-    });
+  async createChannel(wallet: Signer, options: CreateChannelOptions): Promise<string> {
+    return this.channels.createChannel(wallet, options);
   }
 
   /**
-   * Get channel account data
+   * @deprecated Use client.channels.getChannel() instead
    */
   async getChannel(channelPDA: PublicKey): Promise<ChannelAccount | null> {
-    try {
-      const account = await this.getAccount("channelAccount").fetch(channelPDA);
-      return this.convertChannelAccountFromProgram(account, channelPDA);
-    } catch (error: any) {
-      if (error?.message?.includes("Account does not exist")) {
-        return null;
-      }
-      throw error;
-    }
+    return this.channels.getChannel(channelPDA);
   }
 
   /**
-   * Get all channels
+   * @deprecated Use client.channels.getAllChannels() instead
    */
   async getAllChannels(
     limit: number = 50,
     visibilityFilter?: ChannelVisibility
   ): Promise<ChannelAccount[]> {
-    try {
-      const accounts = await this.getAccount("channelAccount").all();
-
-      let filteredAccounts = accounts;
-      if (visibilityFilter) {
-        const visibilityObj = this.convertChannelVisibility(visibilityFilter);
-        filteredAccounts = accounts.filter(
-          ({ account }: { account: any }) =>
-            JSON.stringify(account.visibility) === JSON.stringify(visibilityObj)
-        );
-      }
-
-      return filteredAccounts
-        .slice(0, limit)
-        .map(({ account, publicKey }: { account: any; publicKey: any }) =>
-          this.convertChannelAccountFromProgram(account, publicKey)
-        );
-    } catch (error) {
-      console.warn("Failed to fetch channels:", error);
-      return [];
-    }
+    return this.channels.getAllChannels(limit, visibilityFilter);
   }
 
   /**
-   * Get channels created by a specific user
+   * @deprecated Use client.channels.getChannelsByCreator() instead
    */
   async getChannelsByCreator(
     creator: PublicKey,
     limit: number = 50
   ): Promise<ChannelAccount[]> {
-    try {
-      const accounts = await this.getAccount("channelAccount").all([
-        {
-          memcmp: {
-            offset: 8, // Skip discriminator
-            bytes: creator.toBase58(),
-          },
-        },
-      ]);
-
-      return accounts
-        .slice(0, limit)
-        .map(({ account, publicKey }: { account: any; publicKey: any }) =>
-          this.convertChannelAccountFromProgram(account, publicKey)
-        );
-    } catch (error) {
-      console.warn("Failed to fetch creator channels:", error);
-      return [];
-    }
+    return this.channels.getChannelsByCreator(creator, limit);
   }
 
   /**
-   * Join a channel
+   * @deprecated Use client.channels.joinChannel() instead
    */
   async joinChannel(wallet: Signer, channelPDA: PublicKey): Promise<string> {
+<<<<<<< HEAD
     // Derive agent PDA
     const [agentPDA] = findAgentPDA(wallet.publicKey, this.programId);
 
@@ -505,12 +403,16 @@ export class PodComClient {
       .rpc();
 
     return tx;
+=======
+    return this.channels.joinChannel(wallet, channelPDA);
+>>>>>>> df85d1e44491e4c3e436028282199d5d8626be9c
   }
 
   /**
-   * Leave a channel
+   * @deprecated Use client.channels.leaveChannel() instead
    */
   async leaveChannel(wallet: Signer, channelPDA: PublicKey): Promise<string> {
+<<<<<<< HEAD
     // Derive agent PDA
     const [agentPDA] = findAgentPDA(wallet.publicKey, this.programId);
 
@@ -533,18 +435,22 @@ export class PodComClient {
       .rpc();
 
     return tx;
+=======
+    return this.channels.leaveChannel(wallet, channelPDA);
+>>>>>>> df85d1e44491e4c3e436028282199d5d8626be9c
   }
 
   /**
-   * Broadcast a message to a channel
+   * @deprecated Use client.channels.broadcastMessage() instead
    */
   async broadcastMessage(
     wallet: Signer,
     channelPDA: PublicKey,
     content: string,
-    messageType: MessageType = MessageType.Text,
+    messageType: string = "Text",
     replyTo?: PublicKey
   ): Promise<string> {
+<<<<<<< HEAD
     const program = this.ensureInitialized();
 
     // Generate unique nonce for message
@@ -593,16 +499,25 @@ export class PodComClient {
       .rpc();
 
     return tx;
+=======
+    return this.channels.broadcastMessage(wallet, {
+      channelPDA,
+      content,
+      messageType,
+      replyTo
+    });
+>>>>>>> df85d1e44491e4c3e436028282199d5d8626be9c
   }
 
   /**
-   * Invite a user to a private channel
+   * @deprecated Use client.channels.inviteToChannel() instead
    */
   async inviteToChannel(
     wallet: Signer,
     channelPDA: PublicKey,
     invitee: PublicKey
   ): Promise<string> {
+<<<<<<< HEAD
     // Derive agent PDA
     const [agentPDA] = findAgentPDA(wallet.publicKey, this.programId);
 
@@ -633,231 +548,103 @@ export class PodComClient {
       .rpc();
 
     return tx;
+=======
+    return this.channels.inviteToChannel(wallet, channelPDA, invitee);
+>>>>>>> df85d1e44491e4c3e436028282199d5d8626be9c
   }
 
   /**
-   * Get channel participants
+   * @deprecated Use client.channels.getChannelParticipants() instead
    */
   async getChannelParticipants(
     channelPDA: PublicKey,
     limit: number = 50
-  ): Promise<
-    Array<{
-      pubkey: PublicKey;
-      channel: PublicKey;
-      participant: PublicKey;
-      joinedAt: number;
-      isActive: boolean;
-      messagesSent: number;
-      lastMessageAt: number;
-      bump: number;
-    }>
-  > {
-    this.ensureInitialized();
-
-    try {
-      const accounts = await this.getAccount("channelParticipant").all([
-        {
-          memcmp: {
-            offset: 8, // Skip discriminator
-            bytes: channelPDA.toBase58(),
-          },
-        },
-      ]);
-
-      return accounts
-        .slice(0, limit)
-        .map(({ account, publicKey }: { account: any; publicKey: any }) => ({
-          pubkey: publicKey,
-          channel: account.channel,
-          participant: account.participant,
-          joinedAt: account.joinedAt.toNumber(),
-          isActive: account.isActive,
-          messagesSent: account.messagesSent.toNumber(),
-          lastMessageAt: account.lastMessageAt.toNumber(),
-          bump: account.bump,
-        }));
-    } catch (error) {
-      console.warn("Failed to fetch channel participants:", error);
-      return [];
-    }
+  ): Promise<Array<IdlAccounts<PodCom>>> {
+    return this.channels.getChannelParticipants(channelPDA, limit);
   }
 
   /**
-   * Get channel messages
+   * @deprecated Use client.channels.getChannelMessages() instead
    */
   async getChannelMessages(
     channelPDA: PublicKey,
     limit: number = 50
-  ): Promise<
-    Array<{
-      pubkey: PublicKey;
-      channel: PublicKey;
-      sender: PublicKey;
-      content: string;
-      messageType: MessageType;
-      createdAt: number;
-      editedAt: number | null;
-      replyTo: PublicKey | null;
-      bump: number;
-    }>
-  > {
-    this.ensureInitialized();
-
-    try {
-      const accounts = await this.getAccount("channelMessage").all([
-        {
-          memcmp: {
-            offset: 8, // Skip discriminator
-            bytes: channelPDA.toBase58(),
-          },
-        },
-      ]);
-
-      return accounts
-        .slice(0, limit)
-        .map(({ account, publicKey }: { account: any; publicKey: any }) => ({
-          pubkey: publicKey,
-          channel: account.channel,
-          sender: account.sender,
-          content: account.content,
-          messageType: this.convertMessageTypeFromProgram(account.messageType),
-          createdAt: account.createdAt.toNumber(),
-          editedAt: account.editedAt ? account.editedAt.toNumber() : null,
-          replyTo: account.replyTo || null,
-          bump: account.bump,
-        }));
-    } catch (error) {
-      console.warn("Failed to fetch channel messages:", error);
-      return [];
-    }
+  ): Promise<Array<IdlAccounts<PodCom>>> {
+    return this.channels.getChannelMessages(channelPDA, limit);
   }
 
-  // ============================================================================
-  // Escrow Operations
-  // ============================================================================
-
   /**
-   * Deposit funds to channel escrow
+   * @deprecated Use client.escrow.depositEscrow() instead
    */
-  async depositEscrow(
-    wallet: Signer,
-    options: DepositEscrowOptions
-  ): Promise<string> {
-    const [escrowPDA] = findEscrowPDA(
-      options.channel,
-      wallet.publicKey,
-      this.programId
-    );
-
-    return retry(async () => {
-      const methods = this.getProgramMethods();
-      const tx = await methods
-        .depositEscrow(new BN(options.amount))
-        .accounts({
-          escrowAccount: escrowPDA,
-          channelAccount: options.channel,
-          depositor: wallet.publicKey,
-          systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .signers([wallet])
-        .rpc({ commitment: this.commitment });
-
-      return tx;
-    });
+  async depositEscrow(wallet: Signer, options: DepositEscrowOptions): Promise<string> {
+    return this.escrow.depositEscrow(wallet, options);
   }
 
   /**
-   * Withdraw funds from channel escrow
+   * @deprecated Use client.escrow.withdrawEscrow() instead
    */
-  async withdrawEscrow(
-    wallet: Signer,
-    options: WithdrawEscrowOptions
-  ): Promise<string> {
-    const [escrowPDA] = findEscrowPDA(
-      options.channel,
-      wallet.publicKey,
-      this.programId
-    );
-
-    return retry(async () => {
-      const methods = this.getProgramMethods();
-      const tx = await methods
-        .withdrawEscrow(new BN(options.amount))
-        .accounts({
-          escrowAccount: escrowPDA,
-          channelAccount: options.channel,
-          depositor: wallet.publicKey,
-        })
-        .signers([wallet])
-        .rpc({ commitment: this.commitment });
-
-      return tx;
-    });
+  async withdrawEscrow(wallet: Signer, options: WithdrawEscrowOptions): Promise<string> {
+    return this.escrow.withdrawEscrow(wallet, options);
   }
 
   /**
-   * Get escrow account data
+   * @deprecated Use client.escrow.getEscrow() instead
    */
   async getEscrow(
     channel: PublicKey,
     depositor: PublicKey
   ): Promise<EscrowAccount | null> {
-    this.ensureInitialized();
-    const [escrowPDA] = findEscrowPDA(channel, depositor, this.programId);
-
-    try {
-      const account = await this.getAccount("escrowAccount").fetch(escrowPDA);
-      return {
-        channel: account.channel,
-        depositor: account.depositor,
-        balance: account.amount.toNumber(),
-        amount: account.amount.toNumber(),
-        createdAt: account.createdAt.toNumber(),
-        lastUpdated: account.createdAt.toNumber(), // Use createdAt as lastUpdated for now
-        bump: account.bump,
-      };
-    } catch (error: any) {
-      if (error?.message?.includes("Account does not exist")) {
-        return null;
-      }
-      throw error;
-    }
+    return this.escrow.getEscrow(channel, depositor);
   }
 
   /**
-   * Get all escrow accounts for a depositor
+   * @deprecated Use client.escrow.getEscrowsByDepositor() instead
    */
   async getEscrowsByDepositor(
     depositor: PublicKey,
     limit: number = 50
   ): Promise<EscrowAccount[]> {
-    this.ensureInitialized();
-
-    try {
-      const accounts = await this.getAccount("escrowAccount").all([
-        {
-          memcmp: {
-            offset: 8 + 32, // Skip discriminator + channel pubkey
-            bytes: depositor.toBase58(),
-          },
-        },
-      ]);
-
-      return accounts.slice(0, limit).map(({ account }: { account: any }) => ({
-        channel: account.channel,
-        depositor: account.depositor,
-        balance: account.amount.toNumber(),
-        amount: account.amount.toNumber(),
-        createdAt: account.createdAt.toNumber(),
-        lastUpdated: account.createdAt.toNumber(),
-        bump: account.bump,
-      }));
-    } catch (error) {
-      console.warn("Failed to fetch escrow accounts:", error);
-      return [];
-    }
+    return this.escrow.getEscrowsByDepositor(depositor, limit);
   }
+
+  // ============================================================================
+  // Utility Methods
+  // ============================================================================
+
+  /**
+   * Get the connection instance
+   */
+  getConnection(): Connection {
+    return this.connection;
+  }
+
+  /**
+   * Get the program ID
+   */
+  getProgramId(): PublicKey {
+    return this.programId;
+  }
+
+  /**
+   * Get the commitment level
+   */
+  getCommitment(): Commitment {
+    return this.commitment;
+  }
+
+  /**
+   * Check if the client is initialized
+   */
+  isInitialized(): boolean {
+    // For wallet-based initialization, check if program is set
+    if (this.program) {
+      return true;
+    }
+    
+    // For read-only initialization, check if services have IDL set
+    return this.agents.hasIDL() && this.messages.hasIDL() && this.channels.hasIDL() && this.escrow.hasIDL();
+  }
+<<<<<<< HEAD
 
   // ============================================================================
   // Helper Methods for Type Conversion
@@ -977,3 +764,6 @@ export class PodComClient {
     );
   }
 }
+=======
+} 
+>>>>>>> df85d1e44491e4c3e436028282199d5d8626be9c
