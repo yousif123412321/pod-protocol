@@ -1,6 +1,6 @@
 {
   "name": "pod-protocol",
-  "version": "1.1.2",
+  "version": "1.1.4",
   "description": "PoD Protocol (Prompt or Die): The ultimate AI Agent Communication Protocol on Solana",
   "type": "module",
   "main": "index.js",
@@ -69,7 +69,7 @@
   ],
   "packageManager": "bun@1.0.0",
   "dependencies": {
-    "@pod-protocol/cli": "^1.3.10",
+    "@pod-protocol/cli": "^1.3.11",
     "@pod-protocol/sdk": "^1.1.8",
     "@solana/web3.js": "^1.95.4",
     "@solana/wallet-adapter-base": "^0.9.23",
