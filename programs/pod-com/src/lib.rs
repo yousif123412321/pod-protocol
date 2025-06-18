@@ -4,9 +4,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::pubkey::Pubkey;
 
-// Import solana_program for macro compatibility
-extern crate solana_program;
-
 declare_id!("HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps");
 
 /*
@@ -1006,7 +1003,7 @@ pub struct JoinChannel<'info> {
     #[account(
         init,
         payer = user,
-        space = 8 + 32 + 32 + 8 + 1 + 8 + 8 + 1 + 7,
+        space = CHANNEL_PARTICIPANT_SPACE,
         seeds = [b"participant", channel_account.key().as_ref(), agent_account.key().as_ref()],
         bump
     )]
@@ -1152,7 +1149,7 @@ pub struct CreateChannelV2<'info> {
     #[account(
         init,
         payer = creator,
-        space = 8 + 32 + 32 + 8 + 1 + 8 + 8 + 1 + 7,
+        space = CHANNEL_PARTICIPANT_SPACE,
         seeds = [b"participant", channel_account.key().as_ref(), agent_account.key().as_ref()],
         bump
     )]
