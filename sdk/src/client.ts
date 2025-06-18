@@ -34,58 +34,58 @@ import { MessageService } from "./services/message";
  * Channel-related operations service (placeholder for future implementation)
  */
 class ChannelService extends BaseService {
-  async createChannel(wallet: Signer, options: CreateChannelOptions): Promise<string> {
+  async createChannel(_wallet: Signer, _options: CreateChannelOptions): Promise<string> {
     throw new Error("Channel service not yet implemented");
   }
 
-  async getChannel(channelPDA: PublicKey): Promise<ChannelAccount | null> {
+  async getChannel(_channelPDA: PublicKey): Promise<ChannelAccount | null> {
     throw new Error("Channel service not yet implemented");
   }
 
   async getAllChannels(
-    limit: number = 50,
-    visibilityFilter?: ChannelVisibility
+    _limit: number = 50,
+    _visibilityFilter?: ChannelVisibility
   ): Promise<ChannelAccount[]> {
     throw new Error("Channel service not yet implemented");
   }
 
   async getChannelsByCreator(
-    creator: PublicKey,
-    limit: number = 50
+    _creator: PublicKey,
+    _limit: number = 50
   ): Promise<ChannelAccount[]> {
     throw new Error("Channel service not yet implemented");
   }
 
-  async joinChannel(wallet: Signer, channelPDA: PublicKey): Promise<string> {
+  async joinChannel(_wallet: Signer, _channelPDA: PublicKey): Promise<string> {
     throw new Error("Channel service not yet implemented");
   }
 
-  async leaveChannel(wallet: Signer, channelPDA: PublicKey): Promise<string> {
+  async leaveChannel(_wallet: Signer, _channelPDA: PublicKey): Promise<string> {
     throw new Error("Channel service not yet implemented");
   }
 
-  async broadcastMessage(wallet: Signer, options: BroadcastMessageOptions): Promise<string> {
+  async broadcastMessage(_wallet: Signer, _options: BroadcastMessageOptions): Promise<string> {
     throw new Error("Channel service not yet implemented");
   }
 
   async inviteToChannel(
-    wallet: Signer,
-    channelPDA: PublicKey,
-    invitee: PublicKey
+    _wallet: Signer,
+    _channelPDA: PublicKey,
+    _invitee: PublicKey
   ): Promise<string> {
     throw new Error("Channel service not yet implemented");
   }
 
   async getChannelParticipants(
-    channelPDA: PublicKey,
-    limit: number = 50
+    _channelPDA: PublicKey,
+    _limit: number = 50
   ): Promise<Array<IdlAccounts<PodCom>>> {
     throw new Error("Channel service not yet implemented");
   }
 
   async getChannelMessages(
-    channelPDA: PublicKey,
-    limit: number = 50
+    _channelPDA: PublicKey,
+    _limit: number = 50
   ): Promise<Array<IdlAccounts<PodCom>>> {
     throw new Error("Channel service not yet implemented");
   }
@@ -95,24 +95,24 @@ class ChannelService extends BaseService {
  * Escrow-related operations service (placeholder for future implementation)
  */
 class EscrowService extends BaseService {
-  async depositEscrow(wallet: Signer, options: DepositEscrowOptions): Promise<string> {
+  async depositEscrow(_wallet: Signer, _options: DepositEscrowOptions): Promise<string> {
     throw new Error("Escrow service not yet implemented");
   }
 
-  async withdrawEscrow(wallet: Signer, options: WithdrawEscrowOptions): Promise<string> {
+  async withdrawEscrow(_wallet: Signer, _options: WithdrawEscrowOptions): Promise<string> {
     throw new Error("Escrow service not yet implemented");
   }
 
   async getEscrow(
-    channel: PublicKey,
-    depositor: PublicKey
+    _channel: PublicKey,
+    _depositor: PublicKey
   ): Promise<EscrowAccount | null> {
     throw new Error("Escrow service not yet implemented");
   }
 
   async getEscrowsByDepositor(
-    depositor: PublicKey,
-    limit: number = 50
+    _depositor: PublicKey,
+    _limit: number = 50
   ): Promise<EscrowAccount[]> {
     throw new Error("Escrow service not yet implemented");
   }
@@ -202,7 +202,7 @@ export class PodComClient {
         throw new Error("Client initialization failed - services not properly configured");
       }
       
-    } catch (error: any) {
+    } catch (error: Error) {
       throw new Error(`Client initialization failed: ${error.message}`);
     }
   }
@@ -331,7 +331,7 @@ export class PodComClient {
     wallet: Signer,
     channelPDA: PublicKey,
     content: string,
-    messageType: any = "Text",
+    messageType: string = "Text",
     replyTo?: PublicKey
   ): Promise<string> {
     return this.channels.broadcastMessage(wallet, {
