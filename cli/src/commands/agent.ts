@@ -105,7 +105,7 @@ export class AgentCommands {
 
           spinner.succeed("Agent information retrieved");
           this.displayAgentInfo(agentData);
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(
             chalk.red("Failed to fetch agent info:"),
             error.message
@@ -149,7 +149,7 @@ export class AgentCommands {
 
           spinner.succeed("Agent updated successfully!");
           console.log(chalk.green("Transaction:"), signature);
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(chalk.red("Failed to update agent:"), error.message);
           process.exit(1);
         }
@@ -176,7 +176,7 @@ export class AgentCommands {
 
           spinner.succeed(`Found ${agents.length} agents`);
           this.displayAgentsList(agents);
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(chalk.red("Failed to list agents:"), error.message);
           process.exit(1);
         }
@@ -233,7 +233,7 @@ export class AgentCommands {
     ]);
   }
 
-  private resolveWalletAddress(address: string | undefined, globalOpts: any): PublicKey {
+  private resolveWalletAddress(address: string | undefined, globalOpts: Record<string, any>): PublicKey {
     if (address) {
       return new PublicKey(address);
     } else {
@@ -242,7 +242,7 @@ export class AgentCommands {
     }
   }
 
-  private displayAgentInfo(agentData: any) {
+  private displayAgentInfo(agentData: Record<string, any>) {
     const data = [
       ["Public Key", agentData.pubkey.toBase58()],
       [
@@ -268,8 +268,8 @@ export class AgentCommands {
     );
   }
 
-  private prepareUpdateOptions(options: any) {
-    const updateOptions: any = {};
+  private prepareUpdateOptions(options: Record<string, any>) {
+    const updateOptions: Record<string, any> = {};
     
     if (options.capabilities) {
       updateOptions.capabilities = parseInt(options.capabilities, 10);
@@ -282,8 +282,8 @@ export class AgentCommands {
     return updateOptions;
   }
 
-  private displayAgentsList(agents: any[]) {
-          const data = agents.map((agent: any) => [
+  private displayAgentsList(agents: Record<string, any>[]) {
+          const data = agents.map((agent: Record<string, any>) => [
             agent.pubkey.toBase58().slice(0, 8) + "...",
             getCapabilityNames(agent.capabilities).join(", "),
             agent.reputation.toString(),

@@ -83,7 +83,7 @@ export class ConfigCommands {
                 },
               })
           );
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(chalk.red("Failed to show config:"), error.message);
           process.exit(1);
         }
@@ -112,7 +112,7 @@ export class ConfigCommands {
             chalk.green("✅ Network updated to:"),
             chalk.cyan(network)
           );
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(chalk.red("Failed to set network:"), error.message);
           process.exit(1);
         }
@@ -158,7 +158,7 @@ export class ConfigCommands {
             console.error(chalk.red("Error: Invalid keypair file format"));
             process.exit(1);
           }
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(chalk.red("Failed to set keypair:"), error.message);
           process.exit(1);
         }
@@ -241,7 +241,7 @@ export class ConfigCommands {
           console.log(
             chalk.green("\n✅ Configuration updated to use new keypair")
           );
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(
             chalk.red("Failed to generate keypair:"),
             error.message
@@ -343,14 +343,14 @@ export class ConfigCommands {
               console.log(chalk.cyan("Your wallet address:"), publicKey);
             }
 
-          } catch (error: any) {
+          } catch (error: Error) {
             spinner.fail("Airdrop failed");
             console.error(chalk.red("Error:"), error.message);
             console.log(chalk.yellow("\nAlternative: Visit https://faucet.solana.com/"));
             console.log(chalk.cyan("Your wallet address:"), publicKey);
           }
 
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(chalk.red("Failed to request airdrop:"), error.message);
           process.exit(1);
         }
@@ -378,7 +378,7 @@ export class ConfigCommands {
             chalk.green("✅ Custom endpoint set to:"),
             chalk.cyan(url)
           );
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(chalk.red("Failed to set endpoint:"), error.message);
           process.exit(1);
         }
@@ -395,7 +395,7 @@ export class ConfigCommands {
           this.saveConfig(currentConfig);
 
           console.log(chalk.green("✅ Custom endpoint cleared, using default"));
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(chalk.red("Failed to clear endpoint:"), error.message);
           process.exit(1);
         }
@@ -432,7 +432,7 @@ export class ConfigCommands {
 
           this.saveConfig(defaultConfig);
           console.log(chalk.green("✅ Configuration reset to defaults"));
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(chalk.red("Failed to reset config:"), error.message);
           process.exit(1);
         }
@@ -553,7 +553,7 @@ export class ConfigCommands {
           console.log("• Run 'pod status' to check your connection");
           console.log("• Run 'pod agent register' to register as an AI agent");
           console.log("• Run 'pod --help' to see all available commands");
-        } catch (error: any) {
+        } catch (error: Error) {
           console.error(chalk.red("Setup failed:"), error.message);
           process.exit(1);
         }
