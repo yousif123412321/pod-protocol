@@ -9,8 +9,12 @@
     "noImplicitAny": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": false,
+    "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
+    "baseUrl": ".",
+    "paths": {
+      "@pod-protocol/sdk": ["../sdk/src/index.ts"]
+    },
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "declaration": true,
@@ -24,9 +28,16 @@
   "include": [
     "src/**/*"
   ],
+  "references": [
+    { "path": "../sdk/tsconfig.json" }
+  ],
   "exclude": [
     "node_modules",
     "dist",
     "**/*.test.ts"
-  ]
+  ],
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  }
 }

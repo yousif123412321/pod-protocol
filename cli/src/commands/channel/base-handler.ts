@@ -1,7 +1,6 @@
 import chalk from "chalk";
 import { PublicKey } from "@solana/web3.js";
-import { Ora } from "ora";
-import { handleDryRun, createSpinner, showSuccess, handleCommandError } from "../../utils/shared.js";
+import { handleDryRun, createSpinner, showSuccess } from "../../utils/shared.js";
 import { CommandContext } from "./types.js";
 
 export abstract class BaseChannelHandler {
@@ -14,7 +13,7 @@ export abstract class BaseChannelHandler {
   protected createPublicKey(id: string): PublicKey {
     try {
       return new PublicKey(id);
-    } catch (error) {
+    } catch {
       throw new Error(`Invalid public key: ${id}`);
     }
   }

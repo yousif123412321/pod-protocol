@@ -4,8 +4,8 @@ import {
   Signer,
   Commitment,
 } from "@solana/web3.js";
-import anchor from "@coral-xyz/anchor";
-const { Program, AnchorProvider } = anchor;
+import anchor, { Program } from "@coral-xyz/anchor";
+const { AnchorProvider } = anchor;
 import {
   PROGRAM_ID,
   PodComConfig,
@@ -156,30 +156,55 @@ export class PodComClient {
   }
 
   /**
-   * Initialize the Anchor program (call this first)
+   * Initialize the Anchor program with a wallet (call this first)
    */
-  async initialize(): Promise<void> {
-    const dummyWallet = {
-      publicKey: PublicKey.default,
-      signTransaction: async () => {
-        throw new Error("Use actual signer");
-      },
-      signAllTransactions: async () => {
-        throw new Error("Use actual signer");
-      },
-    };
-
-    const provider = new AnchorProvider(this.connection, dummyWallet, {
-      commitment: this.commitment,
-    });
-
-    this.program = new Program(IDL as any, provider) as Program<any>;
-
-    // Set program for all services
-    this.agents.setProgram(this.program);
-    this.messages.setProgram(this.program);
-    this.channels.setProgram(this.program);
-    this.escrow.setProgram(this.program);
+  async initialize(wallet?: any): Promise<void> {
+    try {
+      if (wallet) {
+        // If a wallet is provided, create the program with it
+        const provider = new AnchorProvider(this.connection, wallet, {
+          commitment: this.commitment,
+          skipPreflight: true,
+        });
+        
+        // Validate IDL before creating program
+        if (!IDL) {
+          throw new Error("IDL not found. Ensure the program IDL is properly generated and imported.");
+        }
+        
+        this.program = new Program(IDL as any, provider) as Program<any>;
+        
+        // Validate program was created successfully
+        if (!this.program) {
+          throw new Error("Failed to create Anchor program instance");
+        }
+        
+        // Set program for all services
+        this.agents.setProgram(this.program);
+        this.messages.setProgram(this.program);
+        this.channels.setProgram(this.program);
+        this.escrow.setProgram(this.program);
+      } else {
+        // No wallet provided - validate IDL before setting on services
+        if (!IDL) {
+          throw new Error("IDL not found. Ensure the program IDL is properly generated and imported.");
+        }
+        
+        // Set IDL for all services
+        this.agents.setIDL(IDL);
+        this.messages.setIDL(IDL);
+        this.channels.setIDL(IDL);
+        this.escrow.setIDL(IDL);
+      }
+      
+      // Validate initialization was successful
+      if (!this.isInitialized()) {
+        throw new Error("Client initialization failed - services not properly configured");
+      }
+      
+    } catch (error: any) {
+      throw new Error(`Client initialization failed: ${error.message}`);
+    }
   }
 
   // ============================================================================
@@ -411,6 +436,12 @@ export class PodComClient {
    * Check if the client is initialized
    */
   isInitialized(): boolean {
-    return this.program !== undefined;
+    // For wallet-based initialization, check if program is set
+    if (this.program) {
+      return true;
+    }
+    
+    // For read-only initialization, check if services have IDL set
+    return this.agents.hasIDL() && this.messages.hasIDL() && this.channels.hasIDL() && this.escrow.hasIDL();
   }
 } 

@@ -24,10 +24,7 @@ export default {
       preferBuiltins: true,
     }),
     commonjs({
-      include: ['node_modules/**'],
-      namedExports: {
-        '@coral-xyz/anchor': ['BN', 'AnchorProvider', 'Program']
-      }
+      include: ['node_modules/**']
     }),
     typescript({
       tsconfig: "./tsconfig.json",

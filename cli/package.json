@@ -1,22 +1,36 @@
 {
   "name": "@pod-protocol/cli",
-  "version": "1.0.0",
+  "version": "1.3.10",
   "description": "Command-line interface for PoD Protocol (Prompt or Die) AI Agent Communication Protocol",
   "type": "module",
   "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
   "bin": {
     "pod": "dist/index.js",
     "pod-com": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
+  "engines": {
+    "node": ">=18.0.0",
+    "bun": ">=1.0.0"
+  },
   "scripts": {
     "build": "tsc",
+    "build:prod": "tsc --sourceMap false",
     "dev": "tsx src/index.ts",
     "test": "bun test",
+    "test:coverage": "bun test --coverage",
     "lint": "eslint src --ext .ts",
-    "prepublishOnly": "bun run build"
+    "lint:fix": "eslint src --ext .ts --fix",
+    "clean": "rm -rf dist/",
+    "prepublishOnly": "bun run clean && bun run build:prod && bun run test",
+    "postinstall": "echo 'PoD Protocol CLI installed successfully! Run: pod --help'"
   },
   "packageManager": "bun@1.0.0",
   "keywords": [
@@ -42,27 +56,30 @@
   },
   "homepage": "https://github.com/Dexploarer/PoD-Protocol#readme",
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/",
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "license": "MIT",
   "dependencies": {
-    "@pod-protocol/sdk": "^1.0.0",
+    "@coral-xyz/anchor-cli": "0.31.1",
+    "@pod-protocol/sdk": "^1.1.8",
     "@solana/web3.js": "^1.95.4",
-    "commander": "^14.0.0",
     "chalk": "^5.3.0",
+    "commander": "^14.0.0",
     "inquirer": "^12.0.0",
     "ora": "^8.1.1",
     "qrcode-terminal": "^0.12.0",
     "table": "^6.8.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.29.0",
     "@types/inquirer": "^9.0.7",
     "@types/node": "^24.0.3",
     "@types/qrcode-terminal": "^0.12.2",
     "@typescript-eslint/eslint-plugin": "^8.19.0",
     "@typescript-eslint/parser": "^8.19.0",
     "eslint": "^9.18.0",
+    "globals": "^16.2.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   }

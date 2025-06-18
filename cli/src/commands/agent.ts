@@ -4,7 +4,6 @@ import inquirer from "inquirer";
 import { table } from "table";
 import { PublicKey } from "@solana/web3.js";
 import {
-  PodComClient,
   AGENT_CAPABILITIES,
   getCapabilityNames,
 } from "@pod-protocol/sdk";
@@ -13,12 +12,27 @@ import {
   handleDryRun,
   createSpinner,
   showSuccess,
-  getTableConfig,
-  formatValue,
-  validatePublicKey,
 } from "../utils/shared.js";
-import { createClient, getWallet } from "../utils/client.js";
+import { createClient, getWallet, getKeypair } from "../utils/client.js";
 import ora from "ora";
+
+// Interfaces for type safety
+interface AgentRegisterOptions {
+  capabilities?: string;
+  metadata?: string;
+  interactive?: boolean;
+}
+
+interface AgentListOptions {
+  limit?: string;
+}
+
+interface AgentUpdateOptions {
+  capabilities?: string;
+  metadata?: string;
+  agent?: string;
+  interactive?: boolean;
+}
 
 export class AgentCommands {
   register(program: Command) {
@@ -42,7 +56,7 @@ export class AgentCommands {
       .action(
         createCommandHandler(
           "register agent",
-          async (client, wallet, globalOpts, options) => {
+          async (client, wallet, globalOpts, options: AgentRegisterOptions) => {
             const { capabilities, metadataUri } = await this.prepareRegistrationData(options);
 
             const spinner = createSpinner("Registering agent...");
@@ -56,7 +70,7 @@ export class AgentCommands {
               return;
             }
 
-            const signature = await client.registerAgent(wallet, {
+            const signature = await client.agents.registerAgent(wallet, {
               capabilities,
               metadataUri,
             });
@@ -76,13 +90,13 @@ export class AgentCommands {
       .command("info [address]")
       .description("Show agent information")
       .action(async (address, cmd) => {
-        const globalOpts = cmd.optsWithGlobals();
+        const globalOpts = cmd.parent?.opts() || {};
 
         try {
           const spinner = ora("Fetching agent information...").start();
           const client = await createClient(globalOpts.network);
           const walletAddress = this.resolveWalletAddress(address, globalOpts);
-          const agentData = await client.getAgent(walletAddress);
+          const agentData = await client.agents.getAgent(walletAddress);
 
           if (!agentData) {
             spinner.fail("Agent not found");
@@ -108,12 +122,13 @@ export class AgentCommands {
       .option("-c, --capabilities <value>", "New capabilities")
       .option("-m, --metadata <uri>", "New metadata URI")
       .action(async (options, cmd) => {
-        const globalOpts = cmd.optsWithGlobals();
+        const globalOpts = cmd.parent?.opts() || {};
 
         try {
           const spinner = ora("Updating agent...").start();
-          const client = await createClient(globalOpts.network);
           const wallet = getWallet(globalOpts.keypair);
+          const keypair = getKeypair(globalOpts.keypair);
+          const client = await createClient(globalOpts.network, wallet);
           const updateOptions = this.prepareUpdateOptions(options);
 
           if (Object.keys(updateOptions).length === 0) {
@@ -130,7 +145,7 @@ export class AgentCommands {
             return;
           }
 
-          const signature = await client.updateAgent(wallet, updateOptions);
+          const signature = await client.agents.updateAgent(keypair, updateOptions);
 
           spinner.succeed("Agent updated successfully!");
           console.log(chalk.green("Transaction:"), signature);
@@ -147,12 +162,12 @@ export class AgentCommands {
       .description("List all registered agents")
       .option("-l, --limit <number>", "Maximum number of agents to show", "10")
       .action(async (options, cmd) => {
-        const globalOpts = cmd.optsWithGlobals();
+        const globalOpts = cmd.parent?.opts() || {};
 
         try {
           const spinner = ora("Fetching agents...").start();
           const client = await createClient(globalOpts.network);
-          const agents = await client.getAllAgents(parseInt(options.limit, 10));
+          const agents = await client.agents.getAllAgents(parseInt(options.limit, 10));
 
           if (agents.length === 0) {
             spinner.succeed("No agents found");
@@ -168,7 +183,7 @@ export class AgentCommands {
       });
   }
 
-  private async prepareRegistrationData(options: any) {
+  private async prepareRegistrationData(options: AgentRegisterOptions) {
     let capabilities = options.capabilities
       ? parseInt(options.capabilities, 10)
       : 0;

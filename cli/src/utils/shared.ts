@@ -1,7 +1,9 @@
 import chalk from "chalk";
 import ora, { Ora } from "ora";
 import { PodComClient } from "@pod-protocol/sdk";
-import { createClient, getWallet } from "./client.js";
+import { createClient, getWallet, getKeypair } from "./client.js";
+import { Command } from "commander";
+import { ErrorHandler, safeExecute } from "./error-handler.js";
 
 export interface GlobalOptions {
   network?: string;
@@ -31,9 +33,10 @@ export function createCommandHandler<T extends any[]>(
 ) {
   return async (globalOpts: GlobalOptions, ...args: T) => {
     try {
-      const client = await createClient(globalOpts.network);
       const wallet = getWallet(globalOpts.keypair);
-      await handler(client, wallet, globalOpts, ...args);
+      const keypair = getKeypair(globalOpts.keypair); 
+      const client = await createClient(globalOpts.network, wallet);
+      await handler(client, keypair, globalOpts, ...args);
     } catch (error: any) {
       handleCommandError(error, action);
     }
@@ -126,4 +129,35 @@ export function validatePublicKey(address: string, fieldName: string): void {
   } catch {
     throw new Error(`Invalid ${fieldName}: ${address}`);
   }
+}
+
+/**
+ * Get command options in a compatible way across Commander.js versions
+ */
+export function getCommandOpts(cmd: Command): GlobalOptions {
+  // Try optsWithGlobals first (v8+)
+  if (typeof (cmd as any).optsWithGlobals === 'function') {
+    return (cmd as any).optsWithGlobals();
+  }
+  // Fallback to parent opts (older versions)
+  return cmd.parent?.opts() || {};
+}
+
+/**
+ * Enhanced command handler with centralized error handling
+ */
+export function createSafeCommandHandler(
+  description: string,
+  handler: (client: PodComClient, wallet: any, globalOpts: GlobalOptions, ...args: any[]) => Promise<void>
+) {
+  return async (...args: any[]) => {
+    const cmd = args[args.length - 1];
+    const globalOpts = getCommandOpts(cmd);
+    
+    await safeExecute(async () => {
+      const client = await createClient(globalOpts.network);
+      const wallet = getWallet(globalOpts.keypair);
+      await handler(client, wallet, globalOpts, ...args.slice(0, -1));
+    }, description);
+  };
 }

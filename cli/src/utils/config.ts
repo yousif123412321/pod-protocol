@@ -27,7 +27,7 @@ export function loadConfig(): CliConfig {
   try {
     const configData = readFileSync(configPath, "utf8");
     return JSON.parse(configData);
-  } catch (error) {
+  } catch {
     console.warn(
       chalk.yellow("Warning: Could not read config file, using defaults")
     );
@@ -63,7 +63,7 @@ export function loadKeypair(keypairPath?: string): Keypair {
   try {
     const keypairData = JSON.parse(readFileSync(expandedPath, "utf8"));
     return Keypair.fromSecretKey(new Uint8Array(keypairData));
-  } catch (error) {
+  } catch {
     console.error(
       chalk.red("Error: Invalid keypair file format:"),
       expandedPath

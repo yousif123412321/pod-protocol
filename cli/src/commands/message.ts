@@ -1,6 +1,5 @@
 import { Command } from "commander";
 import chalk from "chalk";
-import ora from "ora";
 import inquirer from "inquirer";
 import { table } from "table";
 import { PublicKey } from "@solana/web3.js";
@@ -13,7 +12,7 @@ import {
   showSuccess,
   getTableConfig,
   formatValue,
-  GlobalOptions,
+  getCommandOpts,
 } from "../utils/shared.js";
 import {
   validatePublicKey,
@@ -181,7 +180,7 @@ export class MessageCommands {
   }
 
   private async handleInfo(messageId: string, cmd: Command) {
-    const globalOpts = cmd.optsWithGlobals();
+    const globalOpts = getCommandOpts(cmd);
 
     try {
       const messageKey = validatePublicKey(messageId, "message ID");
@@ -250,7 +249,7 @@ export class MessageCommands {
   }
 
   private async handleStatus(options: any, cmd: Command) {
-    const globalOpts = cmd.optsWithGlobals();
+    const globalOpts = getCommandOpts(cmd);
 
     try {
       if (!options.message || !options.status) {
@@ -320,7 +319,7 @@ export class MessageCommands {
   }
 
   private async handleList(options: any, cmd: Command) {
-    const globalOpts = cmd.optsWithGlobals();
+    const globalOpts = getCommandOpts(cmd);
 
     try {
       const limit = validatePositiveInteger(options.limit, "limit");

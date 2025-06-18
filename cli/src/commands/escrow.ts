@@ -1,8 +1,7 @@
 import { Command } from "commander";
-import chalk from "chalk";
 import inquirer from "inquirer";
 import { table } from "table";
-import { PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { PodComClient, lamportsToSol, solToLamports } from "@pod-protocol/sdk";
 import {
   createCommandHandler,
@@ -232,7 +231,7 @@ export class EscrowCommands {
     globalOpts: GlobalOptions,
     options: any
   ) {
-    let { channelId, amount, withdrawAll } = await promptChannelAndAmount({
+    const { channelId, amount: promptAmount, withdrawAll } = await promptChannelAndAmount({
       interactive: options.interactive,
       channel: options.channel,
       amount: options.amount,
@@ -243,6 +242,7 @@ export class EscrowCommands {
     const channelKey = validatePublicKey(channelId, "channel ID");
     const spinner = createSpinner("Withdrawing from escrow...");
     // If withdrawing all, get current balance first
+    let amount = promptAmount;
     if (withdrawAll) {
       const escrowData = await client.getEscrow(channelKey, wallet.publicKey);
       if (!escrowData) {

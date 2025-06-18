@@ -1,6 +1,6 @@
 {
   "name": "@pod-protocol/sdk",
-  "version": "1.0.0",
+  "version": "1.1.8",
   "description": "TypeScript SDK for PoD Protocol (Prompt or Die) AI Agent Communication Protocol",
   "type": "module",
   "main": "dist/index.esm.js",
@@ -15,14 +15,25 @@
   },
   "files": [
     "dist",
-    "src"
+    "src",
+    "README.md",
+    "LICENSE"
   ],
+  "engines": {
+    "node": ">=18.0.0",
+    "bun": ">=1.0.0"
+  },
   "scripts": {
     "build": "rollup -c",
+    "build:prod": "rollup -c --environment NODE_ENV:production",
     "dev": "rollup -c -w", 
     "test": "bun test",
+    "test:coverage": "bun test --coverage",
     "lint": "eslint src --ext .ts",
-    "prepublishOnly": "bun run build"
+    "lint:fix": "eslint src --ext .ts --fix",
+    "clean": "rm -rf dist/",
+    "prepublishOnly": "bun run clean && bun run build:prod && bun run test",
+    "docs": "typedoc --out docs src/index.ts"
   },
   "packageManager": "bun@1.0.0",
   "keywords": [
@@ -48,8 +59,8 @@
   },
   "homepage": "https://github.com/Dexploarer/PoD-Protocol#readme",
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/",
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "license": "MIT",
   "dependencies": {

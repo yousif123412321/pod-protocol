@@ -12,7 +12,9 @@ import {
   hashPayload, 
   retry,
   convertMessageTypeToProgram,
-  convertMessageTypeFromProgram 
+  convertMessageTypeFromProgram,
+  getAccountTimestamp,
+  getAccountCreatedAt
 } from "../utils";
 
 /**
@@ -177,8 +179,8 @@ export class MessageService extends BaseService {
       payloadHash: account.payloadHash,
       messageType: this.convertMessageTypeFromProgram(account.messageType),
       status: this.convertMessageStatusFromProgram(account.status),
-      timestamp: account.timestamp?.toNumber() || account.createdAt?.toNumber() || Date.now(),
-      createdAt: account.createdAt?.toNumber() || account.timestamp?.toNumber() || Date.now(),
+      timestamp: getAccountTimestamp(account),
+      createdAt: getAccountCreatedAt(account),
       expiresAt: account.expiresAt?.toNumber() || 0,
       bump: account.bump,
     };
