@@ -1,9 +1,16 @@
 /**
  * Program IDL in camelCase format in order to be used in JS/TS.
+ * Optimized to reduce duplicate code.
  *
  * Note that this is only a type helper and is not the actual IDL. The original
  * IDL can be found at `target/idl/pod_com.json`.
  */
+
+// Constants to eliminate duplicate values
+const AGENT_SEED = [97, 103, 101, 110, 116] as const;
+const ESCROW_SEED = [101, 115, 99, 114, 111, 119] as const;
+const CHANNEL_SEED = [99, 104, 97, 110, 110, 101, 108] as const;
+const SYSTEM_PROGRAM_ID = "11111111111111111111111111111111" as const;
 export type PodCom = {
   address: "HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps";
   metadata: {
@@ -24,7 +31,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: [99, 104, 97, 110, 110, 101, 108];
+                value: CHANNEL_SEED;
               },
               {
                 kind: "account";
@@ -44,7 +51,7 @@ export type PodCom = {
         },
         {
           name: "systemProgram";
-          address: "11111111111111111111111111111111";
+          address: SYSTEM_PROGRAM_ID;
         }
       ];
       args: [
@@ -85,7 +92,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: [101, 115, 99, 114, 111, 119];
+                value: ESCROW_SEED;
               },
               {
                 kind: "account";
@@ -109,7 +116,7 @@ export type PodCom = {
         },
         {
           name: "systemProgram";
-          address: "11111111111111111111111111111111";
+          address: SYSTEM_PROGRAM_ID;
         }
       ];
       args: [
@@ -130,7 +137,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: [97, 103, 101, 110, 116];
+                value: AGENT_SEED;
               },
               {
                 kind: "account";
@@ -146,7 +153,7 @@ export type PodCom = {
         },
         {
           name: "systemProgram";
-          address: "11111111111111111111111111111111";
+          address: SYSTEM_PROGRAM_ID;
         }
       ];
       args: [
@@ -174,7 +181,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: [97, 103, 101, 110, 116];
+                value: AGENT_SEED;
               },
               {
                 kind: "account";
@@ -190,7 +197,7 @@ export type PodCom = {
         },
         {
           name: "systemProgram";
-          address: "11111111111111111111111111111111";
+          address: SYSTEM_PROGRAM_ID;
         }
       ];
       args: [
@@ -225,7 +232,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: [97, 103, 101, 110, 116];
+                value: AGENT_SEED;
               },
               {
                 kind: "account";
@@ -269,7 +276,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: [97, 103, 101, 110, 116];
+                value: AGENT_SEED;
               },
               {
                 kind: "account";
@@ -305,7 +312,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: [101, 115, 99, 114, 111, 119];
+                value: ESCROW_SEED;
               },
               {
                 kind: "account";
@@ -329,7 +336,7 @@ export type PodCom = {
         },
         {
           name: "systemProgram";
-          address: "11111111111111111111111111111111";
+          address: SYSTEM_PROGRAM_ID;
         }
       ];
       args: [
@@ -648,7 +655,7 @@ export const IDL: PodCom = {
             seeds: [
               {
                 kind: "const",
-                value: [99, 104, 97, 110, 110, 101, 108],
+                value: CHANNEL_SEED,
               },
               {
                 kind: "account",
@@ -668,7 +675,7 @@ export const IDL: PodCom = {
         },
         {
           name: "systemProgram",
-          address: "11111111111111111111111111111111",
+          address: SYSTEM_PROGRAM_ID,
         }
       ],
       args: [
@@ -709,7 +716,7 @@ export const IDL: PodCom = {
             seeds: [
               {
                 kind: "const",
-                value: [101, 115, 99, 114, 111, 119],
+                value: ESCROW_SEED,
               },
               {
                 kind: "account",
@@ -733,7 +740,7 @@ export const IDL: PodCom = {
         },
         {
           name: "systemProgram",
-          address: "11111111111111111111111111111111",
+          address: SYSTEM_PROGRAM_ID,
         }
       ],
       args: [
@@ -754,7 +761,7 @@ export const IDL: PodCom = {
             seeds: [
               {
                 kind: "const",
-                value: [97, 103, 101, 110, 116],
+                value: AGENT_SEED,
               },
               {
                 kind: "account",
@@ -770,7 +777,7 @@ export const IDL: PodCom = {
         },
         {
           name: "systemProgram",
-          address: "11111111111111111111111111111111",
+          address: SYSTEM_PROGRAM_ID,
         }
       ],
       args: [
@@ -798,7 +805,7 @@ export const IDL: PodCom = {
             seeds: [
               {
                 kind: "const",
-                value: [97, 103, 101, 110, 116],
+                value: AGENT_SEED,
               },
               {
                 kind: "account",
@@ -814,7 +821,7 @@ export const IDL: PodCom = {
         },
         {
           name: "systemProgram",
-          address: "11111111111111111111111111111111",
+          address: SYSTEM_PROGRAM_ID,
         }
       ],
       args: [
@@ -849,7 +856,7 @@ export const IDL: PodCom = {
             seeds: [
               {
                 kind: "const",
-                value: [97, 103, 101, 110, 116],
+                value: AGENT_SEED,
               },
               {
                 kind: "account",
@@ -893,7 +900,7 @@ export const IDL: PodCom = {
             seeds: [
               {
                 kind: "const",
-                value: [97, 103, 101, 110, 116],
+                value: AGENT_SEED,
               },
               {
                 kind: "account",
@@ -929,7 +936,7 @@ export const IDL: PodCom = {
             seeds: [
               {
                 kind: "const",
-                value: [101, 115, 99, 114, 111, 119],
+                value: ESCROW_SEED,
               },
               {
                 kind: "account",
@@ -953,7 +960,7 @@ export const IDL: PodCom = {
         },
         {
           name: "systemProgram",
-          address: "11111111111111111111111111111111",
+          address: SYSTEM_PROGRAM_ID,
         }
       ],
       args: [

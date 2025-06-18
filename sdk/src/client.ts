@@ -4,8 +4,7 @@ import {
   Signer,
   Commitment,
 } from "@solana/web3.js";
-import anchor, { Program } from "@coral-xyz/anchor";
-const { AnchorProvider } = anchor;
+import anchor, { Program, AnchorProvider } from "@coral-xyz/anchor";
 import {
   PROGRAM_ID,
   PodComConfig,
@@ -24,6 +23,7 @@ import {
   ChannelVisibility,
 } from "./types";
 import { PodCom, IDL } from "./pod_com";
+import type { IdlAccounts } from "@coral-xyz/anchor";
 
 // Import services
 import { BaseService, BaseServiceConfig } from "./services/base";
@@ -79,14 +79,14 @@ class ChannelService extends BaseService {
   async getChannelParticipants(
     channelPDA: PublicKey,
     limit: number = 50
-  ): Promise<Array<any>> {
+  ): Promise<Array<IdlAccounts<PodCom>>> {
     throw new Error("Channel service not yet implemented");
   }
 
   async getChannelMessages(
     channelPDA: PublicKey,
     limit: number = 50
-  ): Promise<Array<any>> {
+  ): Promise<Array<IdlAccounts<PodCom>>> {
     throw new Error("Channel service not yet implemented");
   }
 }
@@ -126,7 +126,7 @@ export class PodComClient {
   private connection: Connection;
   private programId: PublicKey;
   private commitment: Commitment;
-  private program?: Program<any>;
+  private program?: Program<PodCom>;
 
   // Service instances - public for direct access to specific functionality
   public agents: AgentService;
@@ -158,7 +158,7 @@ export class PodComClient {
   /**
    * Initialize the Anchor program with a wallet (call this first)
    */
-  async initialize(wallet?: any): Promise<void> {
+  async initialize(wallet?: anchor.Wallet): Promise<void> {
     try {
       if (wallet) {
         // If a wallet is provided, create the program with it
@@ -172,7 +172,7 @@ export class PodComClient {
           throw new Error("IDL not found. Ensure the program IDL is properly generated and imported.");
         }
         
-        this.program = new Program(IDL as any, provider) as Program<any>;
+        this.program = new Program(IDL, provider) as Program<PodCom>;
         
         // Validate program was created successfully
         if (!this.program) {
@@ -359,7 +359,7 @@ export class PodComClient {
   async getChannelParticipants(
     channelPDA: PublicKey,
     limit: number = 50
-  ): Promise<Array<any>> {
+  ): Promise<Array<IdlAccounts<PodCom>>> {
     return this.channels.getChannelParticipants(channelPDA, limit);
   }
 
@@ -369,7 +369,7 @@ export class PodComClient {
   async getChannelMessages(
     channelPDA: PublicKey,
     limit: number = 50
-  ): Promise<Array<any>> {
+  ): Promise<Array<IdlAccounts<PodCom>>> {
     return this.channels.getChannelMessages(channelPDA, limit);
   }
 
