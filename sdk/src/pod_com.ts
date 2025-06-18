@@ -31,7 +31,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: CHANNEL_SEED;
+                value: typeof CHANNEL_SEED;
               },
               {
                 kind: "account";
@@ -51,7 +51,7 @@ export type PodCom = {
         },
         {
           name: "systemProgram";
-          address: SYSTEM_PROGRAM_ID;
+          address: typeof SYSTEM_PROGRAM_ID;
         }
       ];
       args: [
@@ -92,7 +92,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: ESCROW_SEED;
+                value: typeof ESCROW_SEED;
               },
               {
                 kind: "account";
@@ -116,7 +116,7 @@ export type PodCom = {
         },
         {
           name: "systemProgram";
-          address: SYSTEM_PROGRAM_ID;
+          address: typeof SYSTEM_PROGRAM_ID;
         }
       ];
       args: [
@@ -137,7 +137,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: AGENT_SEED;
+                value: typeof AGENT_SEED;
               },
               {
                 kind: "account";
@@ -153,7 +153,7 @@ export type PodCom = {
         },
         {
           name: "systemProgram";
-          address: SYSTEM_PROGRAM_ID;
+          address: typeof SYSTEM_PROGRAM_ID;
         }
       ];
       args: [
@@ -181,7 +181,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: AGENT_SEED;
+                value: typeof AGENT_SEED;
               },
               {
                 kind: "account";
@@ -197,7 +197,7 @@ export type PodCom = {
         },
         {
           name: "systemProgram";
-          address: SYSTEM_PROGRAM_ID;
+          address: typeof SYSTEM_PROGRAM_ID;
         }
       ];
       args: [
@@ -232,7 +232,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: AGENT_SEED;
+                value: typeof AGENT_SEED;
               },
               {
                 kind: "account";
@@ -276,7 +276,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: AGENT_SEED;
+                value: typeof AGENT_SEED;
               },
               {
                 kind: "account";
@@ -312,7 +312,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: ESCROW_SEED;
+                value: typeof ESCROW_SEED;
               },
               {
                 kind: "account";
@@ -336,7 +336,7 @@ export type PodCom = {
         },
         {
           name: "systemProgram";
-          address: SYSTEM_PROGRAM_ID;
+          address: typeof SYSTEM_PROGRAM_ID;
         }
       ];
       args: [

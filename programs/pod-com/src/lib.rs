@@ -744,10 +744,20 @@ pub mod pod_com {
     }
 
     // Get channel participants (view function - would be called off-chain)
-    pub fn get_channel_participants(_ctx: Context<GetChannelParticipants>) -> Result<Vec<Pubkey>> {
-        // This would typically be implemented as a view function
-        // For now, we'll use this as a placeholder that can be called off-chain
-        // The actual participant data would be queried via getProgramAccounts
+    pub fn get_channel_participants(ctx: Context<GetChannelParticipants>) -> Result<Vec<Pubkey>> {
+        // Note: In Solana programs, this function returns empty as participant data
+        // is typically queried off-chain via getProgramAccounts RPC calls for efficiency.
+        // The channel account stores the current participant count, but individual
+        // participant pubkeys are stored in separate ChannelParticipant accounts.
+        
+        // For on-chain validation, we verify the channel exists and is active
+        let channel = &ctx.accounts.channel_account;
+        require!(channel.is_active, PodComError::NotInChannel);
+        
+        // Return empty vector as participant enumeration is done off-chain
+        // Off-chain clients should use:
+        // - getProgramAccounts with ChannelParticipant discriminator
+        // - Filter by channel pubkey and is_active = true
         Ok(vec![])
     }
 
