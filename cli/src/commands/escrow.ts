@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import inquirer from "inquirer";
 import { table } from "table";
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey, Signer } from "@solana/web3.js";
 import { PodComClient, lamportsToSol, solToLamports } from "@pod-protocol/sdk";
 import {
   createCommandHandler,
@@ -33,7 +33,7 @@ async function promptChannelAndAmount({
   let withdrawAll = all;
 
   if (interactive) {
-    const questions: any[] = [
+    const questions: Array<Record<string, any>> = [
       {
         type: "input",
         name: "channelId",
@@ -64,17 +64,16 @@ async function promptChannelAndAmount({
         { name: "SOL", value: "sol" },
         { name: "Lamports", value: "lamports" },
       ],
-      when: (answers: any) => !withdraw || !answers.withdrawAll,
+      when: (answers: Record<string, any>) => !withdraw || !answers.withdrawAll,
     });
     questions.push({
       type: "number",
       name: "amount",
       message: "Amount:",
-      validate: (input: number) =>
-        input > 0 ? true : "Amount must be greater than 0",
-      when: (answers: any) => !withdraw || !answers.withdrawAll,
+      validate: (input: number) => (input > 0 ? true : "Amount must be greater than 0"),
+      when: (answers: Record<string, any>) => !withdraw || !answers.withdrawAll,
     });
-    const answers = await inquirer.prompt(questions);
+    const answers = await inquirer.prompt(questions as any);
     channelId = answers.channelId;
     withdrawAll = withdraw ? answers.withdrawAll : false;
     amt =
@@ -202,9 +201,9 @@ export class EscrowCommands {
 
   private async handleDeposit(
     client: PodComClient,
-    wallet: any,
+    wallet: Signer,
     globalOpts: GlobalOptions,
-    options: any,
+    options: Record<string, any>
   ) {
     const { channelId, amount } = await promptChannelAndAmount({
       interactive: options.interactive,
@@ -236,9 +235,9 @@ export class EscrowCommands {
 
   private async handleWithdraw(
     client: PodComClient,
-    wallet: any,
+    wallet: Signer,
     globalOpts: GlobalOptions,
-    options: any,
+    options: Record<string, any>
   ) {
     const {
       channelId,
@@ -285,7 +284,7 @@ export class EscrowCommands {
     });
   }
 
-  private async handleBalance(client: PodComClient, wallet: any, options: any) {
+  private async handleBalance(client: PodComClient, wallet: Signer, options: Record<string, any>) {
     if (!options.channel) {
       throw new ValidationError("Channel ID is required");
     }
@@ -332,7 +331,7 @@ export class EscrowCommands {
     console.log("\n" + table(data, getTableConfig("Escrow Balance")));
   }
 
-  private async handleList(client: PodComClient, wallet: any, options: any) {
+  private async handleList(client: PodComClient, wallet: Signer, options: Record<string, any>) {
     const limit = validatePositiveInteger(options.limit, "limit");
     const spinner = createSpinner("Fetching escrow accounts...");
 
@@ -345,7 +344,7 @@ export class EscrowCommands {
 
     spinner.succeed(`Found ${escrows.length} escrow accounts`);
 
-    const data = escrows.map((escrow: any) => [
+    const data = escrows.map((escrow: Record<string, any>) => [
       formatValue(escrow.channel.toBase58().slice(0, 8) + "...", "address"),
       formatValue(`${lamportsToSol(escrow.balance)} SOL`, "number"),
       formatValue(escrow.balance.toString(), "number"),

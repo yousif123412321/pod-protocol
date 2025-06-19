@@ -1,6 +1,16 @@
+<<<<<<< HEAD
 import { Connection, PublicKey, Signer, Commitment } from "@solana/web3.js";
 import anchor, { Program } from "@coral-xyz/anchor";
 const { AnchorProvider } = anchor;
+=======
+import {
+  Connection,
+  PublicKey,
+  Signer,
+  Commitment,
+} from "@solana/web3.js";
+import anchor, { Program, AnchorProvider } from "@coral-xyz/anchor";
+>>>>>>> origin/main
 import {
   PROGRAM_ID,
   PodComConfig,
@@ -19,11 +29,13 @@ import {
   ChannelVisibility,
 } from "./types";
 import { PodCom, IDL } from "./pod_com";
+import type { IdlAccounts } from "@coral-xyz/anchor";
 
 // Import services
 import { BaseService, BaseServiceConfig } from "./services/base";
 import { AgentService } from "./services/agent";
 import { MessageService } from "./services/message";
+<<<<<<< HEAD
 
 /**
  * Channel-related operations service (placeholder for future implementation)
@@ -124,6 +136,10 @@ class EscrowService extends BaseService {
     throw new Error("Escrow service not yet implemented");
   }
 }
+=======
+import { ChannelService } from "./services/channel";
+import { EscrowService } from "./services/escrow";
+>>>>>>> origin/main
 
 /**
  * Main PoD Protocol SDK client for interacting with the protocol
@@ -133,7 +149,7 @@ export class PodComClient {
   private connection: Connection;
   private programId: PublicKey;
   private commitment: Commitment;
-  private program?: Program<any>;
+  private program?: Program<PodCom>;
 
   // Service instances - public for direct access to specific functionality
   public agents: AgentService;
@@ -165,7 +181,7 @@ export class PodComClient {
   /**
    * Initialize the Anchor program with a wallet (call this first)
    */
-  async initialize(wallet?: any): Promise<void> {
+  async initialize(wallet?: anchor.Wallet): Promise<void> {
     try {
       if (wallet) {
         // If a wallet is provided, create the program with it
@@ -180,9 +196,15 @@ export class PodComClient {
             "IDL not found. Ensure the program IDL is properly generated and imported.",
           );
         }
+<<<<<<< HEAD
 
         this.program = new Program(IDL as any, provider) as Program<any>;
 
+=======
+        
+        this.program = new Program(IDL, provider) as Program<PodCom>;
+        
+>>>>>>> origin/main
         // Validate program was created successfully
         if (!this.program) {
           throw new Error("Failed to create Anchor program instance");
@@ -355,8 +377,13 @@ export class PodComClient {
     wallet: Signer,
     channelPDA: PublicKey,
     content: string,
+<<<<<<< HEAD
     messageType: any = "Text",
     replyTo?: PublicKey,
+=======
+    messageType: string = "Text",
+    replyTo?: PublicKey
+>>>>>>> origin/main
   ): Promise<string> {
     return this.channels.broadcastMessage(wallet, {
       channelPDA,
@@ -382,8 +409,8 @@ export class PodComClient {
    */
   async getChannelParticipants(
     channelPDA: PublicKey,
-    limit: number = 50,
-  ): Promise<Array<any>> {
+    limit: number = 50
+  ): Promise<Array<IdlAccounts<PodCom>>> {
     return this.channels.getChannelParticipants(channelPDA, limit);
   }
 
@@ -392,8 +419,8 @@ export class PodComClient {
    */
   async getChannelMessages(
     channelPDA: PublicKey,
-    limit: number = 50,
-  ): Promise<Array<any>> {
+    limit: number = 50
+  ): Promise<Array<IdlAccounts<PodCom>>> {
     return this.channels.getChannelMessages(channelPDA, limit);
   }
 
