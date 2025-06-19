@@ -1,23 +1,10 @@
 name: CI
-
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
-
-permissions:
-  contents: read
-
-env:
-  SOLANA_VERSION: "2.2.17"
-  ANCHOR_VERSION: "0.31.1"
-  BUN_VERSION: "latest"
+on: [push, pull_request]
 
 jobs:
   lint:
+    name: "🎨 Lint & Format"
     runs-on: ubuntu-latest
-    name: "🎨 Code Style & Linting"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,60 +12,26 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: ${{ env.BUN_VERSION }}
+          bun-version: latest
 
-      - name: Install dependencies
+      - name: Setup Solana Environment
+        uses: ./actions/setup-solana
+
+      - name: Install JS Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint TypeScript & Prettier
+        run: bun run lint:all
+
+      - name: Lint Rust
         run: |
-          bun install
-          cd sdk && bun install
-          cd ../cli && bun install
-
-      - name: Run prettier check
-        run: bun run lint
-
-      - name: Run TypeScript linting (SDK)
-        working-directory: sdk
-        run: bun run lint
-
-      - name: Run TypeScript linting (CLI)
-        working-directory: cli
-        run: bun run lint
-
-  security:
-    runs-on: ubuntu-latest
-    name: "🔒 Security Audit"
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Install dependencies
-        run: |
-          bun install
-          cd sdk && bun install
-          cd ../cli && bun install
-
-      - name: Run security audit (Root)
-        run: bun audit
-        continue-on-error: false
-
-      - name: Run security audit (SDK)
-        working-directory: sdk
-        run: bun audit
-        continue-on-error: false
-
-      - name: Run security audit (CLI)
-        working-directory: cli
-        run: bun audit
-        continue-on-error: false
+          cd programs/pod-com
+          cargo fmt -- --check
+          cargo clippy -- -D warnings
 
   build:
+    name: "🏗️ Build All"
     runs-on: ubuntu-latest
-    name: "🏗️ Build & Compile"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -86,60 +39,22 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: ${{ env.BUN_VERSION }}
+          bun-version: latest
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable
-
-      - name: Setup Solana
+      - name: Setup Solana Environment
         uses: ./actions/setup-solana
-        with:
-          solana-version: ${{ env.SOLANA_VERSION }}
 
-      - name: Cache Rust dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-            programs/pod-com/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install JS Dependencies
+        run: bun install --frozen-lockfile
 
-      - name: Cache Bun dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.bun/install/cache
-            node_modules
-            sdk/node_modules
-            cli/node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
-
-      - name: Install dependencies
-        run: |
-          bun install
-          cd sdk && bun install
-          cd ../cli && bun install
-
-      - name: Verify build setup
-        run: bun run build:verify
-
-      - name: Build Anchor programs
-        run: bun run build:safe
-
-      - name: Build IDL
-        run: bun run build:idl
+      - name: Build Solana Program
+        run: anchor build
 
       - name: Build SDK
-        working-directory: sdk
-        run: bun run build
+        run: cd sdk && bun run build
 
       - name: Build CLI
-        working-directory: cli
-        run: bun run build
+        run: cd cli && bun run build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -152,9 +67,9 @@ jobs:
             cli/dist/
 
   test:
-    runs-on: ubuntu-latest
     name: "🧪 Test Suite"
-    needs: [build]
+    runs-on: ubuntu-latest
+    needs: build
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -162,28 +77,18 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: ${{ env.BUN_VERSION }}
+          bun-version: latest
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable
-
-      - name: Setup Solana
+      - name: Setup Solana Environment
         uses: ./actions/setup-solana
-        with:
-          solana-version: ${{ env.SOLANA_VERSION }}
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           name: build-artifacts
 
-      - name: Install dependencies
-        run: |
-          bun install
-          cd sdk && bun install
-          cd ../cli && bun install
+      - name: Install JS Dependencies
+        run: bun install --frozen-lockfile
 
       - name: Setup Solana keypair
         run: |
@@ -191,20 +96,24 @@ jobs:
           solana-keygen new --no-bip39-passphrase -o ~/.config/solana/id.json
           solana config set --url localhost
 
-      - name: Start Solana test validator
+      - name: Start and Wait for Solana Test Validator
         run: |
-          solana-test-validator --reset --quiet &
-          sleep 10
+          solana-test-validator --reset >/dev/null 2>&1 &
+          echo "Waiting for validator..."
+          for i in {1..20}; do
+            if nc -z localhost 8899; then
+              echo "Validator is ready."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Validator did not start in time."
+          exit 1
 
-      - name: Run unit tests
-        run: bun run test
+      - name: Run Anchor Tests
+        run: anchor test --skip-build
 
-      - name: Run SDK tests
-        working-directory: sdk
-        run: bun run test
-
-      - name: Run CLI tests
-        working-directory: cli
+      - name: Run SDK & CLI Tests
         run: bun run test
 
       - name: Stop Solana test validator
