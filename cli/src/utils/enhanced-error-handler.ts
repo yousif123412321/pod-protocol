@@ -231,15 +231,29 @@ export class EnhancedErrorHandler {
   /**
    * Handle and display a PodError with full formatting
    */
+export class EnhancedErrorHandler {
+  private verbose: boolean = false;
+  private debugMode: boolean = false;
+  private exitOnError: boolean = true;
+
+  constructor(options: { verbose?: boolean; debug?: boolean; exitOnError?: boolean } = {}) {
+    this.verbose = options.verbose || false;
+    this.debugMode = options.debug || false;
+    this.exitOnError = options.exitOnError ?? true;
+  }
+
   public handleError(error: PodError | Error): void {
     if (error instanceof PodError) {
       this.displayPodError(error);
     } else {
       this.displayGenericError(error);
     }
-    
-    process.exit(1);
+
+    if (this.exitOnError) {
+      process.exit(1);
+    }
   }
+}
 
   /**
    * Display a formatted PodError
