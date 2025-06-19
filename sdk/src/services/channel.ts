@@ -72,7 +72,7 @@ export class ChannelService extends BaseService {
   ): Promise<ChannelAccount[]> {
     try {
       const channelAccount = this.getAccount("channelAccount");
-      let filters: any[] = [];
+      const filters: any[] = [];
 
       if (visibilityFilter) {
         const visibilityObj = this.convertChannelVisibility(visibilityFilter);
