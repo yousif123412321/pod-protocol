@@ -3,11 +3,20 @@ import { AGENT_CAPABILITIES, getCapabilityNames } from "@pod-protocol/sdk";
 import inquirer from "inquirer";
 import ora from "ora";
 import chalk from "chalk";
-import { createSpinner, handleDryRun, showSuccess } from "../../utils/shared.js";
+import {
+  createSpinner,
+  handleDryRun,
+  showSuccess,
+} from "../../utils/shared.js";
 import { getWallet } from "../../utils/client.js";
 import { AgentDisplayer } from "./displayer.js";
 import { AgentValidators } from "./validators.js";
-import { CommandContext, AgentRegisterOptions, AgentUpdateOptions, AgentListOptions } from "./types.js";
+import {
+  CommandContext,
+  AgentRegisterOptions,
+  AgentUpdateOptions,
+  AgentListOptions,
+} from "./types.js";
 
 export class AgentHandlers {
   private readonly context: CommandContext;
@@ -19,7 +28,8 @@ export class AgentHandlers {
   }
 
   public async handleRegister(options: AgentRegisterOptions): Promise<void> {
-    const { capabilities, metadataUri } = await this.prepareRegistrationData(options);
+    const { capabilities, metadataUri } =
+      await this.prepareRegistrationData(options);
     const spinner = createSpinner("Registering agent...");
 
     if (
@@ -31,10 +41,13 @@ export class AgentHandlers {
       return;
     }
 
-    const signature = await this.context.client.agents.registerAgent(this.context.wallet, {
-      capabilities,
-      metadataUri,
-    });
+    const signature = await this.context.client.agents.registerAgent(
+      this.context.wallet,
+      {
+        capabilities,
+        metadataUri,
+      },
+    );
 
     showSuccess(spinner, "Agent registered successfully!", {
       Transaction: signature,
@@ -69,18 +82,26 @@ export class AgentHandlers {
 
     if (this.context.globalOpts.dryRun) {
       spinner.succeed("Dry run: Agent update prepared");
-      console.log(chalk.cyan("Updates:"), JSON.stringify(updateOptions, null, 2));
+      console.log(
+        chalk.cyan("Updates:"),
+        JSON.stringify(updateOptions, null, 2),
+      );
       return;
     }
 
-    const signature = await this.context.client.agents.updateAgent(this.context.wallet, updateOptions);
+    const signature = await this.context.client.agents.updateAgent(
+      this.context.wallet,
+      updateOptions,
+    );
 
     spinner.succeed("Agent updated successfully!");
     console.log(chalk.green("Transaction:"), signature);
   }
 
   public async handleList(options: AgentListOptions): Promise<void> {
-    const limit = options.limit ? AgentValidators.validateLimit(options.limit) : 10;
+    const limit = options.limit
+      ? AgentValidators.validateLimit(options.limit)
+      : 10;
     const spinner = ora("Fetching agents...").start();
 
     const agents = await this.context.client.agents.getAllAgents(limit);
@@ -95,12 +116,17 @@ export class AgentHandlers {
   }
 
   private async prepareRegistrationData(options: AgentRegisterOptions) {
-    let capabilities = options.capabilities ? parseInt(options.capabilities, 10) : 0;
+    let capabilities = options.capabilities
+      ? parseInt(options.capabilities, 10)
+      : 0;
     let metadataUri = options.metadata || "";
 
     if (options.interactive) {
       const answers = await this.promptForRegistrationData();
-      capabilities = answers.capabilities.reduce((acc: number, cap: number) => acc | cap, 0);
+      capabilities = answers.capabilities.reduce(
+        (acc: number, cap: number) => acc | cap,
+        0,
+      );
       metadataUri = answers.metadataUri;
     }
 
@@ -124,8 +150,14 @@ export class AgentHandlers {
         choices: [
           { name: "Trading", value: AGENT_CAPABILITIES.TRADING },
           { name: "Analysis", value: AGENT_CAPABILITIES.ANALYSIS },
-          { name: "Data Processing", value: AGENT_CAPABILITIES.DATA_PROCESSING },
-          { name: "Content Generation", value: AGENT_CAPABILITIES.CONTENT_GENERATION },
+          {
+            name: "Data Processing",
+            value: AGENT_CAPABILITIES.DATA_PROCESSING,
+          },
+          {
+            name: "Content Generation",
+            value: AGENT_CAPABILITIES.CONTENT_GENERATION,
+          },
         ],
       },
       {
@@ -150,7 +182,9 @@ export class AgentHandlers {
     const updateOptions: any = {};
 
     if (options.capabilities) {
-      updateOptions.capabilities = AgentValidators.validateCapabilities(options.capabilities);
+      updateOptions.capabilities = AgentValidators.validateCapabilities(
+        options.capabilities,
+      );
     }
 
     if (options.metadata) {

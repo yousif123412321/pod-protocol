@@ -24,6 +24,8 @@ export class AgentDisplayer {
     ]);
 
     const header = ["Address", "Capabilities", "Reputation", "Last Updated"];
-    console.log("\n" + table([header, ...data], getTableConfig("Registered Agents")));
+    console.log(
+      "\n" + table([header, ...data], getTableConfig("Registered Agents")),
+    );
   }
 }

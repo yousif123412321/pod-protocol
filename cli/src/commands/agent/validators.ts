@@ -12,7 +12,9 @@ export class AgentValidators {
   static validateCapabilities(capabilities: string): number {
     const numCaps = parseInt(capabilities, 10);
     if (isNaN(numCaps) || numCaps < 0 || numCaps > 255) {
-      throw new Error("Invalid capabilities: must be a number between 0 and 255");
+      throw new Error(
+        "Invalid capabilities: must be a number between 0 and 255",
+      );
     }
     return numCaps;
   }

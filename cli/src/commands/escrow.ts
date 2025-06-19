@@ -20,7 +20,14 @@ import {
 } from "../utils/validation.js";
 
 // Helper for interactive channel/amount prompts
-async function promptChannelAndAmount({ interactive, channel, amount, lamports, all, withdraw = false }) {
+async function promptChannelAndAmount({
+  interactive,
+  channel,
+  amount,
+  lamports,
+  all,
+  withdraw = false,
+}) {
   let channelId = channel;
   let amt = 0;
   let withdrawAll = all;
@@ -63,17 +70,19 @@ async function promptChannelAndAmount({ interactive, channel, amount, lamports, 
       type: "number",
       name: "amount",
       message: "Amount:",
-      validate: (input: number) => (input > 0 ? true : "Amount must be greater than 0"),
+      validate: (input: number) =>
+        input > 0 ? true : "Amount must be greater than 0",
       when: (answers: any) => !withdraw || !answers.withdrawAll,
     });
     const answers = await inquirer.prompt(questions);
     channelId = answers.channelId;
     withdrawAll = withdraw ? answers.withdrawAll : false;
-    amt = withdraw && answers.withdrawAll
-      ? 0
-      : answers.unit === "sol"
-      ? solToLamports(answers.amount)
-      : answers.amount;
+    amt =
+      withdraw && answers.withdrawAll
+        ? 0
+        : answers.unit === "sol"
+          ? solToLamports(answers.amount)
+          : answers.amount;
   } else {
     if (!channelId) {
       throw new ValidationError("Channel ID is required");
@@ -92,17 +101,17 @@ async function promptChannelAndAmount({ interactive, channel, amount, lamports, 
 function validateAmountOptions(amount, lamports, withdraw = false) {
   if (amount && lamports) {
     throw new ValidationError(
-      "Specify either --amount (SOL) or --lamports, not both"
+      "Specify either --amount (SOL) or --lamports, not both",
     );
   }
   if (!withdraw && !amount && !lamports) {
     throw new ValidationError(
-      "Amount is required (use --amount for SOL or --lamports)"
+      "Amount is required (use --amount for SOL or --lamports)",
     );
   }
   if (withdraw && !amount && !lamports) {
     throw new ValidationError(
-      "Amount is required (use --amount for SOL, --lamports, or --all)"
+      "Amount is required (use --amount for SOL, --lamports, or --all)",
     );
   }
 }
@@ -136,8 +145,8 @@ export class EscrowCommands {
           "deposit to escrow",
           async (client, wallet, globalOpts, options) => {
             await this.handleDeposit(client, wallet, globalOpts, options);
-          }
-        )
+          },
+        ),
       );
 
     // Withdraw from escrow
@@ -154,8 +163,8 @@ export class EscrowCommands {
           "withdraw from escrow",
           async (client, wallet, globalOpts, options) => {
             await this.handleWithdraw(client, wallet, globalOpts, options);
-          }
-        )
+          },
+        ),
       );
 
     // Show escrow balance
@@ -165,15 +174,15 @@ export class EscrowCommands {
       .option("-c, --channel <channelId>", "Channel ID")
       .option(
         "-a, --agent [address]",
-        "Agent address (defaults to current wallet)"
+        "Agent address (defaults to current wallet)",
       )
       .action(
         createCommandHandler(
           "fetch escrow balance",
           async (client, wallet, globalOpts, options) => {
             await this.handleBalance(client, wallet, options);
-          }
-        )
+          },
+        ),
       );
 
     // List all escrow accounts
@@ -186,8 +195,8 @@ export class EscrowCommands {
           "list escrow accounts",
           async (client, wallet, globalOpts, options) => {
             await this.handleList(client, wallet, options);
-          }
-        )
+          },
+        ),
       );
   }
 
@@ -195,7 +204,7 @@ export class EscrowCommands {
     client: PodComClient,
     wallet: any,
     globalOpts: GlobalOptions,
-    options: any
+    options: any,
   ) {
     const { channelId, amount } = await promptChannelAndAmount({
       interactive: options.interactive,
@@ -229,9 +238,13 @@ export class EscrowCommands {
     client: PodComClient,
     wallet: any,
     globalOpts: GlobalOptions,
-    options: any
+    options: any,
   ) {
-    const { channelId, amount: promptAmount, withdrawAll } = await promptChannelAndAmount({
+    const {
+      channelId,
+      amount: promptAmount,
+      withdrawAll,
+    } = await promptChannelAndAmount({
       interactive: options.interactive,
       channel: options.channel,
       amount: options.amount,
@@ -311,7 +324,7 @@ export class EscrowCommands {
         "Last Updated",
         formatValue(
           new Date(escrowData.lastUpdated * 1000).toLocaleString(),
-          "text"
+          "text",
         ),
       ],
     ];
@@ -338,7 +351,7 @@ export class EscrowCommands {
       formatValue(escrow.balance.toString(), "number"),
       formatValue(
         new Date(escrow.lastUpdated * 1000).toLocaleDateString(),
-        "text"
+        "text",
       ),
     ]);
 
@@ -349,8 +362,8 @@ export class EscrowCommands {
             ["Channel", "Balance (SOL)", "Balance (Lamports)", "Last Updated"],
             ...data,
           ],
-          getTableConfig("Escrow Accounts")
-        )
+          getTableConfig("Escrow Accounts"),
+        ),
     );
   }
 }

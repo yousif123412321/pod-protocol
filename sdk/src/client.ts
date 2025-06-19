@@ -1,9 +1,4 @@
-import {
-  Connection,
-  PublicKey,
-  Signer,
-  Commitment,
-} from "@solana/web3.js";
+import { Connection, PublicKey, Signer, Commitment } from "@solana/web3.js";
 import anchor, { Program } from "@coral-xyz/anchor";
 const { AnchorProvider } = anchor;
 import {
@@ -34,7 +29,10 @@ import { MessageService } from "./services/message";
  * Channel-related operations service (placeholder for future implementation)
  */
 class ChannelService extends BaseService {
-  async createChannel(wallet: Signer, options: CreateChannelOptions): Promise<string> {
+  async createChannel(
+    wallet: Signer,
+    options: CreateChannelOptions,
+  ): Promise<string> {
     throw new Error("Channel service not yet implemented");
   }
 
@@ -44,14 +42,14 @@ class ChannelService extends BaseService {
 
   async getAllChannels(
     limit: number = 50,
-    visibilityFilter?: ChannelVisibility
+    visibilityFilter?: ChannelVisibility,
   ): Promise<ChannelAccount[]> {
     throw new Error("Channel service not yet implemented");
   }
 
   async getChannelsByCreator(
     creator: PublicKey,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<ChannelAccount[]> {
     throw new Error("Channel service not yet implemented");
   }
@@ -64,28 +62,31 @@ class ChannelService extends BaseService {
     throw new Error("Channel service not yet implemented");
   }
 
-  async broadcastMessage(wallet: Signer, options: BroadcastMessageOptions): Promise<string> {
+  async broadcastMessage(
+    wallet: Signer,
+    options: BroadcastMessageOptions,
+  ): Promise<string> {
     throw new Error("Channel service not yet implemented");
   }
 
   async inviteToChannel(
     wallet: Signer,
     channelPDA: PublicKey,
-    invitee: PublicKey
+    invitee: PublicKey,
   ): Promise<string> {
     throw new Error("Channel service not yet implemented");
   }
 
   async getChannelParticipants(
     channelPDA: PublicKey,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<Array<any>> {
     throw new Error("Channel service not yet implemented");
   }
 
   async getChannelMessages(
     channelPDA: PublicKey,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<Array<any>> {
     throw new Error("Channel service not yet implemented");
   }
@@ -95,24 +96,30 @@ class ChannelService extends BaseService {
  * Escrow-related operations service (placeholder for future implementation)
  */
 class EscrowService extends BaseService {
-  async depositEscrow(wallet: Signer, options: DepositEscrowOptions): Promise<string> {
+  async depositEscrow(
+    wallet: Signer,
+    options: DepositEscrowOptions,
+  ): Promise<string> {
     throw new Error("Escrow service not yet implemented");
   }
 
-  async withdrawEscrow(wallet: Signer, options: WithdrawEscrowOptions): Promise<string> {
+  async withdrawEscrow(
+    wallet: Signer,
+    options: WithdrawEscrowOptions,
+  ): Promise<string> {
     throw new Error("Escrow service not yet implemented");
   }
 
   async getEscrow(
     channel: PublicKey,
-    depositor: PublicKey
+    depositor: PublicKey,
   ): Promise<EscrowAccount | null> {
     throw new Error("Escrow service not yet implemented");
   }
 
   async getEscrowsByDepositor(
     depositor: PublicKey,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<EscrowAccount[]> {
     throw new Error("Escrow service not yet implemented");
   }
@@ -137,7 +144,7 @@ export class PodComClient {
   constructor(config: PodComConfig = {}) {
     this.connection = new Connection(
       config.endpoint ?? "https://api.devnet.solana.com",
-      config.commitment ?? "confirmed"
+      config.commitment ?? "confirmed",
     );
     this.programId = config.programId ?? PROGRAM_ID;
     this.commitment = config.commitment ?? "confirmed";
@@ -146,7 +153,7 @@ export class PodComClient {
     const serviceConfig: BaseServiceConfig = {
       connection: this.connection,
       programId: this.programId,
-      commitment: this.commitment
+      commitment: this.commitment,
     };
 
     this.agents = new AgentService(serviceConfig);
@@ -166,19 +173,21 @@ export class PodComClient {
           commitment: this.commitment,
           skipPreflight: true,
         });
-        
+
         // Validate IDL before creating program
         if (!IDL) {
-          throw new Error("IDL not found. Ensure the program IDL is properly generated and imported.");
+          throw new Error(
+            "IDL not found. Ensure the program IDL is properly generated and imported.",
+          );
         }
-        
+
         this.program = new Program(IDL as any, provider) as Program<any>;
-        
+
         // Validate program was created successfully
         if (!this.program) {
           throw new Error("Failed to create Anchor program instance");
         }
-        
+
         // Set program for all services
         this.agents.setProgram(this.program);
         this.messages.setProgram(this.program);
@@ -187,21 +196,24 @@ export class PodComClient {
       } else {
         // No wallet provided - validate IDL before setting on services
         if (!IDL) {
-          throw new Error("IDL not found. Ensure the program IDL is properly generated and imported.");
+          throw new Error(
+            "IDL not found. Ensure the program IDL is properly generated and imported.",
+          );
         }
-        
+
         // Set IDL for all services
         this.agents.setIDL(IDL);
         this.messages.setIDL(IDL);
         this.channels.setIDL(IDL);
         this.escrow.setIDL(IDL);
       }
-      
+
       // Validate initialization was successful
       if (!this.isInitialized()) {
-        throw new Error("Client initialization failed - services not properly configured");
+        throw new Error(
+          "Client initialization failed - services not properly configured",
+        );
       }
-      
     } catch (error: any) {
       throw new Error(`Client initialization failed: ${error.message}`);
     }
@@ -215,14 +227,20 @@ export class PodComClient {
   /**
    * @deprecated Use client.agents.registerAgent() instead
    */
-  async registerAgent(wallet: Signer, options: CreateAgentOptions): Promise<string> {
+  async registerAgent(
+    wallet: Signer,
+    options: CreateAgentOptions,
+  ): Promise<string> {
     return this.agents.registerAgent(wallet, options);
   }
 
   /**
    * @deprecated Use client.agents.updateAgent() instead
    */
-  async updateAgent(wallet: Signer, options: UpdateAgentOptions): Promise<string> {
+  async updateAgent(
+    wallet: Signer,
+    options: UpdateAgentOptions,
+  ): Promise<string> {
     return this.agents.updateAgent(wallet, options);
   }
 
@@ -243,7 +261,10 @@ export class PodComClient {
   /**
    * @deprecated Use client.messages.sendMessage() instead
    */
-  async sendMessage(wallet: Signer, options: SendMessageOptions): Promise<string> {
+  async sendMessage(
+    wallet: Signer,
+    options: SendMessageOptions,
+  ): Promise<string> {
     return this.messages.sendMessage(wallet, options);
   }
 
@@ -253,7 +274,7 @@ export class PodComClient {
   async updateMessageStatus(
     wallet: Signer,
     messagePDA: PublicKey,
-    newStatus: MessageStatus
+    newStatus: MessageStatus,
   ): Promise<string> {
     return this.messages.updateMessageStatus(wallet, messagePDA, newStatus);
   }
@@ -271,7 +292,7 @@ export class PodComClient {
   async getAgentMessages(
     agentPublicKey: PublicKey,
     limit: number = 50,
-    statusFilter?: MessageStatus
+    statusFilter?: MessageStatus,
   ): Promise<MessageAccount[]> {
     return this.messages.getAgentMessages(agentPublicKey, limit, statusFilter);
   }
@@ -279,7 +300,10 @@ export class PodComClient {
   /**
    * @deprecated Use client.channels.createChannel() instead
    */
-  async createChannel(wallet: Signer, options: CreateChannelOptions): Promise<string> {
+  async createChannel(
+    wallet: Signer,
+    options: CreateChannelOptions,
+  ): Promise<string> {
     return this.channels.createChannel(wallet, options);
   }
 
@@ -295,7 +319,7 @@ export class PodComClient {
    */
   async getAllChannels(
     limit: number = 50,
-    visibilityFilter?: ChannelVisibility
+    visibilityFilter?: ChannelVisibility,
   ): Promise<ChannelAccount[]> {
     return this.channels.getAllChannels(limit, visibilityFilter);
   }
@@ -305,7 +329,7 @@ export class PodComClient {
    */
   async getChannelsByCreator(
     creator: PublicKey,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<ChannelAccount[]> {
     return this.channels.getChannelsByCreator(creator, limit);
   }
@@ -332,13 +356,13 @@ export class PodComClient {
     channelPDA: PublicKey,
     content: string,
     messageType: any = "Text",
-    replyTo?: PublicKey
+    replyTo?: PublicKey,
   ): Promise<string> {
     return this.channels.broadcastMessage(wallet, {
       channelPDA,
       content,
       messageType,
-      replyTo
+      replyTo,
     });
   }
 
@@ -348,7 +372,7 @@ export class PodComClient {
   async inviteToChannel(
     wallet: Signer,
     channelPDA: PublicKey,
-    invitee: PublicKey
+    invitee: PublicKey,
   ): Promise<string> {
     return this.channels.inviteToChannel(wallet, channelPDA, invitee);
   }
@@ -358,7 +382,7 @@ export class PodComClient {
    */
   async getChannelParticipants(
     channelPDA: PublicKey,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<Array<any>> {
     return this.channels.getChannelParticipants(channelPDA, limit);
   }
@@ -368,7 +392,7 @@ export class PodComClient {
    */
   async getChannelMessages(
     channelPDA: PublicKey,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<Array<any>> {
     return this.channels.getChannelMessages(channelPDA, limit);
   }
@@ -376,14 +400,20 @@ export class PodComClient {
   /**
    * @deprecated Use client.escrow.depositEscrow() instead
    */
-  async depositEscrow(wallet: Signer, options: DepositEscrowOptions): Promise<string> {
+  async depositEscrow(
+    wallet: Signer,
+    options: DepositEscrowOptions,
+  ): Promise<string> {
     return this.escrow.depositEscrow(wallet, options);
   }
 
   /**
    * @deprecated Use client.escrow.withdrawEscrow() instead
    */
-  async withdrawEscrow(wallet: Signer, options: WithdrawEscrowOptions): Promise<string> {
+  async withdrawEscrow(
+    wallet: Signer,
+    options: WithdrawEscrowOptions,
+  ): Promise<string> {
     return this.escrow.withdrawEscrow(wallet, options);
   }
 
@@ -392,7 +422,7 @@ export class PodComClient {
    */
   async getEscrow(
     channel: PublicKey,
-    depositor: PublicKey
+    depositor: PublicKey,
   ): Promise<EscrowAccount | null> {
     return this.escrow.getEscrow(channel, depositor);
   }
@@ -402,7 +432,7 @@ export class PodComClient {
    */
   async getEscrowsByDepositor(
     depositor: PublicKey,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<EscrowAccount[]> {
     return this.escrow.getEscrowsByDepositor(depositor, limit);
   }
@@ -440,8 +470,13 @@ export class PodComClient {
     if (this.program) {
       return true;
     }
-    
+
     // For read-only initialization, check if services have IDL set
-    return this.agents.hasIDL() && this.messages.hasIDL() && this.channels.hasIDL() && this.escrow.hasIDL();
+    return (
+      this.agents.hasIDL() &&
+      this.messages.hasIDL() &&
+      this.channels.hasIDL() &&
+      this.escrow.hasIDL()
+    );
   }
-} 
+}

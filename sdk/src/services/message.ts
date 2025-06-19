@@ -1,36 +1,39 @@
 import { PublicKey, Signer, GetProgramAccountsFilter } from "@solana/web3.js";
 import anchor from "@coral-xyz/anchor";
 import { BaseService } from "./base";
-import { 
-  MessageAccount, 
-  SendMessageOptions, 
-  MessageType, 
-  MessageStatus 
+import {
+  MessageAccount,
+  SendMessageOptions,
+  MessageType,
+  MessageStatus,
 } from "../types";
-import { 
-  findMessagePDA, 
-  hashPayload, 
+import {
+  findMessagePDA,
+  hashPayload,
   retry,
   convertMessageTypeToProgram,
   convertMessageTypeFromProgram,
   getAccountTimestamp,
-  getAccountCreatedAt
+  getAccountCreatedAt,
 } from "../utils";
 
 /**
  * Message-related operations service
  */
 export class MessageService extends BaseService {
-  async sendMessage(wallet: Signer, options: SendMessageOptions): Promise<string> {
+  async sendMessage(
+    wallet: Signer,
+    options: SendMessageOptions,
+  ): Promise<string> {
     // Hash the payload first
     const payloadHash = await hashPayload(options.payload);
-    
+
     const [messagePDA] = findMessagePDA(
       wallet.publicKey,
       options.recipient,
       payloadHash,
       options.messageType,
-      this.programId
+      this.programId,
     );
 
     return retry(async () => {
@@ -41,7 +44,7 @@ export class MessageService extends BaseService {
           options.payload,
           this.convertMessageType(options.messageType, options.customValue),
           payloadHash,
-          "" // metadata is not in the interface
+          "", // metadata is not in the interface
         )
         .accounts({
           messageAccount: messagePDA,
@@ -58,7 +61,7 @@ export class MessageService extends BaseService {
   async updateMessageStatus(
     wallet: Signer,
     messagePDA: PublicKey,
-    newStatus: MessageStatus
+    newStatus: MessageStatus,
   ): Promise<string> {
     return retry(async () => {
       const methods = this.getProgramMethods();
@@ -90,7 +93,7 @@ export class MessageService extends BaseService {
   async getAgentMessages(
     agentPublicKey: PublicKey,
     limit: number = 50,
-    statusFilter?: MessageStatus
+    statusFilter?: MessageStatus,
   ): Promise<MessageAccount[]> {
     try {
       const filters: GetProgramAccountsFilter[] = [
@@ -112,26 +115,30 @@ export class MessageService extends BaseService {
         });
       }
 
-      const accounts = await this.connection.getProgramAccounts(this.programId, {
-        filters,
-        commitment: this.commitment,
-      });
+      const accounts = await this.connection.getProgramAccounts(
+        this.programId,
+        {
+          filters,
+          commitment: this.commitment,
+        },
+      );
 
-      return accounts
-        .slice(0, limit)
-        .map((acc) => {
-          const account = this.ensureInitialized().coder.accounts.decode(
-            "messageAccount",
-            acc.account.data
-          );
-          return this.convertMessageAccountFromProgram(account, acc.pubkey);
-        });
+      return accounts.slice(0, limit).map((acc) => {
+        const account = this.ensureInitialized().coder.accounts.decode(
+          "messageAccount",
+          acc.account.data,
+        );
+        return this.convertMessageAccountFromProgram(account, acc.pubkey);
+      });
     } catch (error: any) {
       throw new Error(`Failed to fetch agent messages: ${error.message}`);
     }
   }
 
-  private convertMessageType(messageType: MessageType, customValue?: number): any {
+  private convertMessageType(
+    messageType: MessageType,
+    customValue?: number,
+  ): any {
     if (messageType === MessageType.Custom && customValue !== undefined) {
       return { type: messageType, customValue };
     }
@@ -169,7 +176,7 @@ export class MessageService extends BaseService {
 
   private convertMessageAccountFromProgram(
     account: any,
-    publicKey: PublicKey
+    publicKey: PublicKey,
   ): MessageAccount {
     return {
       pubkey: publicKey,
@@ -185,4 +192,4 @@ export class MessageService extends BaseService {
       bump: account.bump,
     };
   }
-} 
+}

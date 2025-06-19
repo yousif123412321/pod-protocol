@@ -4,7 +4,7 @@ import { PublicKey } from "@solana/web3.js";
  * PoD Protocol Program ID on Solana Devnet
  */
 export const PROGRAM_ID = new PublicKey(
-  "HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps"
+  "HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps",
 );
 
 /**

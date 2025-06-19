@@ -45,9 +45,8 @@ describe("PoD Protocol Tests", () => {
   test("can register a sender agent", async () => {
     try {
       // Check if agent already exists
-      const existingAgent = await program.account.agentAccount.fetch(
-        senderAgentPDA
-      );
+      const existingAgent =
+        await program.account.agentAccount.fetch(senderAgentPDA);
       if (existingAgent) {
         // Agent already exists, skip creation
         expect(existingAgent.pubkey.equals(wallet.publicKey)).toBe(true);
@@ -70,9 +69,8 @@ describe("PoD Protocol Tests", () => {
     expect(tx).toBeTruthy();
 
     // Verify the agent was created
-    const agentAccount = await program.account.agentAccount.fetch(
-      senderAgentPDA
-    );
+    const agentAccount =
+      await program.account.agentAccount.fetch(senderAgentPDA);
     expect(agentAccount.metadataUri).toBe(METADATA_URI);
     expect(agentAccount.pubkey.equals(wallet.publicKey)).toBe(true);
   });
@@ -91,14 +89,14 @@ describe("PoD Protocol Tests", () => {
       recipientAgentPDA,
       PAYLOAD_HASH,
       messageType,
-      program.programId
+      program.programId,
     );
 
     const tx = await program.methods
       .sendMessage(
         wallet.publicKey, // Send to self to avoid needing separate recipient
         Array.from(PAYLOAD_HASH), // Convert to number array for Anchor
-        messageType
+        messageType,
       )
       .accounts({
         messageAccount: messagePDA,
@@ -112,11 +110,10 @@ describe("PoD Protocol Tests", () => {
     expect(tx).toBeTruthy();
 
     // Verify the message was created
-    const messageAccount = await program.account.messageAccount.fetch(
-      messagePDA
-    );
+    const messageAccount =
+      await program.account.messageAccount.fetch(messagePDA);
     expect(Array.from(messageAccount.payloadHash)).toEqual(
-      Array.from(PAYLOAD_HASH)
+      Array.from(PAYLOAD_HASH),
     );
     expect(messageAccount.sender.equals(senderAgentPDA)).toBe(true); // Now sender is agent PDA
     expect(messageAccount.recipient.equals(wallet.publicKey)).toBe(true);
@@ -126,13 +123,12 @@ describe("PoD Protocol Tests", () => {
   test("can update message status to delivered", async () => {
     // First ensure the message exists by checking it was created in the previous test
     try {
-      const messageAccount = await program.account.messageAccount.fetch(
-        messagePDA
-      );
+      const messageAccount =
+        await program.account.messageAccount.fetch(messagePDA);
       expect("pending" in messageAccount.status).toBe(true);
     } catch (error) {
       throw new Error(
-        "Message account not found - previous test may have failed"
+        "Message account not found - previous test may have failed",
       );
     }
 
@@ -149,9 +145,8 @@ describe("PoD Protocol Tests", () => {
     expect(tx).toBeTruthy();
 
     // Verify the message status was updated
-    const messageAccount = await program.account.messageAccount.fetch(
-      messagePDA
-    );
+    const messageAccount =
+      await program.account.messageAccount.fetch(messagePDA);
     expect("delivered" in messageAccount.status).toBe(true);
   });
 
@@ -171,9 +166,8 @@ describe("PoD Protocol Tests", () => {
     expect(tx).toBeTruthy();
 
     // Verify the agent was updated
-    const agentAccount = await program.account.agentAccount.fetch(
-      senderAgentPDA
-    );
+    const agentAccount =
+      await program.account.agentAccount.fetch(senderAgentPDA);
     expect(agentAccount.metadataUri).toBe(newMetadataUri);
     expect(agentAccount.capabilities.toNumber()).toBe(2);
   });

@@ -19,14 +19,34 @@ jobs:
         with:
           components: rustfmt, clippy
 
-      - name: Install JS Dependencies
-        run: bun install --frozen-lockfile
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            ~/.cargo/registry
+            ~/.cargo/git
+            node_modules
+            sdk/node_modules
+            cli/node_modules
+          key: ${{ runner.os }}-lint-${{ hashFiles('**/bun.lock', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-lint-
+
+      - name: Install dependencies
+        run: |
+          echo "📦 Installing workspace dependencies..."
+          bun install --frozen-lockfile
+          echo "✅ Root dependencies installed"
 
       - name: Lint TypeScript & Prettier
-        run: bun run lint:all
+        run: |
+          echo "🎨 Running TypeScript and Prettier linting..."
+          bun run lint:all
 
       - name: Lint Rust
         run: |
+          echo "🦀 Running Rust linting..."
           cd programs/pod-com
           cargo fmt -- --check
           cargo clippy -- -D warnings
@@ -57,17 +77,44 @@ jobs:
           avm install 0.31.1
           avm use 0.31.1
 
-      - name: Install JS Dependencies
-        run: bun install --frozen-lockfile
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            node_modules
+            sdk/node_modules
+            cli/node_modules
+          key: ${{ runner.os }}-build-${{ hashFiles('**/bun.lock', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
+      - name: Install dependencies
+        run: |
+          echo "📦 Installing all workspace dependencies..."
+          bun install --frozen-lockfile
+          echo "✅ All dependencies installed"
 
       - name: Build Solana Program
-        run: anchor build
+        run: |
+          echo "⚓ Building Anchor program..."
+          anchor build
+          echo "✅ Anchor program built successfully"
 
       - name: Build SDK
-        run: cd sdk && bun run build
+        run: |
+          echo "📦 Building SDK..."
+          cd sdk && bun run build
+          echo "✅ SDK built successfully"
 
       - name: Build CLI
-        run: cd cli && bun run build
+        run: |
+          echo "🔧 Building CLI..."
+          cd cli && bun run build
+          echo "✅ CLI built successfully"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -98,7 +145,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config build-essential libudev-dev netcat-openbsd
+          sudo apt-get install -y pkg-config build-essential libudev-dev netcat-openbsd curl
 
       - name: Install Anchor CLI via avm
         run: |
@@ -111,8 +158,25 @@ jobs:
         with:
           name: build-artifacts
 
-      - name: Install JS Dependencies
-        run: bun install --frozen-lockfile
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            ~/.cargo/registry
+            ~/.cargo/git
+            node_modules
+            sdk/node_modules
+            cli/node_modules
+          key: ${{ runner.os }}-test-${{ hashFiles('**/bun.lock', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-test-
+
+      - name: Install dependencies
+        run: |
+          echo "📦 Installing workspace dependencies for testing..."
+          bun install --frozen-lockfile
+          echo "✅ Dependencies installed"
 
       - name: Setup Solana keypair
         run: |
@@ -122,18 +186,38 @@ jobs:
 
       - name: Start and Wait for Solana Test Validator
         run: |
-          solana-test-validator --reset >/dev/null 2>&1 &
-          echo "Waiting for validator to be ready..."
-          for i in {1..30}; do
-            if nc -z localhost 8899; then
-              echo "✅ Validator is ready on port 8899"
-              break
+          echo "🚀 Starting Solana test validator..."
+          solana-test-validator --reset --quiet --log /tmp/validator.log &
+          VALIDATOR_PID=$!
+          echo "Validator PID: $VALIDATOR_PID"
+          
+          echo "⏳ Waiting for validator to be ready..."
+          for i in {1..60}; do
+            if nc -z localhost 8899 && nc -z localhost 8900; then
+              echo "✅ Validator is ready on ports 8899 (RPC) and 8900 (WebSocket)"
+              
+              # Additional health check
+              if curl -s -X POST -H "Content-Type: application/json" \
+                -d '{"jsonrpc":"2.0","id":1,"method":"getHealth"}' \
+                http://localhost:8899 | grep -q '"result":"ok"'; then
+                echo "✅ Validator health check passed"
+                break
+              fi
             fi
-            if [ $i -eq 30 ]; then
-              echo "❌ Validator did not start within 30 seconds"
+            
+            if [ $i -eq 60 ]; then
+              echo "❌ Validator did not start within 60 seconds"
+              echo "📋 Validator logs:"
+              if [ -f /tmp/validator.log ]; then
+                tail -50 /tmp/validator.log
+              fi
+              kill $VALIDATOR_PID 2>/dev/null || true
               exit 1
             fi
-            echo "⏳ Attempt $i/30: Validator not ready yet, waiting..."
+            
+            if [ $((i % 10)) -eq 0 ]; then
+              echo "⏳ Attempt $i/60: Still waiting for validator..."
+            fi
             sleep 1
           done
 

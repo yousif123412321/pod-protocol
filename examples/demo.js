@@ -11,7 +11,7 @@ const wallet = provider.wallet.payer;
 const findAgentPDA = (wallet) => {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("agent"), wallet.toBuffer()],
-    program.programId
+    program.programId,
   );
 };
 

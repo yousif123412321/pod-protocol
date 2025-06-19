@@ -1,12 +1,21 @@
 import { PublicKey } from "@solana/web3.js";
 import { MessageType } from "@pod-protocol/sdk";
 import inquirer from "inquirer";
-import { createSpinner, handleDryRun, showSuccess } from "../../utils/shared.js";
+import {
+  createSpinner,
+  handleDryRun,
+  showSuccess,
+} from "../../utils/shared.js";
 import { getWallet } from "../../utils/client.js";
 import { ValidationError } from "../../utils/validation.js";
 import { MessageDisplayer } from "./displayer.js";
 import { MessageValidators } from "./validators.js";
-import { CommandContext, SendMessageOptions, MessageStatusOptions, MessageListOptions } from "./types.js";
+import {
+  CommandContext,
+  SendMessageOptions,
+  MessageStatusOptions,
+  MessageListOptions,
+} from "./types.js";
 
 export class MessageHandlers {
   private readonly context: CommandContext;
@@ -21,7 +30,9 @@ export class MessageHandlers {
     let recipient = options.recipient;
     let payload = options.payload;
     let messageType = options.type as MessageType;
-    let customValue = options.customValue ? parseInt(options.customValue, 10) : 0;
+    let customValue = options.customValue
+      ? parseInt(options.customValue, 10)
+      : 0;
 
     if (options.interactive) {
       const answers = await this.promptForMessageData();
@@ -53,12 +64,15 @@ export class MessageHandlers {
       return;
     }
 
-    const signature = await this.context.client.sendMessage(this.context.wallet, {
-      recipient: recipientKey,
-      payload: validatedPayload,
-      messageType,
-      customValue,
-    });
+    const signature = await this.context.client.sendMessage(
+      this.context.wallet,
+      {
+        recipient: recipientKey,
+        payload: validatedPayload,
+        messageType,
+        customValue,
+      },
+    );
 
     showSuccess(spinner, "Message sent successfully!", {
       Transaction: signature,
@@ -88,7 +102,9 @@ export class MessageHandlers {
     }
 
     const messageKey = MessageValidators.validateMessageId(options.message);
-    const validatedStatus = MessageValidators.validateMessageStatus(options.status);
+    const validatedStatus = MessageValidators.validateMessageStatus(
+      options.status,
+    );
 
     const spinner = createSpinner("Updating message status...");
 
@@ -104,7 +120,7 @@ export class MessageHandlers {
     const signature = await this.context.client.updateMessageStatus(
       this.context.wallet,
       messageKey,
-      validatedStatus
+      validatedStatus,
     );
 
     showSuccess(spinner, "Message status updated successfully!", {
@@ -115,7 +131,9 @@ export class MessageHandlers {
   }
 
   public async handleList(options: MessageListOptions): Promise<void> {
-    const limit = options.limit ? MessageValidators.validateLimit(options.limit) : 10;
+    const limit = options.limit
+      ? MessageValidators.validateLimit(options.limit)
+      : 10;
     const spinner = createSpinner("Fetching messages...");
 
     let agentAddress: PublicKey;
@@ -129,7 +147,7 @@ export class MessageHandlers {
     const messages = await this.context.client.getAgentMessages(
       agentAddress,
       limit,
-      options.filter
+      options.filter,
     );
 
     if (messages.length === 0) {

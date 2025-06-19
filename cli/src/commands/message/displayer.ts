@@ -14,14 +14,14 @@ export class MessageDisplayer {
         formatValue(
           messageData.payload.slice(0, 100) +
             (messageData.payload.length > 100 ? "..." : ""),
-          "text"
+          "text",
         ),
       ],
       [
         "Timestamp",
         formatValue(
           new Date(messageData.timestamp * 1000).toLocaleString(),
-          "text"
+          "text",
         ),
       ],
       [
@@ -30,7 +30,7 @@ export class MessageDisplayer {
           messageData.expiresAt
             ? new Date(messageData.expiresAt * 1000).toLocaleString()
             : "Never",
-          "text"
+          "text",
         ),
       ],
     ];
@@ -45,10 +45,7 @@ export class MessageDisplayer {
       formatValue(msg.recipient.toBase58().slice(0, 8) + "...", "address"),
       formatValue(msg.messageType, "text"),
       formatValue(msg.status, "text"),
-      formatValue(
-        new Date(msg.timestamp * 1000).toLocaleDateString(),
-        "text"
-      ),
+      formatValue(new Date(msg.timestamp * 1000).toLocaleDateString(), "text"),
     ]);
 
     const header = ["ID", "Sender", "Recipient", "Type", "Status", "Date"];

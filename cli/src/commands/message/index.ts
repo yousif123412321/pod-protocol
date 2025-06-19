@@ -1,7 +1,12 @@
 import { Command } from "commander";
 import { createCommandHandler } from "../../utils/shared.js";
 import { MessageHandlers } from "./handlers.js";
-import { CommandContext, SendMessageOptions, MessageStatusOptions, MessageListOptions } from "./types.js";
+import {
+  CommandContext,
+  SendMessageOptions,
+  MessageStatusOptions,
+  MessageListOptions,
+} from "./types.js";
 
 export class MessageCommands {
   public register(program: Command): void {
@@ -24,11 +29,11 @@ export class MessageCommands {
       .option(
         "-t, --type <type>",
         "Message type (text, data, command, response, custom)",
-        "text"
+        "text",
       )
       .option(
         "-c, --custom-value <number>",
-        "Custom value for custom message types"
+        "Custom value for custom message types",
       )
       .option("-i, --interactive", "Interactive message creation")
       .action(
@@ -38,8 +43,8 @@ export class MessageCommands {
             const context: CommandContext = { client, wallet, globalOpts };
             const handlers = new MessageHandlers(context);
             await handlers.handleSend(options);
-          }
-        )
+          },
+        ),
       );
   }
 
@@ -54,8 +59,8 @@ export class MessageCommands {
             const context: CommandContext = { client, wallet, globalOpts };
             const handlers = new MessageHandlers(context);
             await handlers.handleInfo(messageId);
-          }
-        )
+          },
+        ),
       );
   }
 
@@ -66,7 +71,7 @@ export class MessageCommands {
       .option("-m, --message <messageId>", "Message ID")
       .option(
         "-s, --status <status>",
-        "New status (pending, delivered, read, failed)"
+        "New status (pending, delivered, read, failed)",
       )
       .action(
         createCommandHandler(
@@ -75,8 +80,8 @@ export class MessageCommands {
             const context: CommandContext = { client, wallet, globalOpts };
             const handlers = new MessageHandlers(context);
             await handlers.handleStatus(options);
-          }
-        )
+          },
+        ),
       );
   }
 
@@ -86,16 +91,16 @@ export class MessageCommands {
       .description("List messages for an agent")
       .option(
         "-a, --agent [address]",
-        "Agent address (defaults to current wallet)"
+        "Agent address (defaults to current wallet)",
       )
       .option(
         "-l, --limit <number>",
         "Maximum number of messages to show",
-        "10"
+        "10",
       )
       .option(
         "-f, --filter <status>",
-        "Filter by status (pending, delivered, read, failed)"
+        "Filter by status (pending, delivered, read, failed)",
       )
       .action(
         createCommandHandler(
@@ -104,8 +109,8 @@ export class MessageCommands {
             const context: CommandContext = { client, wallet, globalOpts };
             const handlers = new MessageHandlers(context);
             await handlers.handleList(options);
-          }
-        )
+          },
+        ),
       );
   }
 }

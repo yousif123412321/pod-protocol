@@ -9,11 +9,11 @@ export { MessageType } from "./types";
  */
 export function findAgentPDA(
   wallet: PublicKey,
-  programId: PublicKey = PROGRAM_ID
+  programId: PublicKey = PROGRAM_ID,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("agent"), wallet.toBuffer()],
-    programId
+    programId,
   );
 }
 
@@ -25,7 +25,7 @@ export function findMessagePDA(
   recipient: PublicKey,
   payloadHash: Uint8Array,
   messageType: MessageType | any,
-  programId: PublicKey = PROGRAM_ID
+  programId: PublicKey = PROGRAM_ID,
 ): [PublicKey, number] {
   let messageTypeId: number;
 
@@ -38,14 +38,14 @@ export function findMessagePDA(
       messageType.text !== undefined
         ? 0
         : messageType.data !== undefined
-        ? 1
-        : messageType.command !== undefined
-        ? 2
-        : messageType.response !== undefined
-        ? 3
-        : typeof messageType.custom === "number"
-        ? 4 + messageType.custom
-        : 0;
+          ? 1
+          : messageType.command !== undefined
+            ? 2
+            : messageType.response !== undefined
+              ? 3
+              : typeof messageType.custom === "number"
+                ? 4 + messageType.custom
+                : 0;
   }
 
   return PublicKey.findProgramAddressSync(
@@ -56,7 +56,7 @@ export function findMessagePDA(
       Buffer.from(payloadHash),
       Buffer.from([messageTypeId]),
     ],
-    programId
+    programId,
   );
 }
 
@@ -66,11 +66,11 @@ export function findMessagePDA(
 export function findChannelPDA(
   creator: PublicKey,
   name: string,
-  programId: PublicKey = PROGRAM_ID
+  programId: PublicKey = PROGRAM_ID,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("channel"), creator.toBuffer(), Buffer.from(name)],
-    programId
+    programId,
   );
 }
 
@@ -80,11 +80,11 @@ export function findChannelPDA(
 export function findEscrowPDA(
   channel: PublicKey,
   depositor: PublicKey,
-  programId: PublicKey = PROGRAM_ID
+  programId: PublicKey = PROGRAM_ID,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("escrow"), channel.toBuffer(), depositor.toBuffer()],
-    programId
+    programId,
   );
 }
 
@@ -93,7 +93,7 @@ export function findEscrowPDA(
  */
 export function getMessageTypeId(
   messageType: MessageType,
-  customValue?: number
+  customValue?: number,
 ): number {
   switch (messageType) {
     case MessageType.Text:
@@ -132,7 +132,7 @@ export function getMessageTypeFromId(id: number): {
  */
 export function convertMessageTypeToProgram(
   messageType: MessageType,
-  customValue?: number
+  customValue?: number,
 ): any {
   switch (messageType) {
     case MessageType.Text:
@@ -182,7 +182,7 @@ export function getMessageTypeIdFromObject(msg: any): number {
  * Create a SHA-256 hash of message payload
  */
 export async function hashPayload(
-  payload: string | Uint8Array
+  payload: string | Uint8Array,
 ): Promise<Uint8Array> {
   const data =
     typeof payload === "string" ? new TextEncoder().encode(payload) : payload;
@@ -195,7 +195,7 @@ export async function hashPayload(
  */
 export function hasCapability(
   capabilities: number,
-  capability: number
+  capability: number,
 ): boolean {
   return (capabilities & capability) !== 0;
 }
@@ -205,7 +205,7 @@ export function hasCapability(
  */
 export function addCapability(
   capabilities: number,
-  capability: number
+  capability: number,
 ): number {
   return capabilities | capability;
 }
@@ -215,7 +215,7 @@ export function addCapability(
  */
 export function removeCapability(
   capabilities: number,
-  capability: number
+  capability: number,
 ): number {
   return capabilities & ~capability;
 }
@@ -293,7 +293,7 @@ export function sleep(ms: number): Promise<void> {
 export async function retry<T>(
   fn: () => Promise<T>,
   maxRetries: number = 3,
-  baseDelay: number = 1000
+  baseDelay: number = 1000,
 ): Promise<T> {
   let lastError: Error;
 
@@ -322,7 +322,7 @@ export async function retry<T>(
 export function convertTimestamp(
   primaryField?: any,
   fallbackField?: any,
-  defaultValue: number = Date.now()
+  defaultValue: number = Date.now(),
 ): number {
   return primaryField?.toNumber() || fallbackField?.toNumber() || defaultValue;
 }

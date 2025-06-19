@@ -1,7 +1,12 @@
 import { Command } from "commander";
 import { createCommandHandler } from "../../utils/shared.js";
 import { AgentHandlers } from "./handlers.js";
-import { CommandContext, AgentRegisterOptions, AgentUpdateOptions, AgentListOptions } from "./types.js";
+import {
+  CommandContext,
+  AgentRegisterOptions,
+  AgentUpdateOptions,
+  AgentListOptions,
+} from "./types.js";
 
 export class AgentCommands {
   public register(program: Command): void {
@@ -29,8 +34,8 @@ export class AgentCommands {
             const context: CommandContext = { client, wallet, globalOpts };
             const handlers = new AgentHandlers(context);
             await handlers.handleRegister(options);
-          }
-        )
+          },
+        ),
       );
   }
 
@@ -45,8 +50,8 @@ export class AgentCommands {
             const context: CommandContext = { client, wallet, globalOpts };
             const handlers = new AgentHandlers(context);
             await handlers.handleInfo(address);
-          }
-        )
+          },
+        ),
       );
   }
 
@@ -63,8 +68,8 @@ export class AgentCommands {
             const context: CommandContext = { client, wallet, globalOpts };
             const handlers = new AgentHandlers(context);
             await handlers.handleUpdate(options);
-          }
-        )
+          },
+        ),
       );
   }
 
@@ -80,8 +85,8 @@ export class AgentCommands {
             const context: CommandContext = { client, wallet, globalOpts };
             const handlers = new AgentHandlers(context);
             await handlers.handleList(options);
-          }
-        )
+          },
+        ),
       );
   }
 }

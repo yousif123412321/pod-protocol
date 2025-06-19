@@ -1,6 +1,10 @@
 import chalk from "chalk";
 import { PublicKey } from "@solana/web3.js";
-import { handleDryRun, createSpinner, showSuccess } from "../../utils/shared.js";
+import {
+  handleDryRun,
+  createSpinner,
+  showSuccess,
+} from "../../utils/shared.js";
 import { CommandContext } from "./types.js";
 
 export abstract class BaseChannelHandler {
@@ -21,7 +25,7 @@ export abstract class BaseChannelHandler {
   protected async executeWithSpinner<T>(
     message: string,
     operation: () => Promise<T>,
-    dryRunData?: Record<string, string>
+    dryRunData?: Record<string, string>,
   ): Promise<T | void> {
     const spinner = createSpinner(message);
 
@@ -50,7 +54,7 @@ export abstract class BaseChannelHandler {
     spinner: any,
     message: string,
     signature: string,
-    additionalData?: Record<string, string>
+    additionalData?: Record<string, string>,
   ): void {
     showSuccess(spinner, message, {
       Transaction: signature,
