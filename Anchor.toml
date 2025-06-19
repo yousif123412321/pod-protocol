@@ -1,6 +1,6 @@
 [toolchain]
-# Using npm as the package manager for Anchor compatibility
-package_manager = "npm"
+# Using bun as the package manager for faster builds and consistency
+package_manager = "bun"
 
 [features]
 # Enable resolution of Anchor feature flags

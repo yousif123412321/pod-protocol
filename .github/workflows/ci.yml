@@ -14,8 +14,10 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Setup Solana Environment
-        uses: ./actions/setup-solana
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
 
       - name: Install JS Dependencies
         run: bun install --frozen-lockfile
@@ -41,8 +43,19 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Setup Solana Environment
-        uses: ./actions/setup-solana
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config build-essential libudev-dev
+
+      - name: Install Anchor CLI via avm
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          avm install 0.31.1
+          avm use 0.31.1
 
       - name: Install JS Dependencies
         run: bun install --frozen-lockfile
@@ -79,8 +92,19 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Setup Solana Environment
-        uses: ./actions/setup-solana
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config build-essential libudev-dev netcat-openbsd
+
+      - name: Install Anchor CLI via avm
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          avm install 0.31.1
+          avm use 0.31.1
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -99,16 +123,19 @@ jobs:
       - name: Start and Wait for Solana Test Validator
         run: |
           solana-test-validator --reset >/dev/null 2>&1 &
-          echo "Waiting for validator..."
-          for i in {1..20}; do
+          echo "Waiting for validator to be ready..."
+          for i in {1..30}; do
             if nc -z localhost 8899; then
-              echo "Validator is ready."
-              exit 0
+              echo "✅ Validator is ready on port 8899"
+              break
             fi
+            if [ $i -eq 30 ]; then
+              echo "❌ Validator did not start within 30 seconds"
+              exit 1
+            fi
+            echo "⏳ Attempt $i/30: Validator not ready yet, waiting..."
             sleep 1
           done
-          echo "Validator did not start in time."
-          exit 1
 
       - name: Run Anchor Tests
         run: anchor test --skip-build
