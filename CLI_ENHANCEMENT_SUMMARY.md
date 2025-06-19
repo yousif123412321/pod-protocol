@@ -41,7 +41,7 @@
 #### 6. **Enhanced Global Options**
 ```bash
 -v, --verbose     🟦 Enable verbose output with detailed information
---debug          ⚙️ Enable debug mode with technical diagnostics  
+--debug          ⚙️ Enable debug mode with technical diagnostics
 -q, --quiet      ℹ️ Suppress non-essential output
 --no-banner      Skip displaying the banner
 --dry-run        ⚠️ Show what would be executed without actually doing it
