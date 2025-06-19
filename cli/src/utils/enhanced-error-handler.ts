@@ -214,7 +214,7 @@ export const ERROR_TEMPLATES: Record<ErrorCode, Omit<ErrorDetails, 'code'>> = {
   },
 
   // Add more error templates as needed...
-} as any;
+} as const satisfies Record<ErrorCode, Omit<ErrorDetails, 'code'>>;
 
 /**
  * Enhanced error handler with rich formatting and suggestions
