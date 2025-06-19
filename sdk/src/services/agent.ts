@@ -29,7 +29,7 @@ export class AgentService extends BaseService {
       }
 
       try {
-        const tx = await program.methods
+        const tx = await (program.methods as any)
           .registerAgent(new BN(options.capabilities), options.metadataUri)
           .accounts({
             agentAccount: agentPDA,
@@ -91,7 +91,7 @@ export class AgentService extends BaseService {
         program = new anchor.Program(idl, provider);
       }
 
-      const tx = await program.methods
+      const tx = await (program.methods as any)
         .updateAgent(
           options.capabilities !== undefined
             ? new BN(options.capabilities)
@@ -141,7 +141,7 @@ export class AgentService extends BaseService {
         program = new anchor.Program(idl, provider);
       }
 
-      const account = await program.account.agentAccount.fetch(agentPDA);
+      const account = await (program.account as any).agentAccount.fetch(agentPDA);
       return {
         pubkey: agentPDA,
         capabilities: account.capabilities.toNumber(),
@@ -178,7 +178,7 @@ export class AgentService extends BaseService {
       const idl = this.ensureIDL();
       const program = new anchor.Program(idl, provider);
 
-      const accounts = await program.account.agentAccount.all();
+      const accounts = await (program.account as any).agentAccount.all();
 
       return accounts.slice(0, limit).map((acc: any) => ({
         pubkey: acc.publicKey,

@@ -30,6 +30,14 @@ export default {
       tsconfig: "./tsconfig.json",
       declaration: true,
       declarationDir: "dist",
+      outputToFilesystem: true,
+      exclude: ["**/*.test.ts", "node_modules/**"],
+      noEmitOnError: false,
+      compilerOptions: {
+        composite: false,
+        incremental: false,
+        skipLibCheck: true,
+      },
     }),
   ],
   external: [

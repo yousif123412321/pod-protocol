@@ -3,7 +3,7 @@ import ora, { Ora } from "ora";
 import { PodComClient } from "@pod-protocol/sdk";
 import { createClient, getWallet, getKeypair } from "./client.js";
 import { Command } from "commander";
-import { ErrorHandler, safeExecute } from "./error-handler.js";
+import { safeExecute } from "./error-handler.js";
 
 export interface GlobalOptions {
   network?: string;
