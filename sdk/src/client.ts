@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-import { Connection, PublicKey, Signer, Commitment } from "@solana/web3.js";
-import anchor, { Program } from "@coral-xyz/anchor";
-const { AnchorProvider } = anchor;
-=======
 import {
   Connection,
   PublicKey,
@@ -10,7 +5,6 @@ import {
   Commitment,
 } from "@solana/web3.js";
 import anchor, { Program, AnchorProvider } from "@coral-xyz/anchor";
->>>>>>> origin/main
 import {
   PROGRAM_ID,
   PodComConfig,
@@ -35,111 +29,8 @@ import type { IdlAccounts } from "@coral-xyz/anchor";
 import { BaseService, BaseServiceConfig } from "./services/base";
 import { AgentService } from "./services/agent";
 import { MessageService } from "./services/message";
-<<<<<<< HEAD
-
-/**
- * Channel-related operations service (placeholder for future implementation)
- */
-class ChannelService extends BaseService {
-  async createChannel(
-    wallet: Signer,
-    options: CreateChannelOptions,
-  ): Promise<string> {
-    throw new Error("Channel service not yet implemented");
-  }
-
-  async getChannel(channelPDA: PublicKey): Promise<ChannelAccount | null> {
-    throw new Error("Channel service not yet implemented");
-  }
-
-  async getAllChannels(
-    limit: number = 50,
-    visibilityFilter?: ChannelVisibility,
-  ): Promise<ChannelAccount[]> {
-    throw new Error("Channel service not yet implemented");
-  }
-
-  async getChannelsByCreator(
-    creator: PublicKey,
-    limit: number = 50,
-  ): Promise<ChannelAccount[]> {
-    throw new Error("Channel service not yet implemented");
-  }
-
-  async joinChannel(wallet: Signer, channelPDA: PublicKey): Promise<string> {
-    throw new Error("Channel service not yet implemented");
-  }
-
-  async leaveChannel(wallet: Signer, channelPDA: PublicKey): Promise<string> {
-    throw new Error("Channel service not yet implemented");
-  }
-
-  async broadcastMessage(
-    wallet: Signer,
-    options: BroadcastMessageOptions,
-  ): Promise<string> {
-    throw new Error("Channel service not yet implemented");
-  }
-
-  async inviteToChannel(
-    wallet: Signer,
-    channelPDA: PublicKey,
-    invitee: PublicKey,
-  ): Promise<string> {
-    throw new Error("Channel service not yet implemented");
-  }
-
-  async getChannelParticipants(
-    channelPDA: PublicKey,
-    limit: number = 50,
-  ): Promise<Array<any>> {
-    throw new Error("Channel service not yet implemented");
-  }
-
-  async getChannelMessages(
-    channelPDA: PublicKey,
-    limit: number = 50,
-  ): Promise<Array<any>> {
-    throw new Error("Channel service not yet implemented");
-  }
-}
-
-/**
- * Escrow-related operations service (placeholder for future implementation)
- */
-class EscrowService extends BaseService {
-  async depositEscrow(
-    wallet: Signer,
-    options: DepositEscrowOptions,
-  ): Promise<string> {
-    throw new Error("Escrow service not yet implemented");
-  }
-
-  async withdrawEscrow(
-    wallet: Signer,
-    options: WithdrawEscrowOptions,
-  ): Promise<string> {
-    throw new Error("Escrow service not yet implemented");
-  }
-
-  async getEscrow(
-    channel: PublicKey,
-    depositor: PublicKey,
-  ): Promise<EscrowAccount | null> {
-    throw new Error("Escrow service not yet implemented");
-  }
-
-  async getEscrowsByDepositor(
-    depositor: PublicKey,
-    limit: number = 50,
-  ): Promise<EscrowAccount[]> {
-    throw new Error("Escrow service not yet implemented");
-  }
-}
-=======
 import { ChannelService } from "./services/channel";
 import { EscrowService } from "./services/escrow";
->>>>>>> origin/main
 
 /**
  * Main PoD Protocol SDK client for interacting with the protocol
@@ -196,15 +87,9 @@ export class PodComClient {
             "IDL not found. Ensure the program IDL is properly generated and imported.",
           );
         }
-<<<<<<< HEAD
-
-        this.program = new Program(IDL as any, provider) as Program<any>;
-
-=======
         
         this.program = new Program(IDL, provider) as Program<PodCom>;
         
->>>>>>> origin/main
         // Validate program was created successfully
         if (!this.program) {
           throw new Error("Failed to create Anchor program instance");
@@ -377,13 +262,8 @@ export class PodComClient {
     wallet: Signer,
     channelPDA: PublicKey,
     content: string,
-<<<<<<< HEAD
-    messageType: any = "Text",
-    replyTo?: PublicKey,
-=======
     messageType: string = "Text",
     replyTo?: PublicKey
->>>>>>> origin/main
   ): Promise<string> {
     return this.channels.broadcastMessage(wallet, {
       channelPDA,

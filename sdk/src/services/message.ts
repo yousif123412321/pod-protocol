@@ -39,7 +39,6 @@ export class MessageService extends BaseService {
       senderAgentPDA,
       options.recipient,
       payloadHash,
-<<<<<<< HEAD
       messageTypeObj,
       this.programId
     );
