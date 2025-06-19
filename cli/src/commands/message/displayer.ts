@@ -2,8 +2,7 @@ import { table } from "table";
 import { getTableConfig, formatValue } from "../../utils/shared.js";
 
 export class MessageDisplayer {
-// Define a proper interface for messageData
-interface MessageData {
+export interface MessageData {
   pubkey: { toBase58(): string };
   sender: { toBase58(): string };
   recipient: { toBase58(): string };
@@ -13,6 +12,8 @@ interface MessageData {
   timestamp: number;
   expiresAt?: number;
 }
+
+export class MessageDisplayer {
 
 // ... other imports and code ...
 
