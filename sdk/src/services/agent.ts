@@ -29,7 +29,8 @@ export class AgentService extends BaseService {
       }
 
       try {
-        const tx = await (program.methods as any)
+        const tx = await program.methods // Potentially remove 'as any' if types allow
+
           .registerAgent(new BN(options.capabilities), options.metadataUri)
           .accounts({
             agentAccount: agentPDA,
