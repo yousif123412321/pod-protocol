@@ -141,8 +141,9 @@ export class AgentService extends BaseService {
         const idl = this.ensureIDL();
         program = new anchor.Program(idl, provider);
       }
-
-      const account = await (program.account as any).agentAccount.fetch(agentPDA);
+      
+      const agentAccount = this.getAccount("agentAccount");
+      const account = await agentAccount.fetch(agentPDA);
       return {
         pubkey: agentPDA,
         capabilities: account.capabilities.toNumber(),
@@ -178,8 +179,9 @@ export class AgentService extends BaseService {
 
       const idl = this.ensureIDL();
       const program = new anchor.Program(idl, provider);
-
-      const accounts = await (program.account as any).agentAccount.all();
+      
+      const agentAccount = this.getAccount("agentAccount");
+      const accounts = await agentAccount.all();
 
       return accounts.slice(0, limit).map((acc: any) => ({
         pubkey: acc.publicKey,

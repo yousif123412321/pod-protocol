@@ -4,9 +4,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::pubkey::Pubkey;
 
-// Import solana_program for macro compatibility
-extern crate solana_program;
-
 declare_id!("HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps");
 
 /*
@@ -591,7 +588,7 @@ pub mod pod_com {
 
         // Initialize participant account
         participant.channel = channel.key();
-        participant.participant = ctx.accounts.user.key();
+        participant.participant = ctx.accounts.agent_account.key(); // Use agent PDA
         participant.joined_at = clock.unix_timestamp;
         participant.is_active = true;
         participant.messages_sent = 0;
@@ -747,10 +744,20 @@ pub mod pod_com {
     }
 
     // Get channel participants (view function - would be called off-chain)
-    pub fn get_channel_participants(_ctx: Context<GetChannelParticipants>) -> Result<Vec<Pubkey>> {
-        // This would typically be implemented as a view function
-        // For now, we'll use this as a placeholder that can be called off-chain
-        // The actual participant data would be queried via getProgramAccounts
+    pub fn get_channel_participants(ctx: Context<GetChannelParticipants>) -> Result<Vec<Pubkey>> {
+        // Note: In Solana programs, this function returns empty as participant data
+        // is typically queried off-chain via getProgramAccounts RPC calls for efficiency.
+        // The channel account stores the current participant count, but individual
+        // participant pubkeys are stored in separate ChannelParticipant accounts.
+        
+        // For on-chain validation, we verify the channel exists and is active
+        let channel = &ctx.accounts.channel_account;
+        require!(channel.is_active, PodComError::NotInChannel);
+        
+        // Return empty vector as participant enumeration is done off-chain
+        // Off-chain clients should use:
+        // - getProgramAccounts with ChannelParticipant discriminator
+        // - Filter by channel pubkey and is_active = true
         Ok(vec![])
     }
 
@@ -852,7 +859,7 @@ pub mod pod_com {
 
         // Add creator as first participant
         participant.channel = channel.key();
-        participant.participant = ctx.accounts.creator.key();
+        participant.participant = ctx.accounts.agent_account.key(); // Use agent PDA
         participant.joined_at = clock.unix_timestamp;
         participant.is_active = true;
         participant.messages_sent = 0;
@@ -1007,10 +1014,16 @@ pub struct JoinChannel<'info> {
         init,
         payer = user,
         space = CHANNEL_PARTICIPANT_SPACE,
-        seeds = [b"participant", channel_account.key().as_ref(), user.key().as_ref()],
+        seeds = [b"participant", channel_account.key().as_ref(), agent_account.key().as_ref()],
         bump
     )]
     pub participant_account: Account<'info, ChannelParticipant>,
+    #[account(
+        seeds = [b"agent", user.key().as_ref()],
+        bump = agent_account.bump,
+        constraint = user.key() == agent_account.pubkey @ PodComError::Unauthorized,
+    )]
+    pub agent_account: Account<'info, AgentAccount>,
     #[account(
         mut,
         seeds = [b"invitation", channel_account.key().as_ref(), user.key().as_ref()],
@@ -1028,11 +1041,17 @@ pub struct LeaveChannel<'info> {
     pub channel_account: Account<'info, ChannelAccount>,
     #[account(
         mut,
-        seeds = [b"participant", channel_account.key().as_ref(), user.key().as_ref()],
+        seeds = [b"participant", channel_account.key().as_ref(), agent_account.key().as_ref()],
         bump = participant_account.bump,
-        constraint = participant_account.participant == user.key() @ PodComError::Unauthorized
+        constraint = participant_account.participant == agent_account.key() @ PodComError::Unauthorized
     )]
     pub participant_account: Account<'info, ChannelParticipant>,
+    #[account(
+        seeds = [b"agent", user.key().as_ref()],
+        bump = agent_account.bump,
+        constraint = user.key() == agent_account.pubkey @ PodComError::Unauthorized,
+    )]
+    pub agent_account: Account<'info, AgentAccount>,
     #[account(mut)]
     pub user: Signer<'info>,
 }
@@ -1047,11 +1066,17 @@ pub struct BroadcastMessage<'info> {
     pub channel_account: Account<'info, ChannelAccount>,
     #[account(
         mut,
-        seeds = [b"participant", channel_account.key().as_ref(), user.key().as_ref()],
+        seeds = [b"participant", channel_account.key().as_ref(), agent_account.key().as_ref()],
         bump = participant_account.bump,
         constraint = participant_account.is_active @ PodComError::NotInChannel
     )]
     pub participant_account: Account<'info, ChannelParticipant>,
+    #[account(
+        seeds = [b"agent", user.key().as_ref()],
+        bump = agent_account.bump,
+        constraint = user.key() == agent_account.pubkey @ PodComError::Unauthorized,
+    )]
+    pub agent_account: Account<'info, AgentAccount>,
     #[account(
         init,
         payer = user,
@@ -1075,11 +1100,17 @@ pub struct BroadcastMessage<'info> {
 pub struct InviteToChannel<'info> {
     pub channel_account: Account<'info, ChannelAccount>,
     #[account(
-        seeds = [b"participant", channel_account.key().as_ref(), inviter.key().as_ref()],
+        seeds = [b"participant", channel_account.key().as_ref(), agent_account.key().as_ref()],
         bump = participant_account.bump,
         constraint = participant_account.is_active @ PodComError::NotInChannel
     )]
     pub participant_account: Option<Account<'info, ChannelParticipant>>,
+    #[account(
+        seeds = [b"agent", inviter.key().as_ref()],
+        bump = agent_account.bump,
+        constraint = inviter.key() == agent_account.pubkey @ PodComError::Unauthorized,
+    )]
+    pub agent_account: Account<'info, AgentAccount>,
     #[account(
         init,
         payer = inviter,
@@ -1129,7 +1160,7 @@ pub struct CreateChannelV2<'info> {
         init,
         payer = creator,
         space = CHANNEL_PARTICIPANT_SPACE,
-        seeds = [b"participant", channel_account.key().as_ref(), creator.key().as_ref()],
+        seeds = [b"participant", channel_account.key().as_ref(), agent_account.key().as_ref()],
         bump
     )]
     pub participant_account: Account<'info, ChannelParticipant>,
