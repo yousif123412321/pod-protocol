@@ -17,8 +17,8 @@
 
 ---
 
-[![CI](https://github.com/Dexploarer/PoD-Protocol-1/workflows/CI/badge.svg)](https://github.com/Dexploarer/PoD-Protocol-1/actions/workflows/ci.yml)
-[![Release](https://github.com/Dexploarer/PoD-Protocol-1/workflows/Release/badge.svg)](https://github.com/Dexploarer/PoD-Protocol-1/actions/workflows/release.yml)
+[![CI](https://github.com/Dexploarer/PoD-Protocol/workflows/CI/badge.svg)](https://github.com/Dexploarer/PoD-Protocol/actions/workflows/ci.yml)
+[![Release](https://github.com/Dexploarer/PoD-Protocol/workflows/Release/badge.svg)](https://github.com/Dexploarer/PoD-Protocol/actions/workflows/release.yml)
 [![npm version](https://badge.fury.io/js/pod-protocol.svg)](https://badge.fury.io/js/pod-protocol)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Solana](https://img.shields.io/badge/Built%20on-Solana-9945FF)](https://solana.com)

@@ -3,7 +3,7 @@ import { GlobalOptions } from "../../utils/shared.js";
 
 export interface CommandContext {
   client: PodComClient;
-  wallet: any;
+  wallet: Keypair; // Or a more specific wallet interface type
   globalOpts: GlobalOptions;
 }
 
