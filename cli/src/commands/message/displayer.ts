@@ -59,15 +59,8 @@ export class MessageDisplayer {
     console.log("\n" + table(data, getTableConfig("Message Information")));
   }
 
-  public displayMessagesList(messages: any[]): void {
-    const data = messages.map((msg: any) => [
-      formatValue(msg.pubkey.toBase58().slice(0, 8) + "...", "address"),
-      formatValue(msg.sender.toBase58().slice(0, 8) + "...", "address"),
-      formatValue(msg.recipient.toBase58().slice(0, 8) + "...", "address"),
-      formatValue(msg.messageType, "text"),
-      formatValue(msg.status, "text"),
-      formatValue(new Date(msg.timestamp * 1000).toLocaleDateString(), "text"),
-    ]);
+  public displayMessagesList(messages: MessageData[]): void {
+    const data = messages.map((msg: MessageData) => [
 
     const header = ["ID", "Sender", "Recipient", "Type", "Status", "Date"];
     console.log("\n" + table([header, ...data], getTableConfig("Messages")));
