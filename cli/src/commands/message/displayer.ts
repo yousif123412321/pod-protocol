@@ -2,7 +2,28 @@ import { table } from "table";
 import { getTableConfig, formatValue } from "../../utils/shared.js";
 
 export class MessageDisplayer {
-  public displayMessageInfo(messageData: any): void {
+// Define a proper interface for messageData
+interface MessageData {
+  pubkey: { toBase58(): string };
+  sender: { toBase58(): string };
+  recipient: { toBase58(): string };
+  messageType: string;
+  status: string;
+  payload: string;
+  timestamp: number;
+  expiresAt?: number;
+}
+
+// ... other imports and code ...
+
+export class MessageDisplayer {
+-  public displayMessageInfo(messageData: any): void {
++  public displayMessageInfo(messageData: MessageData): void {
+     // existing implementation...
+  }
+
+  // other methods...
+}
     const data = [
       ["Message ID", formatValue(messageData.pubkey.toBase58(), "address")],
       ["Sender", formatValue(messageData.sender.toBase58(), "address")],
