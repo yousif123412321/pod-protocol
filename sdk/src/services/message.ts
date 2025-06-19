@@ -1,11 +1,11 @@
 import { PublicKey, Signer, GetProgramAccountsFilter, SystemProgram } from "@solana/web3.js";
 import anchor from "@coral-xyz/anchor";
 import { BaseService } from "./base";
-import { 
-  MessageAccount, 
-  SendMessageOptions, 
-  MessageType, 
-  MessageStatus 
+import {
+  MessageAccount,
+  SendMessageOptions,
+  MessageType,
+  MessageStatus,
 } from "../types";
 import { 
   findAgentPDA,
@@ -15,7 +15,7 @@ import {
   convertMessageTypeToProgram,
   convertMessageTypeFromProgram,
   getAccountTimestamp,
-  getAccountCreatedAt
+  getAccountCreatedAt,
 } from "../utils";
 
 /**
@@ -66,7 +66,7 @@ export class MessageService extends BaseService {
   async updateMessageStatus(
     wallet: Signer,
     messagePDA: PublicKey,
-    newStatus: MessageStatus
+    newStatus: MessageStatus,
   ): Promise<string> {
     return retry(async () => {
       const methods = this.getProgramMethods();
@@ -98,7 +98,7 @@ export class MessageService extends BaseService {
   async getAgentMessages(
     agentPublicKey: PublicKey,
     limit: number = 50,
-    statusFilter?: MessageStatus
+    statusFilter?: MessageStatus,
   ): Promise<MessageAccount[]> {
     try {
       const filters: GetProgramAccountsFilter[] = [
@@ -120,20 +120,21 @@ export class MessageService extends BaseService {
         });
       }
 
-      const accounts = await this.connection.getProgramAccounts(this.programId, {
-        filters,
-        commitment: this.commitment,
-      });
+      const accounts = await this.connection.getProgramAccounts(
+        this.programId,
+        {
+          filters,
+          commitment: this.commitment,
+        },
+      );
 
-      return accounts
-        .slice(0, limit)
-        .map((acc) => {
-          const account = this.ensureInitialized().coder.accounts.decode(
-            "messageAccount",
-            acc.account.data
-          );
-          return this.convertMessageAccountFromProgram(account, acc.pubkey);
-        });
+      return accounts.slice(0, limit).map((acc) => {
+        const account = this.ensureInitialized().coder.accounts.decode(
+          "messageAccount",
+          acc.account.data,
+        );
+        return this.convertMessageAccountFromProgram(account, acc.pubkey);
+      });
     } catch (error: any) {
       throw new Error(`Failed to fetch agent messages: ${error.message}`);
     }
@@ -177,7 +178,7 @@ export class MessageService extends BaseService {
 
   private convertMessageAccountFromProgram(
     account: any,
-    publicKey: PublicKey
+    publicKey: PublicKey,
   ): MessageAccount {
     return {
       pubkey: publicKey,

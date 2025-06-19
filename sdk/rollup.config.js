@@ -24,12 +24,20 @@ export default {
       preferBuiltins: true,
     }),
     commonjs({
-      include: ['node_modules/**']
+      include: ["node_modules/**"],
     }),
     typescript({
       tsconfig: "./tsconfig.json",
       declaration: true,
       declarationDir: "dist",
+      outputToFilesystem: true,
+      exclude: ["**/*.test.ts", "node_modules/**"],
+      noEmitOnError: false,
+      compilerOptions: {
+        composite: false,
+        incremental: false,
+        skipLibCheck: true,
+      },
     }),
   ],
   external: [

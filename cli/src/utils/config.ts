@@ -29,7 +29,7 @@ export function loadConfig(): CliConfig {
     return JSON.parse(configData);
   } catch {
     console.warn(
-      chalk.yellow("Warning: Could not read config file, using defaults")
+      chalk.yellow("Warning: Could not read config file, using defaults"),
     );
     return {
       network: "devnet",
@@ -54,8 +54,8 @@ export function loadKeypair(keypairPath?: string): Keypair {
     console.error(chalk.red("Error: Keypair file not found:"), expandedPath);
     console.log(
       chalk.yellow(
-        "Tip: Generate a new keypair with 'pod config generate-keypair'"
-      )
+        "Tip: Generate a new keypair with 'pod config generate-keypair'",
+      ),
     );
     process.exit(1);
   }
@@ -66,10 +66,10 @@ export function loadKeypair(keypairPath?: string): Keypair {
   } catch {
     console.error(
       chalk.red("Error: Invalid keypair file format:"),
-      expandedPath
+      expandedPath,
     );
     console.log(
-      chalk.yellow("Tip: Ensure the file contains a valid Solana keypair")
+      chalk.yellow("Tip: Ensure the file contains a valid Solana keypair"),
     );
     process.exit(1);
   }

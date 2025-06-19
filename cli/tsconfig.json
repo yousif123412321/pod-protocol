@@ -13,7 +13,7 @@
     "moduleResolution": "node",
     "baseUrl": ".",
     "paths": {
-      "@pod-protocol/sdk": ["../sdk/src/index.ts"]
+      "@pod-protocol/sdk": ["../sdk/dist/index.d.ts"]
     },
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
@@ -27,9 +27,6 @@
   },
   "include": [
     "src/**/*"
-  ],
-  "references": [
-    { "path": "../sdk/tsconfig.json" }
   ],
   "exclude": [
     "node_modules",

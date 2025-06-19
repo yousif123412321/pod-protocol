@@ -14,17 +14,12 @@ import { findAgentPDA, findMessagePDA } from "./test-utils";
 // Create test wallet and connection for devnet
 const testWallet = Keypair.generate();
 const connection = new Connection("https://api.devnet.solana.com", "confirmed");
-const provider = new AnchorProvider(
-  connection,
-  new anchor.Wallet(testWallet),
-  { commitment: "confirmed" }
-);
+const provider = new AnchorProvider(connection, new anchor.Wallet(testWallet), {
+  commitment: "confirmed",
+});
 anchor.setProvider(provider);
 
-const program = new Program(
-  IDL,
-  provider
-) as Program<PodCom>;
+const program = new Program(IDL, provider) as Program<PodCom>;
 
 // Constants for testing
 const METADATA_URI = "https://example.com/test-agent";
@@ -39,7 +34,7 @@ describe("PoD Protocol Clean Tests", () => {
     // Airdrop SOL to test wallet
     const airdropSignature = await provider.connection.requestAirdrop(
       testWallet.publicKey,
-      2 * LAMPORTS_PER_SOL
+      2 * LAMPORTS_PER_SOL,
     );
 
     const latestBlockhash = await provider.connection.getLatestBlockhash();
@@ -81,7 +76,7 @@ describe("PoD Protocol Clean Tests", () => {
       testWallet.publicKey,
       PAYLOAD_HASH,
       messageType,
-      program.programId
+      program.programId,
     );
 
     const tx = await program.methods
@@ -98,11 +93,10 @@ describe("PoD Protocol Clean Tests", () => {
     expect(tx).toBeTruthy();
 
     // Verify the message was created
-    const messageAccount = await program.account.messageAccount.fetch(
-      messagePDA
-    );
+    const messageAccount =
+      await program.account.messageAccount.fetch(messagePDA);
     expect(Array.from(messageAccount.payloadHash)).toEqual(
-      Array.from(PAYLOAD_HASH)
+      Array.from(PAYLOAD_HASH),
     );
     expect(messageAccount.sender.equals(testWallet.publicKey)).toBe(true);
     expect(messageAccount.recipient.equals(testWallet.publicKey)).toBe(true);
@@ -123,9 +117,8 @@ describe("PoD Protocol Clean Tests", () => {
     expect(tx).toBeTruthy();
 
     // Verify the message status was updated
-    const messageAccount = await program.account.messageAccount.fetch(
-      messagePDA
-    );
+    const messageAccount =
+      await program.account.messageAccount.fetch(messagePDA);
     expect("delivered" in messageAccount.status).toBe(true);
   });
 });

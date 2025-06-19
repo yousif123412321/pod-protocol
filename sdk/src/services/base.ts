@@ -32,7 +32,9 @@ export abstract class BaseService {
 
   protected ensureInitialized(): AnchorProgram {
     if (!this.program) {
-      throw new Error("Client not initialized with wallet. Call client.initialize(wallet) first.");
+      throw new Error(
+        "Client not initialized with wallet. Call client.initialize(wallet) first.",
+      );
     }
     return this.program;
   }
@@ -41,7 +43,9 @@ export abstract class BaseService {
     const program = this.ensureInitialized();
     const accounts = program.account as any;
     if (!accounts || !accounts[accountName]) {
-      throw new Error(`Account type '${accountName}' not found in program. Verify IDL is correct.`);
+      throw new Error(
+        `Account type '${accountName}' not found in program. Verify IDL is correct.`,
+      );
     }
     return accounts[accountName];
   }
@@ -49,7 +53,9 @@ export abstract class BaseService {
   protected getProgramMethods() {
     const program = this.ensureInitialized();
     if (!program.methods) {
-      throw new Error("Program methods not available. Verify IDL is correct and program is initialized.");
+      throw new Error(
+        "Program methods not available. Verify IDL is correct and program is initialized.",
+      );
     }
     return program.methods as any;
   }
@@ -67,7 +73,7 @@ export abstract class BaseService {
     }
     this.idl = idl;
   }
-  
+
   /**
    * Check if IDL is set for read-only operations
    */
@@ -77,8 +83,10 @@ export abstract class BaseService {
 
   protected ensureIDL(): any {
     if (!this.idl) {
-      throw new Error("IDL not set. Call client.initialize() first or ensure IDL is properly imported.");
+      throw new Error(
+        "IDL not set. Call client.initialize() first or ensure IDL is properly imported.",
+      );
     }
     return this.idl;
   }
-} 
+}

@@ -40,7 +40,7 @@ export type PodCom = {
               {
                 kind: "arg";
                 path: "name";
-              }
+              },
             ];
           };
         },
@@ -78,7 +78,7 @@ export type PodCom = {
         {
           name: "feePerMessage";
           type: "u64";
-        }
+        },
       ];
     },
     {
@@ -101,7 +101,7 @@ export type PodCom = {
               {
                 kind: "account";
                 path: "depositor";
-              }
+              },
             ];
           };
         },
@@ -123,7 +123,7 @@ export type PodCom = {
         {
           name: "amount";
           type: "u64";
-        }
+        },
       ];
     },
     {
@@ -142,7 +142,7 @@ export type PodCom = {
               {
                 kind: "account";
                 path: "signer";
-              }
+              },
             ];
           };
         },
@@ -164,7 +164,7 @@ export type PodCom = {
         {
           name: "metadataUri";
           type: "string";
-        }
+        },
       ];
     },
     {
@@ -186,7 +186,7 @@ export type PodCom = {
               {
                 kind: "account";
                 path: "signer";
-              }
+              },
             ];
           };
         },
@@ -218,7 +218,7 @@ export type PodCom = {
               name: "messageType";
             };
           };
-        }
+        },
       ];
     },
     {
@@ -238,14 +238,14 @@ export type PodCom = {
                 kind: "account";
                 path: "agent_account.pubkey";
                 account: "agentAccount";
-              }
+              },
             ];
           };
         },
         {
           name: "signer";
           signer: true;
-        }
+        },
       ];
       args: [
         {
@@ -259,7 +259,7 @@ export type PodCom = {
           type: {
             option: "string";
           };
-        }
+        },
       ];
     },
     {
@@ -281,14 +281,14 @@ export type PodCom = {
               {
                 kind: "account";
                 path: "signer";
-              }
+              },
             ];
           };
         },
         {
           name: "signer";
           signer: true;
-        }
+        },
       ];
       args: [
         {
@@ -298,7 +298,7 @@ export type PodCom = {
               name: "messageStatus";
             };
           };
-        }
+        },
       ];
     },
     {
@@ -321,7 +321,7 @@ export type PodCom = {
               {
                 kind: "account";
                 path: "depositor";
-              }
+              },
             ];
           };
         },
@@ -343,9 +343,9 @@ export type PodCom = {
         {
           name: "amount";
           type: "u64";
-        }
+        },
       ];
-    }
+    },
   ];
   accounts: [
     {
@@ -363,7 +363,7 @@ export type PodCom = {
     {
       name: "messageAccount";
       discriminator: [97, 144, 24, 58, 225, 40, 89, 223];
-    }
+    },
   ];
   errors: [
     {
@@ -385,7 +385,7 @@ export type PodCom = {
       code: 6003;
       name: "invalidMessageStatusTransition";
       msg: "Invalid message status transition";
-    }
+    },
   ];
   types: [
     {
@@ -422,7 +422,7 @@ export type PodCom = {
             type: {
               array: ["u8", 7];
             };
-          }
+          },
         ];
       };
     },
@@ -480,7 +480,7 @@ export type PodCom = {
             type: {
               array: ["u8", 7];
             };
-          }
+          },
         ];
       };
     },
@@ -494,7 +494,7 @@ export type PodCom = {
           },
           {
             name: "private";
-          }
+          },
         ];
       };
     },
@@ -528,7 +528,7 @@ export type PodCom = {
             type: {
               array: ["u8", 7];
             };
-          }
+          },
         ];
       };
     },
@@ -584,7 +584,7 @@ export type PodCom = {
             type: {
               array: ["u8", 7];
             };
-          }
+          },
         ];
       };
     },
@@ -604,7 +604,7 @@ export type PodCom = {
           },
           {
             name: "failed";
-          }
+          },
         ];
       };
     },
@@ -628,10 +628,10 @@ export type PodCom = {
           {
             name: "custom";
             fields: ["u8"];
-          }
+          },
         ];
       };
-    }
+    },
   ];
 };
 
@@ -641,7 +641,8 @@ export const IDL: PodCom = {
     name: "podCom",
     version: "0.1.0",
     spec: "0.1.0",
-    description: "PoD Protocol (Prompt or Die): AI Agent Communication Protocol",
+    description:
+      "PoD Protocol (Prompt or Die): AI Agent Communication Protocol",
   },
   instructions: [
     {
@@ -664,7 +665,7 @@ export const IDL: PodCom = {
               {
                 kind: "arg",
                 path: "name",
-              }
+              },
             ],
           },
         },
@@ -702,7 +703,7 @@ export const IDL: PodCom = {
         {
           name: "feePerMessage",
           type: "u64",
-        }
+        },
       ],
     },
     {
@@ -725,7 +726,7 @@ export const IDL: PodCom = {
               {
                 kind: "account",
                 path: "depositor",
-              }
+              },
             ],
           },
         },
@@ -747,7 +748,7 @@ export const IDL: PodCom = {
         {
           name: "amount",
           type: "u64",
-        }
+        },
       ],
     },
     {
@@ -766,7 +767,7 @@ export const IDL: PodCom = {
               {
                 kind: "account",
                 path: "signer",
-              }
+              },
             ],
           },
         },
@@ -788,7 +789,7 @@ export const IDL: PodCom = {
         {
           name: "metadataUri",
           type: "string",
-        }
+        },
       ],
     },
     {
@@ -810,7 +811,7 @@ export const IDL: PodCom = {
               {
                 kind: "account",
                 path: "signer",
-              }
+              },
             ],
           },
         },
@@ -842,7 +843,7 @@ export const IDL: PodCom = {
               name: "messageType",
             },
           },
-        }
+        },
       ],
     },
     {
@@ -862,14 +863,14 @@ export const IDL: PodCom = {
                 kind: "account",
                 path: "agent_account.pubkey",
                 account: "agentAccount",
-              }
+              },
             ],
           },
         },
         {
           name: "signer",
           signer: true,
-        }
+        },
       ],
       args: [
         {
@@ -883,7 +884,7 @@ export const IDL: PodCom = {
           type: {
             option: "string",
           },
-        }
+        },
       ],
     },
     {
@@ -905,14 +906,14 @@ export const IDL: PodCom = {
               {
                 kind: "account",
                 path: "signer",
-              }
+              },
             ],
           },
         },
         {
           name: "signer",
           signer: true,
-        }
+        },
       ],
       args: [
         {
@@ -922,7 +923,7 @@ export const IDL: PodCom = {
               name: "messageStatus",
             },
           },
-        }
+        },
       ],
     },
     {
@@ -945,7 +946,7 @@ export const IDL: PodCom = {
               {
                 kind: "account",
                 path: "depositor",
-              }
+              },
             ],
           },
         },
@@ -967,9 +968,9 @@ export const IDL: PodCom = {
         {
           name: "amount",
           type: "u64",
-        }
+        },
       ],
-    }
+    },
   ],
   accounts: [
     {
@@ -987,7 +988,7 @@ export const IDL: PodCom = {
     {
       name: "messageAccount",
       discriminator: [97, 144, 24, 58, 225, 40, 89, 223],
-    }
+    },
   ],
   errors: [
     {
@@ -1009,7 +1010,7 @@ export const IDL: PodCom = {
       code: 6003,
       name: "invalidMessageStatusTransition",
       msg: "Invalid message status transition",
-    }
+    },
   ],
   types: [
     {
@@ -1046,7 +1047,7 @@ export const IDL: PodCom = {
             type: {
               array: ["u8", 7],
             },
-          }
+          },
         ],
       },
     },
@@ -1104,7 +1105,7 @@ export const IDL: PodCom = {
             type: {
               array: ["u8", 7],
             },
-          }
+          },
         ],
       },
     },
@@ -1118,7 +1119,7 @@ export const IDL: PodCom = {
           },
           {
             name: "private",
-          }
+          },
         ],
       },
     },
@@ -1152,7 +1153,7 @@ export const IDL: PodCom = {
             type: {
               array: ["u8", 7],
             },
-          }
+          },
         ],
       },
     },
@@ -1208,7 +1209,7 @@ export const IDL: PodCom = {
             type: {
               array: ["u8", 7],
             },
-          }
+          },
         ],
       },
     },
@@ -1228,7 +1229,7 @@ export const IDL: PodCom = {
           },
           {
             name: "failed",
-          }
+          },
         ],
       },
     },
@@ -1252,9 +1253,9 @@ export const IDL: PodCom = {
           {
             name: "custom",
             fields: ["u8"],
-          }
+          },
         ],
       },
-    }
+    },
   ],
 };

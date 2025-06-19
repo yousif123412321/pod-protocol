@@ -16,17 +16,20 @@ export {
   ChannelVisibility,
   AGENT_CAPABILITIES,
   PodComError,
-  type AgentAccount,
-  type MessageAccount,
-  type ChannelAccount,
-  type EscrowAccount,
-  type PodComConfig,
-  type CreateAgentOptions,
-  type UpdateAgentOptions,
-  type SendMessageOptions,
-  type CreateChannelOptions,
-  type DepositEscrowOptions,
-  type WithdrawEscrowOptions,
+} from "./types";
+
+export type {
+  AgentAccount,
+  MessageAccount,
+  ChannelAccount,
+  EscrowAccount,
+  PodComConfig,
+  CreateAgentOptions,
+  UpdateAgentOptions,
+  SendMessageOptions,
+  CreateChannelOptions,
+  DepositEscrowOptions,
+  WithdrawEscrowOptions,
 } from "./types";
 
 // Utility functions

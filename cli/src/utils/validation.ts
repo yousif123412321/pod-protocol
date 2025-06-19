@@ -16,7 +16,7 @@ export class ValidationError extends Error {
  */
 export function validatePublicKey(
   address: string,
-  fieldName: string = "address"
+  fieldName: string = "address",
 ): PublicKey {
   try {
     return new PublicKey(address);
@@ -30,7 +30,7 @@ export function validatePublicKey(
  */
 export function validateSolAmount(
   amount: string | number,
-  fieldName: string = "amount"
+  fieldName: string = "amount",
 ): number {
   const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
 
@@ -107,7 +107,7 @@ export function validateChannelName(name: string): string {
 
   if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
     throw new ValidationError(
-      "Channel name can only contain letters, numbers, underscores, and hyphens"
+      "Channel name can only contain letters, numbers, underscores, and hyphens",
     );
   }
 
@@ -137,7 +137,7 @@ export function validateNetwork(network: string): string {
 
   if (!validNetworks.includes(network)) {
     throw new ValidationError(
-      `Invalid network: ${network}. Must be one of: ${validNetworks.join(", ")}`
+      `Invalid network: ${network}. Must be one of: ${validNetworks.join(", ")}`,
     );
   }
 
@@ -149,7 +149,7 @@ export function validateNetwork(network: string): string {
  */
 export function validateFilePath(
   filePath: string,
-  fieldName: string = "file"
+  fieldName: string = "file",
 ): string {
   if (!filePath.trim()) {
     throw new ValidationError(`${fieldName} path cannot be empty`);
@@ -159,8 +159,8 @@ export function validateFilePath(
   if (filePath.includes("..") && !filePath.startsWith("~/")) {
     console.warn(
       chalk.yellow(
-        `Warning: ${fieldName} path contains '..' - ensure this is intentional`
-      )
+        `Warning: ${fieldName} path contains '..' - ensure this is intentional`,
+      ),
     );
   }
 
@@ -172,7 +172,7 @@ export function validateFilePath(
  */
 export function validatePositiveInteger(
   value: string | number,
-  fieldName: string = "value"
+  fieldName: string = "value",
 ): number {
   const num = typeof value === "string" ? parseInt(value, 10) : value;
 
@@ -193,13 +193,13 @@ export function validatePositiveInteger(
 export function validateEnum<T extends string>(
   value: string,
   validValues: readonly T[],
-  fieldName: string = "value"
+  fieldName: string = "value",
 ): T {
   if (!validValues.includes(value as T)) {
     throw new ValidationError(
       `Invalid ${fieldName}: ${value}. Must be one of: ${validValues.join(
-        ", "
-      )}`
+        ", ",
+      )}`,
     );
   }
 
@@ -211,7 +211,7 @@ export function validateEnum<T extends string>(
  */
 export function safeValidate<T>(
   validator: () => T,
-  onError?: (error: ValidationError) => void
+  onError?: (error: ValidationError) => void,
 ): T | null {
   try {
     return validator();

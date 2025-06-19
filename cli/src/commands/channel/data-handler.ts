@@ -38,7 +38,8 @@ export class ChannelDataHandler {
         type: "input",
         name: "name",
         message: "Channel name:",
-        validate: (input: string) => input.length > 0 ? true : "Channel name is required",
+        validate: (input: string) =>
+          input.length > 0 ? true : "Channel name is required",
       },
       {
         type: "input",
@@ -61,14 +62,16 @@ export class ChannelDataHandler {
         name: "maxParticipants",
         message: "Maximum participants:",
         default: 100,
-        validate: (input: number) => input > 0 ? true : "Must be greater than 0",
+        validate: (input: number) =>
+          input > 0 ? true : "Must be greater than 0",
       },
       {
         type: "number",
         name: "feePerMessage",
         message: "Fee per message (lamports):",
         default: 1000,
-        validate: (input: number) => input >= 0 ? true : "Must be 0 or greater",
+        validate: (input: number) =>
+          input >= 0 ? true : "Must be 0 or greater",
       },
     ]);
   }

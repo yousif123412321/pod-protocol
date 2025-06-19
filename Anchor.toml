@@ -1,5 +1,5 @@
 [toolchain]
-# Using npm as the package manager for Anchor compatibility
+# Using npm as the package manager (required by Anchor framework - bun not supported)
 package_manager = "npm"
 
 [features]

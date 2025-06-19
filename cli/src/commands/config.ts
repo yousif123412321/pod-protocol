@@ -61,10 +61,10 @@ export class ConfigCommands {
           if (existsSync(currentConfig.keypairPath)) {
             try {
               const keypairData = JSON.parse(
-                readFileSync(currentConfig.keypairPath, "utf8")
+                readFileSync(currentConfig.keypairPath, "utf8"),
               );
               const keypair = Keypair.fromSecretKey(
-                new Uint8Array(keypairData)
+                new Uint8Array(keypairData),
               );
               data.push(["Public Key", keypair.publicKey.toBase58()]);
             } catch {
@@ -81,7 +81,7 @@ export class ConfigCommands {
                   alignment: "center",
                   content: chalk.blue.bold("POD-COM CLI Configuration"),
                 },
-              })
+              }),
           );
         } catch (error: any) {
           console.error(chalk.red("Failed to show config:"), error.message);
@@ -99,7 +99,7 @@ export class ConfigCommands {
           if (!validNetworks.includes(network)) {
             console.error(
               chalk.red("Error: Invalid network. Must be one of:"),
-              validNetworks.join(", ")
+              validNetworks.join(", "),
             );
             process.exit(1);
           }
@@ -110,7 +110,7 @@ export class ConfigCommands {
 
           console.log(
             chalk.green("✅ Network updated to:"),
-            chalk.cyan(network)
+            chalk.cyan(network),
           );
         } catch (error: any) {
           console.error(chalk.red("Failed to set network:"), error.message);
@@ -132,7 +132,7 @@ export class ConfigCommands {
           if (!existsSync(expandedPath)) {
             console.error(
               chalk.red("Error: Keypair file does not exist:"),
-              expandedPath
+              expandedPath,
             );
             process.exit(1);
           }
@@ -148,11 +148,11 @@ export class ConfigCommands {
 
             console.log(
               chalk.green("✅ Keypair path updated to:"),
-              chalk.cyan(expandedPath)
+              chalk.cyan(expandedPath),
             );
             console.log(
               chalk.cyan("Public key:"),
-              keypair.publicKey.toBase58()
+              keypair.publicKey.toBase58(),
             );
           } catch {
             console.error(chalk.red("Error: Invalid keypair file format"));
@@ -221,7 +221,7 @@ export class ConfigCommands {
           // Save keypair
           writeFileSync(
             expandedPath,
-            JSON.stringify(Array.from(keypair.secretKey))
+            JSON.stringify(Array.from(keypair.secretKey)),
           );
 
           spinner.succeed("Keypair generated successfully!");
@@ -239,12 +239,12 @@ export class ConfigCommands {
           this.saveConfig(currentConfig);
 
           console.log(
-            chalk.green("\n✅ Configuration updated to use new keypair")
+            chalk.green("\n✅ Configuration updated to use new keypair"),
           );
         } catch (error: any) {
           console.error(
             chalk.red("Failed to generate keypair:"),
-            error.message
+            error.message,
           );
           process.exit(1);
         }
@@ -254,31 +254,52 @@ export class ConfigCommands {
     config
       .command("airdrop")
       .description("Request devnet SOL airdrop for development")
-      .option("-a, --amount <sol>", "Amount of SOL to request (default: 2)", "2")
+      .option(
+        "-a, --amount <sol>",
+        "Amount of SOL to request (default: 2)",
+        "2",
+      )
       .action(async (options) => {
         try {
           const currentConfig = this.loadConfig();
-          
+
           if (currentConfig.network !== "devnet") {
-            console.error(chalk.red("Error: Airdrop is only available on devnet"));
-            console.log(chalk.yellow("Tip: Switch to devnet with 'pod config set-network devnet'"));
+            console.error(
+              chalk.red("Error: Airdrop is only available on devnet"),
+            );
+            console.log(
+              chalk.yellow(
+                "Tip: Switch to devnet with 'pod config set-network devnet'",
+              ),
+            );
             return;
           }
 
           if (!existsSync(currentConfig.keypairPath)) {
-            console.error(chalk.red("Error: Keypair file not found:"), currentConfig.keypairPath);
-            console.log(chalk.yellow("Tip: Generate a new keypair with 'pod config generate-keypair'"));
+            console.error(
+              chalk.red("Error: Keypair file not found:"),
+              currentConfig.keypairPath,
+            );
+            console.log(
+              chalk.yellow(
+                "Tip: Generate a new keypair with 'pod config generate-keypair'",
+              ),
+            );
             return;
           }
 
           const amount = parseFloat(options.amount);
           if (amount <= 0 || amount > 5) {
-            console.error(chalk.red("Error: Amount must be between 0.1 and 5 SOL"));
+            console.error(
+              chalk.red("Error: Amount must be between 0.1 and 5 SOL"),
+            );
             return;
           }
 
           // Load keypair to get public key
-          const keypairData = JSON.parse(readFileSync(currentConfig.keypairPath, "utf8"));
+          const keypairData = JSON.parse(
+            readFileSync(currentConfig.keypairPath, "utf8"),
+          );
           const keypair = Keypair.fromSecretKey(new Uint8Array(keypairData));
           const publicKey = keypair.publicKey.toBase58();
 
@@ -294,7 +315,7 @@ export class ConfigCommands {
             const endpoints = [
               "https://api.devnet.solana.com",
               "https://devnet.solana.com",
-              "https://rpc.solana.com"
+              "https://rpc.solana.com",
             ];
 
             let success = false;
@@ -309,12 +330,12 @@ export class ConfigCommands {
                     jsonrpc: "2.0",
                     id: 1,
                     method: "requestAirdrop",
-                    params: [publicKey, amount * 1000000000] // Convert SOL to lamports
-                  })
+                    params: [publicKey, amount * 1000000000], // Convert SOL to lamports
+                  }),
                 });
 
                 const data = await response.json();
-                
+
                 if (data.result) {
                   signature = data.result;
                   success = true;
@@ -333,23 +354,33 @@ export class ConfigCommands {
             if (success) {
               spinner.succeed("Airdrop successful!");
               console.log(chalk.green("Transaction signature:"), signature);
-              console.log(chalk.cyan("Tip: It may take 15-30 seconds for the balance to appear"));
+              console.log(
+                chalk.cyan(
+                  "Tip: It may take 15-30 seconds for the balance to appear",
+                ),
+              );
             } else {
               spinner.fail("All airdrop sources are rate-limited");
               console.log(chalk.yellow("\nAlternative options:"));
-              console.log(chalk.cyan("1. Visit:"), "https://faucet.solana.com/");
-              console.log(chalk.cyan("2. Use QuickNode faucet:"), "https://faucet.quicknode.com/solana/devnet");
+              console.log(
+                chalk.cyan("1. Visit:"),
+                "https://faucet.solana.com/",
+              );
+              console.log(
+                chalk.cyan("2. Use QuickNode faucet:"),
+                "https://faucet.quicknode.com/solana/devnet",
+              );
               console.log(chalk.cyan("3. Try again in a few hours"));
               console.log(chalk.cyan("Your wallet address:"), publicKey);
             }
-
           } catch (error: any) {
             spinner.fail("Airdrop failed");
             console.error(chalk.red("Error:"), error.message);
-            console.log(chalk.yellow("\nAlternative: Visit https://faucet.solana.com/"));
+            console.log(
+              chalk.yellow("\nAlternative: Visit https://faucet.solana.com/"),
+            );
             console.log(chalk.cyan("Your wallet address:"), publicKey);
           }
-
         } catch (error: any) {
           console.error(chalk.red("Failed to request airdrop:"), error.message);
           process.exit(1);
@@ -376,7 +407,7 @@ export class ConfigCommands {
 
           console.log(
             chalk.green("✅ Custom endpoint set to:"),
-            chalk.cyan(url)
+            chalk.cyan(url),
           );
         } catch (error: any) {
           console.error(chalk.red("Failed to set endpoint:"), error.message);
@@ -503,7 +534,7 @@ export class ConfigCommands {
               homedir(),
               ".config",
               "pod-com",
-              "keypair.json"
+              "keypair.json",
             );
 
             const keypairDir = dirname(keypairPath);
@@ -513,7 +544,7 @@ export class ConfigCommands {
 
             writeFileSync(
               keypairPath,
-              JSON.stringify(Array.from(keypair.secretKey))
+              JSON.stringify(Array.from(keypair.secretKey)),
             );
             newConfig.keypairPath = keypairPath;
 
@@ -540,12 +571,12 @@ export class ConfigCommands {
 
           if (answers.generateKeypair) {
             const keypairData = JSON.parse(
-              readFileSync(newConfig.keypairPath, "utf8")
+              readFileSync(newConfig.keypairPath, "utf8"),
             );
             const keypair = Keypair.fromSecretKey(new Uint8Array(keypairData));
             console.log(
               chalk.cyan("Public Key:"),
-              keypair.publicKey.toBase58()
+              keypair.publicKey.toBase58(),
             );
           }
 

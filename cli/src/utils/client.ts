@@ -2,7 +2,10 @@ import { PodComClient } from "@pod-protocol/sdk";
 import { getNetworkEndpoint, loadKeypair } from "./config.js";
 import { Keypair } from "@solana/web3.js";
 
-export async function createClient(network?: string, wallet?: any): Promise<PodComClient> {
+export async function createClient(
+  network?: string,
+  wallet?: any,
+): Promise<PodComClient> {
   const client = new PodComClient({
     endpoint: getNetworkEndpoint(network),
     commitment: "confirmed",
@@ -13,7 +16,7 @@ export async function createClient(network?: string, wallet?: any): Promise<PodC
 
 export function getWallet(keypairPath?: string): any {
   const keypair = loadKeypair(keypairPath);
-  
+
   // Return wallet-like interface that Anchor expects
   return {
     publicKey: keypair.publicKey,
@@ -22,11 +25,11 @@ export function getWallet(keypairPath?: string): any {
       return tx;
     },
     signAllTransactions: async (txs: any[]) => {
-      return txs.map(tx => {
+      return txs.map((tx) => {
         tx.partialSign(keypair);
         return tx;
       });
-    }
+    },
   };
 }
 

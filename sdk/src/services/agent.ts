@@ -9,7 +9,10 @@ import { findAgentPDA, retry, getAccountLastUpdated } from "../utils";
  * Agent-related operations service
  */
 export class AgentService extends BaseService {
-  async registerAgent(wallet: Signer, options: CreateAgentOptions): Promise<string> {
+  async registerAgent(
+    wallet: Signer,
+    options: CreateAgentOptions,
+  ): Promise<string> {
     const [agentPDA] = findAgentPDA(wallet.publicKey, this.programId);
 
     return retry(async () => {
@@ -21,12 +24,12 @@ export class AgentService extends BaseService {
       } else {
         // This should not happen if client.initialize(wallet) was called properly
         throw new Error(
-          "No program instance available. Ensure client.initialize(wallet) was called successfully."
+          "No program instance available. Ensure client.initialize(wallet) was called successfully.",
         );
       }
 
       try {
-        const tx = await program.methods
+        const tx = await (program.methods as any)
           .registerAgent(new BN(options.capabilities), options.metadataUri)
           .accounts({
             agentAccount: agentPDA,
@@ -39,20 +42,29 @@ export class AgentService extends BaseService {
       } catch (error: any) {
         // Provide more specific error messages
         if (error.message?.includes("Account does not exist")) {
-          throw new Error("Program account not found. Verify the program is deployed and the program ID is correct.");
+          throw new Error(
+            "Program account not found. Verify the program is deployed and the program ID is correct.",
+          );
         }
         if (error.message?.includes("insufficient funds")) {
-          throw new Error("Insufficient SOL balance to pay for transaction fees and rent.");
+          throw new Error(
+            "Insufficient SOL balance to pay for transaction fees and rent.",
+          );
         }
         if (error.message?.includes("custom program error")) {
-          throw new Error(`Program error: ${error.message}. Check program logs for details.`);
+          throw new Error(
+            `Program error: ${error.message}. Check program logs for details.`,
+          );
         }
         throw new Error(`Agent registration failed: ${error.message}`);
       }
     });
   }
 
-  async updateAgent(wallet: Signer, options: UpdateAgentOptions): Promise<string> {
+  async updateAgent(
+    wallet: Signer,
+    options: UpdateAgentOptions,
+  ): Promise<string> {
     const [agentPDA] = findAgentPDA(wallet.publicKey, this.programId);
 
     return retry(async () => {
@@ -63,24 +75,28 @@ export class AgentService extends BaseService {
         program = this.program;
       } else {
         // Fallback: create a fresh provider with the actual wallet for this transaction
-        const provider = new anchor.AnchorProvider(this.connection, wallet as any, {
-          commitment: this.commitment,
-          skipPreflight: true,
-        });
-        
+        const provider = new anchor.AnchorProvider(
+          this.connection,
+          wallet as any,
+          {
+            commitment: this.commitment,
+            skipPreflight: true,
+          },
+        );
+
         // Get the IDL directly (no dummy wallet involved)
         const idl = this.ensureIDL();
-        
+
         // Create a new program instance with the proper wallet
         program = new anchor.Program(idl, provider);
       }
 
-      const tx = await program.methods
+      const tx = await (program.methods as any)
         .updateAgent(
           options.capabilities !== undefined
             ? new BN(options.capabilities)
             : null,
-          options.metadataUri !== undefined ? options.metadataUri : null
+          options.metadataUri !== undefined ? options.metadataUri : null,
         )
         .accounts({
           agentAccount: agentPDA,
@@ -105,14 +121,22 @@ export class AgentService extends BaseService {
         // For read operations, create a temporary program with a dummy wallet
         const dummyWallet = {
           publicKey: anchor.web3.PublicKey.default,
-          signTransaction: async () => { throw new Error("Read-only"); },
-          signAllTransactions: async () => { throw new Error("Read-only"); },
+          signTransaction: async () => {
+            throw new Error("Read-only");
+          },
+          signAllTransactions: async () => {
+            throw new Error("Read-only");
+          },
         };
-        
-        const provider = new anchor.AnchorProvider(this.connection, dummyWallet, {
-          commitment: this.commitment,
-        });
-        
+
+        const provider = new anchor.AnchorProvider(
+          this.connection,
+          dummyWallet,
+          {
+            commitment: this.commitment,
+          },
+        );
+
         const idl = this.ensureIDL();
         program = new anchor.Program(idl, provider);
       }
@@ -140,32 +164,34 @@ export class AgentService extends BaseService {
       // For read operations, create a temporary program with a dummy wallet
       const dummyWallet = {
         publicKey: anchor.web3.PublicKey.default,
-        signTransaction: async () => { throw new Error("Read-only"); },
-        signAllTransactions: async () => { throw new Error("Read-only"); },
+        signTransaction: async () => {
+          throw new Error("Read-only");
+        },
+        signAllTransactions: async () => {
+          throw new Error("Read-only");
+        },
       };
-      
+
       const provider = new anchor.AnchorProvider(this.connection, dummyWallet, {
         commitment: this.commitment,
       });
-      
+
       const idl = this.ensureIDL();
       const program = new anchor.Program(idl, provider);
       
       const agentAccount = this.getAccount("agentAccount");
       const accounts = await agentAccount.all();
 
-      return accounts
-        .slice(0, limit)
-        .map((acc: any) => ({
-          pubkey: acc.publicKey,
-          capabilities: acc.account.capabilities.toNumber(),
-          metadataUri: acc.account.metadataUri,
-          reputation: acc.account.reputation?.toNumber() || 0,
-          lastUpdated: getAccountLastUpdated(acc.account),
-          bump: acc.account.bump,
-        }));
+      return accounts.slice(0, limit).map((acc: any) => ({
+        pubkey: acc.publicKey,
+        capabilities: acc.account.capabilities.toNumber(),
+        metadataUri: acc.account.metadataUri,
+        reputation: acc.account.reputation?.toNumber() || 0,
+        lastUpdated: getAccountLastUpdated(acc.account),
+        bump: acc.account.bump,
+      }));
     } catch (error: any) {
       throw new Error(`Failed to fetch agents: ${error.message}`);
     }
   }
-} 
+}
