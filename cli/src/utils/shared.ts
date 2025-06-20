@@ -31,12 +31,17 @@ export function createCommandHandler<T extends any[]>(
     ...args: T
   ) => Promise<void>,
 ) {
-  return async (globalOpts: GlobalOptions, ...args: T) => {
+  return async (...args: any[]) => {
     try {
+      // Commander.js passes the command object as the last argument
+      const cmd = args[args.length - 1];
+      const globalOpts = getCommandOpts(cmd);
+      const commandArgs = args.slice(0, -1) as T;
+      
       const wallet = getWallet(globalOpts.keypair);
       const keypair = getKeypair(globalOpts.keypair);
       const client = await createClient(globalOpts.network, wallet);
-      await handler(client, keypair, globalOpts, ...args);
+      await handler(client, keypair, globalOpts, ...commandArgs);
     } catch (error: any) {
       handleCommandError(error, action);
     }

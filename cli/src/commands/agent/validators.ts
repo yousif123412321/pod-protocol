@@ -1,6 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 
-export const validateAgentAddress = (address: string): void => {
+export class AgentValidators {
+  static validateAgentAddress = (address: string): void => {
   try {
     new PublicKey(address);
   } catch {
@@ -8,7 +9,7 @@ export const validateAgentAddress = (address: string): void => {
   }
 };
 
-export const validateCapabilities = (capabilities: string): number => {
+static validateCapabilities = (capabilities: string): number => {
   const numCaps = parseInt(capabilities, 10);
   if (isNaN(numCaps) || numCaps < 0 || numCaps > 255) {
     throw new Error(
@@ -18,13 +19,13 @@ export const validateCapabilities = (capabilities: string): number => {
   return numCaps;
 };
 
-export const validateMetadataUri = (uri: string): void => {
-  if (uri && !isValidUri(uri)) {
+static validateMetadataUri = (uri: string): void => {
+  if (uri && !AgentValidators.isValidUri(uri)) {
     throw new Error(`Invalid metadata URI: ${uri}`);
   }
 };
 
-export const validateLimit = (limit: string): number => {
+static validateLimit = (limit: string): number => {
   const numLimit = parseInt(limit, 10);
   if (isNaN(numLimit) || numLimit <= 0) {
     throw new Error("Invalid limit: must be a positive number");
@@ -32,7 +33,7 @@ export const validateLimit = (limit: string): number => {
   return numLimit;
 };
 
-const isValidUri = (uri: string): boolean => {
+static isValidUri = (uri: string): boolean => {
   try {
     new URL(uri);
     return true;
@@ -40,3 +41,4 @@ const isValidUri = (uri: string): boolean => {
     return false;
   }
 };
+}

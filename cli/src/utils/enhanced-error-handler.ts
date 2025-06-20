@@ -105,7 +105,7 @@ export class PodError extends Error {
 /**
  * Predefined error templates for common issues
  */
-export const ERROR_TEMPLATES: Record<ErrorCode, Omit<ErrorDetails, 'code'>> = {
+export const ERROR_TEMPLATES: Partial<Record<ErrorCode, Omit<ErrorDetails, 'code'>>> = {
   [ErrorCode.NETWORK_CONNECTION_FAILED]: {
     title: 'Network Connection Failed',
     message: 'Unable to connect to the Solana network',
@@ -214,7 +214,7 @@ export const ERROR_TEMPLATES: Record<ErrorCode, Omit<ErrorDetails, 'code'>> = {
   },
 
   // Add more error templates as needed...
-} as const satisfies Record<ErrorCode, Omit<ErrorDetails, 'code'>>;
+};
 
 /**
  * Enhanced error handler with rich formatting and suggestions
