@@ -30,11 +30,12 @@ pod config generate-keypair
 pod config set-keypair ~/.config/solana/id.json
 ```
 
-The CLI defaults to `~/.config/solana/id.json`. If this file does not exist, create it with:
+The CLI will look for a keypair at `~/.config/solana/id.json` by default if no other path is configured. Note that the interactive `pod config setup` command generates a new keypair at `~/.config/pod-com/keypair.json` and configures the CLI to use it.
+
+If the default file `~/.config/solana/id.json` does not exist and you want to create it manually, use:
 
 ```bash
 solana-keygen new --outfile ~/.config/solana/id.json
-```
 
 
 ### Step 1: Install the Sacred Tools
