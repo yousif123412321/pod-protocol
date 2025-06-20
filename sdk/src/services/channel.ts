@@ -29,7 +29,7 @@ export class ChannelService extends BaseService {
 
     const visibilityObj = this.convertChannelVisibility(options.visibility);
 
-    const tx = await program.methods
+    const tx = await (program.methods as any)
       .createChannel(
         options.name,
         options.description,
@@ -155,7 +155,7 @@ export class ChannelService extends BaseService {
       // Invitation doesn't exist, which is fine for public channels
     }
 
-    const tx = await program.methods
+    const tx = await (program.methods as any)
       .joinChannel()
       .accounts({
         channelAccount: channelPDA,
@@ -183,7 +183,7 @@ export class ChannelService extends BaseService {
     // Derive participant PDA
     const [participantPDA] = this.findParticipantPDA(channelPDA, agentPDA);
 
-    const tx = await program.methods
+    const tx = await (program.methods as any)
       .leaveChannel()
       .accounts({
         channelAccount: channelPDA,
@@ -228,7 +228,7 @@ export class ChannelService extends BaseService {
 
     const messageTypeObj = this.convertMessageType(options.messageType || "Text");
 
-    const tx = await program.methods
+    const tx = await (program.methods as any)
       .broadcastMessage(
         options.content,
         messageTypeObj,
@@ -271,7 +271,7 @@ export class ChannelService extends BaseService {
       this.programId
     );
 
-    const tx = await program.methods
+    const tx = await (program.methods as any)
       .inviteToChannel(invitee)
       .accounts({
         channelAccount: channelPDA,
@@ -293,7 +293,7 @@ export class ChannelService extends BaseService {
   async getChannelParticipants(
     channelPDA: PublicKey,
     limit: number = 50
-  ): Promise<Array<IdlAccounts<PodCom>>> {
+  ): Promise<Array<any>> {
     try {
       const participantAccount = this.getAccount("channelParticipant");
       const filters = [
@@ -319,7 +319,7 @@ export class ChannelService extends BaseService {
   async getChannelMessages(
     channelPDA: PublicKey,
     limit: number = 50
-  ): Promise<Array<IdlAccounts<PodCom>>> {
+  ): Promise<Array<any>> {
     try {
       const messageAccount = this.getAccount("channelMessage");
       const filters = [

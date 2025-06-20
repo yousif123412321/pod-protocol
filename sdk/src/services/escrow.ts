@@ -24,7 +24,7 @@ export class EscrowService extends BaseService {
     // Derive escrow PDA
     const [escrowPDA] = findEscrowPDA(options.channel, wallet.publicKey, this.programId);
 
-    const tx = await program.methods
+    const tx = await (program.methods as any)
       .depositEscrow(new anchor.BN(options.amount))
       .accounts({
         escrowAccount: escrowPDA,
@@ -51,7 +51,7 @@ export class EscrowService extends BaseService {
     // Derive escrow PDA
     const [escrowPDA] = findEscrowPDA(options.channel, wallet.publicKey, this.programId);
 
-    const tx = await program.methods
+    const tx = await (program.methods as any)
       .withdrawEscrow(new anchor.BN(options.amount))
       .accounts({
         escrowAccount: escrowPDA,

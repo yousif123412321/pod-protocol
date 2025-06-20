@@ -40,7 +40,7 @@ export class PodComClient {
   private connection: Connection;
   private programId: PublicKey;
   private commitment: Commitment;
-  private program?: Program<PodCom>;
+  private program?: Program<any>; // Use any for IDL compatibility
 
   // Service instances - public for direct access to specific functionality
   public agents: AgentService;
@@ -86,7 +86,7 @@ export class PodComClient {
           throw new Error("IDL not found. Ensure the program IDL is properly generated and imported.");
         }
         
-        this.program = new Program(IDL, provider) as Program<PodCom>;
+        this.program = new Program(IDL as any, provider);
         
         // Validate program was created successfully
         if (!this.program) {
@@ -273,7 +273,7 @@ export class PodComClient {
   async getChannelParticipants(
     channelPDA: PublicKey,
     limit: number = 50
-  ): Promise<Array<IdlAccounts<PodCom>>> {
+  ): Promise<Array<any>> {
     return this.channels.getChannelParticipants(channelPDA, limit);
   }
 
@@ -283,7 +283,7 @@ export class PodComClient {
   async getChannelMessages(
     channelPDA: PublicKey,
     limit: number = 50
-  ): Promise<Array<IdlAccounts<PodCom>>> {
+  ): Promise<Array<any>> {
     return this.channels.getChannelMessages(channelPDA, limit);
   }
 

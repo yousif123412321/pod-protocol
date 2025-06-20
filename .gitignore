@@ -2,6 +2,14 @@
 node_modules/
 */node_modules/
 
+# Package manager lockfiles (keep yarn.lock for Anchor compatibility)
+package-lock.json
+pnpm-lock.yaml
+# yarn.lock - keep this for Anchor compatibility
+
+# Bun
+.bun/
+
 # Build outputs
 target/
 dist/
@@ -52,6 +60,16 @@ jspm_packages/
 
 # Yarn Integrity file
 .yarn-integrity
+
+# Yarn v2+
+.yarn/
+!.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
 
 # dotenv environment variables file
 .env

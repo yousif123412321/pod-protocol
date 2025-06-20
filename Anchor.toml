@@ -1,6 +1,7 @@
 [toolchain]
-# Using npm as the package manager for Anchor compatibility
-package_manager = "npm"
+# Using yarn as the package manager for Anchor compatibility
+# Anchor CLI expects yarn and has hardcoded dependencies on it
+package_manager = "yarn"
 
 [features]
 # Enable resolution of Anchor feature flags
@@ -28,7 +29,8 @@ wallet = "~/.config/solana/id.json"
 
 # Test script configuration
 [scripts]
-test = "bun test"
+# Use bun for faster testing while keeping anchor compatibility
+test = "yarn run test:bun"
 
 # Solana configuration
 [solana]

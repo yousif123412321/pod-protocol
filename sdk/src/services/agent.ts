@@ -26,7 +26,7 @@ export class AgentService extends BaseService {
       }
 
       try {
-        const tx = await program.methods
+        const tx = await (program.methods as any)
           .registerAgent(new BN(options.capabilities), options.metadataUri)
           .accounts({
             agentAccount: agentPDA,
@@ -75,7 +75,7 @@ export class AgentService extends BaseService {
         program = new anchor.Program(idl, provider);
       }
 
-      const tx = await program.methods
+      const tx = await (program.methods as any)
         .updateAgent(
           options.capabilities !== undefined
             ? new BN(options.capabilities)

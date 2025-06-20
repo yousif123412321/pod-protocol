@@ -44,7 +44,7 @@ export class MessageService extends BaseService {
     );
 
     return retry(async () => {
-      const tx = await program.methods
+      const tx = await (program.methods as any)
         .sendMessage(
           options.recipient,
           Array.from(payloadHash),
