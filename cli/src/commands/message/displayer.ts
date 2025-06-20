@@ -56,7 +56,7 @@ export class MessageDisplayer {
         formatValue(this.truncateString(msg.recipient.toBase58(), 20), "address"),
         msg.messageType,
       msg.status,
-      new Date(msg.timestamp.toNumber() * 1000).toLocaleDateString(),
+      new Date(msg.timestamp * 1000).toLocaleDateString(),
     ]);
 
     const header = ["ID", "Sender", "Recipient", "Type", "Status", "Date"];
