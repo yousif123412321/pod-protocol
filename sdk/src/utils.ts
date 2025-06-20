@@ -387,3 +387,174 @@ export function getAccountLastUpdated(account: any): number {
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+/**
+ * Format a public key for display (show first 4 and last 4 characters)
+ */
+export function formatPublicKey(pubkey: PublicKey | string, length: number = 8): string {
+  const key = typeof pubkey === 'string' ? pubkey : pubkey.toBase58();
+  if (key.length <= length + 3) return key;
+  
+  const start = Math.floor(length / 2);
+  const end = length - start;
+  return `${key.slice(0, start)}...${key.slice(-end)}`;
+}
+
+/**
+ * Validate and parse a message type string
+ */
+export function parseMessageType(typeStr: string): MessageType {
+  const normalized = typeStr.toLowerCase();
+  switch (normalized) {
+    case 'text':
+      return MessageType.Text;
+    case 'data':
+      return MessageType.Data;
+    case 'command':
+      return MessageType.Command;
+    case 'response':
+      return MessageType.Response;
+    case 'custom':
+      return MessageType.Custom;
+    default:
+      throw new Error(`Invalid message type: ${typeStr}`);
+  }
+}
+
+/**
+ * Generate a unique message ID for tracking
+ */
+export function generateMessageId(): string {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+/**
+ * Calculate the estimated fee for a transaction
+ */
+export function estimateTransactionFee(
+  messageLength: number,
+  baseFee: number = 5000
+): number {
+  // Base fee + per-byte fee
+  const perByteFee = 10;
+  return baseFee + (messageLength * perByteFee);
+}
+
+/**
+ * Convert duration to human readable format
+ */
+export function formatDuration(ms: number): string {
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) return `${days}d ${hours % 24}h`;
+  if (hours > 0) return `${hours}h ${minutes % 60}m`;
+  if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+  return `${seconds}s`;
+}
+
+/**
+ * Convert bytes to human readable format
+ */
+export function formatBytes(bytes: number): string {
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  if (bytes === 0) return '0 B';
+  
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  const size = bytes / Math.pow(1024, i);
+  
+  return `${size.toFixed(1)} ${sizes[i]}`;
+}
+
+/**
+ * Validate capability combination
+ */
+export function validateCapabilities(capabilities: number): boolean {
+  // Must be non-negative and within valid range (0-255 for 8 bits)
+  return capabilities >= 0 && capabilities <= 255;
+}
+
+/**
+ * Get channel visibility string
+ */
+export function getVisibilityString(visibility: any): string {
+  if (typeof visibility === 'object') {
+    if (visibility.public !== undefined) return 'Public';
+    if (visibility.private !== undefined) return 'Private';
+  }
+  return typeof visibility === 'string' ? visibility : 'Public';
+}
+
+/**
+ * Calculate PDA for a channel participant
+ */
+export function findParticipantPDA(
+  channel: PublicKey,
+  agent: PublicKey,
+  programId: PublicKey = PROGRAM_ID,
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("participant"), channel.toBuffer(), agent.toBuffer()],
+    programId,
+  );
+}
+
+/**
+ * Calculate PDA for a channel invitation
+ */
+export function findInvitationPDA(
+  channel: PublicKey,
+  invitee: PublicKey,
+  programId: PublicKey = PROGRAM_ID,
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("invitation"), channel.toBuffer(), invitee.toBuffer()],
+    programId,
+  );
+}
+
+/**
+ * Create a deterministic seed for account derivation
+ */
+export function createSeed(input: string): Buffer {
+  // Truncate or pad to 32 bytes for PDA seeds
+  const buffer = Buffer.from(input, 'utf8');
+  if (buffer.length > 32) {
+    return buffer.slice(0, 32);
+  }
+  if (buffer.length < 32) {
+    const padded = Buffer.alloc(32);
+    buffer.copy(padded);
+    return padded;
+  }
+  return buffer;
+}
+
+/**
+ * Wait for transaction confirmation with retry
+ */
+export async function confirmTransaction(
+  connection: any,
+  signature: string,
+  maxRetries: number = 10,
+  delay: number = 1000
+): Promise<boolean> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const result = await connection.getTransaction(signature);
+      if (result && result.meta && result.meta.err === null) {
+        return true;
+      }
+    } catch (error) {
+      // Transaction might not be confirmed yet
+    }
+    
+    if (i < maxRetries - 1) {
+      await sleep(delay);
+    }
+  }
+  
+  return false;
+}

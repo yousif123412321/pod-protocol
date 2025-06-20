@@ -10,6 +10,8 @@ import { MessageCommands } from "./commands/message.js";
 import { ChannelCommands } from "./commands/channel.js";
 import { EscrowCommands } from "./commands/escrow.js";
 import { ConfigCommands } from "./commands/config.js";
+import { AnalyticsCommands } from "./commands/analytics.js";
+import { DiscoveryCommands } from "./commands/discovery.js";
 import { 
   showBanner, 
   showPromptOrDieBanner, 
@@ -69,6 +71,8 @@ const messageCommands = new MessageCommands();
 const channelCommands = new ChannelCommands();
 const escrowCommands = new EscrowCommands();
 const configCommands = new ConfigCommands();
+const analyticsCommands = new AnalyticsCommands();
+const discoveryCommands = new DiscoveryCommands();
 
 // Register command groups
 agentCommands.register(program);
@@ -76,6 +80,8 @@ messageCommands.register(program);
 channelCommands.register(program);
 escrowCommands.register(program);
 configCommands.register(program);
+analyticsCommands.register(program);
+discoveryCommands.register(program);
 
 // Enhanced status command
 program
@@ -173,7 +179,7 @@ program.on('command:*', (operands) => {
   console.log();
   
   // Simple command suggestions
-  const availableCommands = ['agent', 'message', 'channel', 'escrow', 'config', 'status'];
+  const availableCommands = ['agent', 'message', 'channel', 'escrow', 'config', 'analytics', 'discover', 'status'];
   const suggestions = availableCommands.filter(cmd => 
     cmd.includes(unknownCommand) || unknownCommand.includes(cmd)
   );

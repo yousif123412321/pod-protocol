@@ -8,6 +8,33 @@
 // Core client
 export { PodComClient } from "./client";
 
+// Services
+export { AgentService } from "./services/agent";
+export { MessageService } from "./services/message";
+export { ChannelService } from "./services/channel";
+export { EscrowService } from "./services/escrow";
+export { AnalyticsService } from "./services/analytics";
+export { DiscoveryService } from "./services/discovery";
+
+// Service types
+export type {
+  AgentAnalytics,
+  MessageAnalytics,
+  ChannelAnalytics,
+  NetworkAnalytics,
+  DashboardData,
+} from "./services/analytics";
+
+export type {
+  SearchFilters,
+  SearchResult,
+  AgentSearchFilters,
+  MessageSearchFilters,
+  ChannelSearchFilters,
+  RecommendationOptions,
+  Recommendation,
+} from "./services/discovery";
+
 // Types and interfaces
 export {
   PROGRAM_ID,
