@@ -1,0 +1,195 @@
+/* Terminal UI Component for PoD Protocol CLI Demo */
+
+.terminal-section {
+    max-width: 1200px;
+    margin: 50px auto;
+    padding: 20px;
+}
+
+.terminal-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.terminal-title {
+    font-size: 2.5rem;
+    color: #00ff41;
+    text-shadow: 0 0 20px #00ff41;
+    margin-bottom: 10px;
+}
+
+.terminal-subtitle {
+    color: #b0b0b0;
+    font-size: 1.2rem;
+}
+
+.terminal-container {
+    background: #0c0c0c;
+    border: 2px solid #00ff41;
+    border-radius: 10px;
+    box-shadow: 0 0 30px rgba(0, 255, 65, 0.3);
+    overflow: hidden;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.terminal-header-bar {
+    background: #1a1a1a;
+    padding: 10px 15px;
+    border-bottom: 1px solid #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.terminal-button {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.terminal-button.close { background: #ff5f57; }
+.terminal-button.minimize { background: #ffbd2e; }
+.terminal-button.maximize { background: #28ca42; }
+
+.terminal-title-bar {
+    color: #999;
+    font-size: 0.9rem;
+    margin-left: 10px;
+}
+
+.terminal-body {
+    padding: 20px;
+    background: #000;
+    min-height: 400px;
+    font-family: 'Courier New', 'Monaco', 'Menlo', monospace;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.terminal-output {
+    color: #00ff41;
+    margin-bottom: 20px;
+    white-space: pre-wrap;
+}
+
+.terminal-prompt {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.prompt-text {
+    color: #00ff41;
+    margin-right: 10px;
+    user-select: none;
+}
+
+.terminal-input {
+    background: transparent;
+    border: none;
+    color: #00ff41;
+    font-family: inherit;
+    font-size: inherit;
+    outline: none;
+    flex: 1;
+    caret-color: #00ff41;
+}
+
+.terminal-cursor {
+    display: inline-block;
+    width: 8px;
+    height: 16px;
+    background: #00ff41;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+.command-suggestion {
+    background: rgba(0, 255, 65, 0.1);
+    border: 1px solid #00ff41;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.suggestion-title {
+    color: #00ff41;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.suggestion-commands {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.suggestion-cmd {
+    background: rgba(255, 107, 53, 0.1);
+    border: 1px solid #ff6b35;
+    padding: 8px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #ff6b35;
+}
+
+.suggestion-cmd:hover {
+    background: rgba(255, 107, 53, 0.2);
+    box-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
+}
+
+.output-text {
+    color: #e0e0e0;
+}
+
+.output-success {
+    color: #00ff41;
+}
+
+.output-error {
+    color: #ff5555;
+}
+
+.output-warning {
+    color: #ffbd2e;
+}
+
+.output-info {
+    color: #5fd7ff;
+}
+
+.ascii-art {
+    color: #ff6b35;
+    font-size: 12px;
+    line-height: 1.2;
+    margin: 10px 0;
+}
+
+.command-help {
+    color: #b0b0b0;
+    font-style: italic;
+    margin-left: 20px;
+}
+
+.typing-animation {
+    overflow: hidden;
+    border-right: 2px solid #00ff41;
+    white-space: nowrap;
+    animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+@keyframes blink-caret {
+    from, to { border-color: transparent; }
+    50% { border-color: #00ff41; }
+}
