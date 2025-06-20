@@ -245,11 +245,7 @@ See our [Contributing Guidelines](./CONTRIBUTING.md) for the path to enlightenme
 
 ## 🧪 Tests
 
-The project includes TypeScript tests that run using the Anchor framework.
-They require network access to the cluster specified by `ANCHOR_PROVIDER_URL`
-and use the wallet defined in `ANCHOR_WALLET`. See
-[tests/README.md](./tests/README.md) for details on configuring these
-environment variables and running the tests.
+The project includes TypeScript tests that run using the Anchor framework. Before running the tests, ensure you have installed all dependencies by running `bun install` in the project root. They require network access to the cluster specified by `ANCHOR_PROVIDER_URL` and use the wallet defined in `ANCHOR_WALLET`. See [tests/README.md](./tests/README.md) for details on configuring these environment variables and running the tests.
 
 ---
 
