@@ -37,6 +37,193 @@ export class ConfigCommands {
     writeFileSync(configPath, JSON.stringify(config, null, 2));
   }
 
+  private async tryMultipleAirdropSources(publicKey: string, amount: number, spinner: any): Promise<{success: boolean, signature?: string, source?: string}> {
+    const lamports = amount * 1000000000; // Convert SOL to lamports
+    
+    // Primary RPC endpoints to try
+    const rpcEndpoints = [
+      { name: "Official Devnet", url: "https://api.devnet.solana.com" },
+      { name: "Solana Labs RPC", url: "https://devnet.solana.com" },
+      { name: "GenesysGo RPC", url: "https://solana-devnet.g.alchemy.com/v2/demo" },
+      { name: "QuickNode Public", url: "https://greatest-fittest-tent.solana-devnet.quiknode.pro/0e9f2c7e-de71-4f35-b449-8b37aac10c1b/" },
+    ];
+    
+    // Try RPC endpoints first
+    for (const endpoint of rpcEndpoints) {
+      spinner.text = `Trying ${endpoint.name}...`;
+      
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        const response = await fetch(endpoint.url, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "User-Agent": "PoD-Protocol-CLI/1.4.0"
+          },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            id: Math.floor(Math.random() * 1000000),
+            method: "requestAirdrop",
+            params: [publicKey, lamports],
+          }),
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          continue;
+        }
+
+        const data = await response.json();
+
+        if (data.result) {
+          return {
+            success: true,
+            signature: data.result,
+            source: endpoint.name,
+          };
+        } else if (data.error) {
+          if (data.error.code === 429) {
+            continue; // Rate limited, try next
+          }
+          if (data.error.message?.includes("rate")) {
+            continue; // Rate limited, try next  
+          }
+        }
+      } catch (error) {
+        // Network error or timeout, try next endpoint
+        continue;
+      }
+    }
+    
+    // Try web-based faucet APIs as backup
+    const webFaucets = [
+      {
+        name: "SOL-Utils Faucet",
+        tryAirdrop: () => this.tryWebFaucet(publicKey, amount, "https://sol-utils.com/api/faucet")
+      },
+      {
+        name: "Community Faucet",  
+        tryAirdrop: () => this.tryWebFaucet(publicKey, amount, "https://faucet.solana.com/api/airdrop")
+      }
+    ];
+    
+    for (const faucet of webFaucets) {
+      spinner.text = `Trying ${faucet.name}...`;
+      try {
+        const result = await faucet.tryAirdrop();
+        if (result.success) {
+          return {
+            success: true,
+            signature: result.signature,
+            source: faucet.name,
+          };
+        }
+      } catch (error) {
+        continue;
+      }
+    }
+
+    return { success: false };
+  }
+
+  private async tryWebFaucet(publicKey: string, amount: number, endpoint: string): Promise<{success: boolean, signature?: string}> {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "PoD-Protocol-CLI/1.4.0",
+        },
+        body: JSON.stringify({
+          address: publicKey,
+          amount: amount,
+          network: "devnet",
+        }),
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.signature || data.txId || data.transaction) {
+          return {
+            success: true,
+            signature: data.signature || data.txId || data.transaction,
+          };
+        }
+      }
+    } catch (error) {
+      // Fail silently and let caller try next option
+    }
+    
+    return { success: false };
+  }
+
+  private showAlternativeFaucetOptions(publicKey: string): void {
+    console.log(chalk.yellow("\n🚰 Alternative Devnet SOL Faucet Options:"));
+    console.log();
+    
+    const faucets = [
+      {
+        name: "Official Solana Faucet",
+        url: "https://faucet.solana.com/",
+        description: "Web interface, up to 5 SOL every 2 hours",
+        icon: "🔹"
+      },
+      {
+        name: "QuickNode Multi-chain Faucet", 
+        url: "https://faucet.quicknode.com/solana/devnet",
+        description: "0.1 SOL every 24 hours",
+        icon: "🔸"
+      },
+      {
+        name: "SOL-Utils Faucet",
+        url: "https://sol-utils.com/faucet",
+        description: "Instant SOL, SPL tokens, and NFTs",
+        icon: "🔶"
+      },
+      {
+        name: "Stakely Faucet",
+        url: "https://stakely.io/en/faucet/solana-sol",
+        description: "1 SOL every 24 hours",
+        icon: "🔷"
+      }
+    ];
+
+    faucets.forEach((faucet, index) => {
+      console.log(`${faucet.icon} ${chalk.cyan.bold(`${index + 1}. ${faucet.name}`)}`);
+      console.log(`   ${chalk.white("URL:")} ${chalk.blue(faucet.url)}`);
+      console.log(`   ${chalk.gray(faucet.description)}`);
+      console.log();
+    });
+
+    console.log(chalk.magenta.bold("💡 Pro Tips:"));
+    console.log(chalk.gray("   • Try different faucets if one is rate-limited"));
+    console.log(chalk.gray("   • Some faucets offer more SOL for GitHub authentication"));
+    console.log(chalk.gray("   • Rate limits reset at different times for each service"));
+    console.log(chalk.gray("   • Use VPN to change IP if all services are rate-limited"));
+    console.log();
+    
+    console.log(chalk.cyan.bold("📋 Your Wallet Address:"));
+    console.log(chalk.white(`   ${publicKey}`));
+    console.log();
+    
+    // Show QR code for easy copying
+    console.log(chalk.blue("📱 QR Code for easy mobile access:"));
+    qrcode.generate(publicKey, { small: true });
+    
+    console.log(chalk.green.bold("🔄 Retry Command:"));
+    console.log(chalk.white(`   pod config airdrop --amount 2`));
+  }
+
   register(program: Command) {
     const config = program
       .command("config")
@@ -311,67 +498,21 @@ export class ConfigCommands {
           const spinner = ora("Requesting airdrop...").start();
 
           try {
-            // Try multiple airdrop sources
-            const endpoints = [
-              "https://api.devnet.solana.com",
-              "https://devnet.solana.com",
-              "https://rpc.solana.com",
-            ];
-
-            let success = false;
-            let signature = "";
-
-            for (const endpoint of endpoints) {
-              try {
-                const response = await fetch(endpoint, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    jsonrpc: "2.0",
-                    id: 1,
-                    method: "requestAirdrop",
-                    params: [publicKey, amount * 1000000000], // Convert SOL to lamports
-                  }),
-                });
-
-                const data = await response.json();
-
-                if (data.result) {
-                  signature = data.result;
-                  success = true;
-                  break;
-                } else if (data.error) {
-                  if (data.error.code === 429) {
-                    continue; // Try next endpoint
-                  }
-                  throw new Error(data.error.message);
-                }
-              } catch {
-                continue; // Try next endpoint
-              }
-            }
-
-            if (success) {
+            // Enhanced multi-endpoint airdrop with comprehensive fallbacks
+            const success = await this.tryMultipleAirdropSources(publicKey, amount, spinner);
+            
+            if (success.success) {
               spinner.succeed("Airdrop successful!");
-              console.log(chalk.green("Transaction signature:"), signature);
+              console.log(chalk.green("Transaction signature:"), success.signature);
+              console.log(chalk.green("Source:"), success.source);
               console.log(
                 chalk.cyan(
                   "Tip: It may take 15-30 seconds for the balance to appear",
                 ),
               );
             } else {
-              spinner.fail("All airdrop sources are rate-limited");
-              console.log(chalk.yellow("\nAlternative options:"));
-              console.log(
-                chalk.cyan("1. Visit:"),
-                "https://faucet.solana.com/",
-              );
-              console.log(
-                chalk.cyan("2. Use QuickNode faucet:"),
-                "https://faucet.quicknode.com/solana/devnet",
-              );
-              console.log(chalk.cyan("3. Try again in a few hours"));
-              console.log(chalk.cyan("Your wallet address:"), publicKey);
+              spinner.fail("All automated airdrop sources are currently rate-limited");
+              this.showAlternativeFaucetOptions(publicKey);
             }
           } catch (error: any) {
             spinner.fail("Airdrop failed");
@@ -589,5 +730,95 @@ export class ConfigCommands {
           process.exit(1);
         }
       });
+
+    // Faucet status check command
+    config
+      .command("faucet-status")
+      .description("Check status of available devnet faucets")
+      .action(async () => {
+        try {
+          await this.checkFaucetStatus();
+        } catch (error: any) {
+          console.error(chalk.red("Failed to check faucet status:"), error.message);
+          process.exit(1);
+        }
+      });
+
+    // Comprehensive faucet help command
+    config
+      .command("faucet-help")
+      .description("Show comprehensive faucet options and troubleshooting")
+      .action(async () => {
+        try {
+          const currentConfig = this.loadConfig();
+          
+          if (!existsSync(currentConfig.keypairPath)) {
+            console.error(
+              chalk.red("Error: Keypair file not found:"),
+              currentConfig.keypairPath,
+            );
+            console.log(
+              chalk.yellow(
+                "Tip: Generate a new keypair with 'pod config generate-keypair'",
+              ),
+            );
+            return;
+          }
+
+          const keypairData = JSON.parse(
+            readFileSync(currentConfig.keypairPath, "utf8"),
+          );
+          const keypair = Keypair.fromSecretKey(new Uint8Array(keypairData));
+          const publicKey = keypair.publicKey.toBase58();
+
+          this.showAlternativeFaucetOptions(publicKey);
+        } catch (error: any) {
+          console.error(chalk.red("Failed to show faucet help:"), error.message);
+          process.exit(1);
+        }
+      });
+  }
+
+  private async checkFaucetStatus(): Promise<void> {
+    console.log(chalk.blue.bold("🚰 Devnet SOL Faucet Status Check"));
+    console.log();
+
+    const faucets = [
+      { name: "Official Solana Faucet", url: "https://faucet.solana.com/" },
+      { name: "Official Devnet RPC", url: "https://api.devnet.solana.com" },
+      { name: "QuickNode Faucet", url: "https://faucet.quicknode.com/" },
+      { name: "SOL-Utils Faucet", url: "https://sol-utils.com/" },
+    ];
+
+    const spinner = ora("Checking faucet availability...").start();
+
+    for (const faucet of faucets) {
+      spinner.text = `Checking ${faucet.name}...`;
+      
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch(faucet.url, {
+          method: "HEAD",
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          console.log(`✅ ${chalk.green(faucet.name)}: ${chalk.cyan("Available")}`);
+        } else {
+          console.log(`⚠️  ${chalk.yellow(faucet.name)}: ${chalk.red("Unavailable")} (${response.status})`);
+        }
+      } catch (error) {
+        console.log(`❌ ${chalk.red(faucet.name)}: ${chalk.red("Connection failed")}`);
+      }
+    }
+
+    spinner.stop();
+    console.log();
+    console.log(chalk.gray("Note: This checks website availability, not API rate limits"));
+    console.log(chalk.cyan("Tip: Try 'pod config airdrop' to test actual faucet functionality"));
   }
 }
