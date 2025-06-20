@@ -5,9 +5,17 @@ import { ChannelValidators } from "./validators.js";
 
 export class ChannelDataHandler {
   static async prepareChannelData(options: any): Promise<ChannelData> {
-    let name = options.name || "";
-    let description = options.description || "";
-    let visibility = options.visibility || "public";
+    // Ensure all inputs are properly typed and provide defaults
+    let name =
+      options.name && typeof options.name === "string" ? options.name : "";
+    let description =
+      options.description && typeof options.description === "string"
+        ? options.description
+        : "";
+    let visibility =
+      options.visibility && typeof options.visibility === "string"
+        ? options.visibility
+        : "public";
     let maxParticipants = parseInt(options.maxParticipants, 10) || 100;
     let feePerMessage = parseInt(options.fee, 10) || 1000;
 
@@ -38,7 +46,8 @@ export class ChannelDataHandler {
         type: "input",
         name: "name",
         message: "Channel name:",
-        validate: (input: string) => input.length > 0 ? true : "Channel name is required",
+        validate: (input: string) =>
+          input.length > 0 ? true : "Channel name is required",
       },
       {
         type: "input",
@@ -61,14 +70,16 @@ export class ChannelDataHandler {
         name: "maxParticipants",
         message: "Maximum participants:",
         default: 100,
-        validate: (input: number) => input > 0 ? true : "Must be greater than 0",
+        validate: (input: number) =>
+          input > 0 ? true : "Must be greater than 0",
       },
       {
         type: "number",
         name: "feePerMessage",
         message: "Fee per message (lamports):",
         default: 1000,
-        validate: (input: number) => input >= 0 ? true : "Must be 0 or greater",
+        validate: (input: number) =>
+          input >= 0 ? true : "Must be 0 or greater",
       },
     ]);
   }

@@ -1,9 +1,4 @@
-import {
-  Connection,
-  PublicKey,
-  Signer,
-  Commitment,
-} from "@solana/web3.js";
+import { Connection, PublicKey, Signer, Commitment } from "@solana/web3.js";
 import anchor, { Program, AnchorProvider } from "@coral-xyz/anchor";
 import {
   PROGRAM_ID,
@@ -31,6 +26,8 @@ import { AgentService } from "./services/agent";
 import { MessageService } from "./services/message";
 import { ChannelService } from "./services/channel";
 import { EscrowService } from "./services/escrow";
+import { AnalyticsService } from "./services/analytics";
+import { DiscoveryService } from "./services/discovery";
 
 /**
  * Main PoD Protocol SDK client for interacting with the protocol
@@ -47,11 +44,13 @@ export class PodComClient {
   public messages: MessageService;
   public channels: ChannelService;
   public escrow: EscrowService;
+  public analytics: AnalyticsService;
+  public discovery: DiscoveryService;
 
   constructor(config: PodComConfig = {}) {
     this.connection = new Connection(
       config.endpoint ?? "https://api.devnet.solana.com",
-      config.commitment ?? "confirmed"
+      config.commitment ?? "confirmed",
     );
     this.programId = config.programId ?? PROGRAM_ID;
     this.commitment = config.commitment ?? "confirmed";
@@ -60,13 +59,15 @@ export class PodComClient {
     const serviceConfig: BaseServiceConfig = {
       connection: this.connection,
       programId: this.programId,
-      commitment: this.commitment
+      commitment: this.commitment,
     };
 
     this.agents = new AgentService(serviceConfig);
     this.messages = new MessageService(serviceConfig);
     this.channels = new ChannelService(serviceConfig);
     this.escrow = new EscrowService(serviceConfig);
+    this.analytics = new AnalyticsService(serviceConfig);
+    this.discovery = new DiscoveryService(serviceConfig);
   }
 
   /**
@@ -80,10 +81,12 @@ export class PodComClient {
           commitment: this.commitment,
           skipPreflight: true,
         });
-        
+
         // Validate IDL before creating program
         if (!IDL) {
-          throw new Error("IDL not found. Ensure the program IDL is properly generated and imported.");
+          throw new Error(
+            "IDL not found. Ensure the program IDL is properly generated and imported.",
+          );
         }
         
         this.program = new Program(IDL as any, provider);
@@ -92,30 +95,37 @@ export class PodComClient {
         if (!this.program) {
           throw new Error("Failed to create Anchor program instance");
         }
-        
+
         // Set program for all services
         this.agents.setProgram(this.program);
         this.messages.setProgram(this.program);
         this.channels.setProgram(this.program);
         this.escrow.setProgram(this.program);
+        this.analytics.setProgram(this.program);
+        this.discovery.setProgram(this.program);
       } else {
         // No wallet provided - validate IDL before setting on services
         if (!IDL) {
-          throw new Error("IDL not found. Ensure the program IDL is properly generated and imported.");
+          throw new Error(
+            "IDL not found. Ensure the program IDL is properly generated and imported.",
+          );
         }
-        
+
         // Set IDL for all services
         this.agents.setIDL(IDL);
         this.messages.setIDL(IDL);
         this.channels.setIDL(IDL);
         this.escrow.setIDL(IDL);
+        this.analytics.setIDL(IDL);
+        this.discovery.setIDL(IDL);
       }
-      
+
       // Validate initialization was successful
       if (!this.isInitialized()) {
-        throw new Error("Client initialization failed - services not properly configured");
+        throw new Error(
+          "Client initialization failed - services not properly configured",
+        );
       }
-      
     } catch (error: any) {
       throw new Error(`Client initialization failed: ${error.message}`);
     }
@@ -129,14 +139,20 @@ export class PodComClient {
   /**
    * @deprecated Use client.agents.registerAgent() instead
    */
-  async registerAgent(wallet: Signer, options: CreateAgentOptions): Promise<string> {
+  async registerAgent(
+    wallet: Signer,
+    options: CreateAgentOptions,
+  ): Promise<string> {
     return this.agents.registerAgent(wallet, options);
   }
 
   /**
    * @deprecated Use client.agents.updateAgent() instead
    */
-  async updateAgent(wallet: Signer, options: UpdateAgentOptions): Promise<string> {
+  async updateAgent(
+    wallet: Signer,
+    options: UpdateAgentOptions,
+  ): Promise<string> {
     return this.agents.updateAgent(wallet, options);
   }
 
@@ -157,7 +173,10 @@ export class PodComClient {
   /**
    * @deprecated Use client.messages.sendMessage() instead
    */
-  async sendMessage(wallet: Signer, options: SendMessageOptions): Promise<string> {
+  async sendMessage(
+    wallet: Signer,
+    options: SendMessageOptions,
+  ): Promise<string> {
     return this.messages.sendMessage(wallet, options);
   }
 
@@ -167,7 +186,7 @@ export class PodComClient {
   async updateMessageStatus(
     wallet: Signer,
     messagePDA: PublicKey,
-    newStatus: MessageStatus
+    newStatus: MessageStatus,
   ): Promise<string> {
     return this.messages.updateMessageStatus(wallet, messagePDA, newStatus);
   }
@@ -185,7 +204,7 @@ export class PodComClient {
   async getAgentMessages(
     agentPublicKey: PublicKey,
     limit: number = 50,
-    statusFilter?: MessageStatus
+    statusFilter?: MessageStatus,
   ): Promise<MessageAccount[]> {
     return this.messages.getAgentMessages(agentPublicKey, limit, statusFilter);
   }
@@ -193,7 +212,10 @@ export class PodComClient {
   /**
    * @deprecated Use client.channels.createChannel() instead
    */
-  async createChannel(wallet: Signer, options: CreateChannelOptions): Promise<string> {
+  async createChannel(
+    wallet: Signer,
+    options: CreateChannelOptions,
+  ): Promise<string> {
     return this.channels.createChannel(wallet, options);
   }
 
@@ -209,7 +231,7 @@ export class PodComClient {
    */
   async getAllChannels(
     limit: number = 50,
-    visibilityFilter?: ChannelVisibility
+    visibilityFilter?: ChannelVisibility,
   ): Promise<ChannelAccount[]> {
     return this.channels.getAllChannels(limit, visibilityFilter);
   }
@@ -219,7 +241,7 @@ export class PodComClient {
    */
   async getChannelsByCreator(
     creator: PublicKey,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<ChannelAccount[]> {
     return this.channels.getChannelsByCreator(creator, limit);
   }
@@ -246,13 +268,13 @@ export class PodComClient {
     channelPDA: PublicKey,
     content: string,
     messageType: string = "Text",
-    replyTo?: PublicKey
+    replyTo?: PublicKey,
   ): Promise<string> {
     return this.channels.broadcastMessage(wallet, {
       channelPDA,
       content,
       messageType,
-      replyTo
+      replyTo,
     });
   }
 
@@ -262,7 +284,7 @@ export class PodComClient {
   async inviteToChannel(
     wallet: Signer,
     channelPDA: PublicKey,
-    invitee: PublicKey
+    invitee: PublicKey,
   ): Promise<string> {
     return this.channels.inviteToChannel(wallet, channelPDA, invitee);
   }
@@ -290,14 +312,20 @@ export class PodComClient {
   /**
    * @deprecated Use client.escrow.depositEscrow() instead
    */
-  async depositEscrow(wallet: Signer, options: DepositEscrowOptions): Promise<string> {
+  async depositEscrow(
+    wallet: Signer,
+    options: DepositEscrowOptions,
+  ): Promise<string> {
     return this.escrow.depositEscrow(wallet, options);
   }
 
   /**
    * @deprecated Use client.escrow.withdrawEscrow() instead
    */
-  async withdrawEscrow(wallet: Signer, options: WithdrawEscrowOptions): Promise<string> {
+  async withdrawEscrow(
+    wallet: Signer,
+    options: WithdrawEscrowOptions,
+  ): Promise<string> {
     return this.escrow.withdrawEscrow(wallet, options);
   }
 
@@ -306,7 +334,7 @@ export class PodComClient {
    */
   async getEscrow(
     channel: PublicKey,
-    depositor: PublicKey
+    depositor: PublicKey,
   ): Promise<EscrowAccount | null> {
     return this.escrow.getEscrow(channel, depositor);
   }
@@ -316,7 +344,7 @@ export class PodComClient {
    */
   async getEscrowsByDepositor(
     depositor: PublicKey,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<EscrowAccount[]> {
     return this.escrow.getEscrowsByDepositor(depositor, limit);
   }
@@ -354,8 +382,15 @@ export class PodComClient {
     if (this.program) {
       return true;
     }
-    
+
     // For read-only initialization, check if services have IDL set
-    return this.agents.hasIDL() && this.messages.hasIDL() && this.channels.hasIDL() && this.escrow.hasIDL();
+    return (
+      this.agents.hasIDL() &&
+      this.messages.hasIDL() &&
+      this.channels.hasIDL() &&
+      this.escrow.hasIDL() &&
+      this.analytics.hasIDL() &&
+      this.discovery.hasIDL()
+    );
   }
 }

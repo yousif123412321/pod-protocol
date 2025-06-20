@@ -1,28 +1,36 @@
-import { PublicKey, Signer, GetProgramAccountsFilter, SystemProgram } from "@solana/web3.js";
+import {
+  PublicKey,
+  Signer,
+  GetProgramAccountsFilter,
+  SystemProgram,
+} from "@solana/web3.js";
 import anchor from "@coral-xyz/anchor";
 import { BaseService } from "./base";
-import { 
-  MessageAccount, 
-  SendMessageOptions, 
-  MessageType, 
-  MessageStatus 
+import {
+  MessageAccount,
+  SendMessageOptions,
+  MessageType,
+  MessageStatus,
 } from "../types";
-import { 
+import {
   findAgentPDA,
-  findMessagePDA, 
-  hashPayload, 
+  findMessagePDA,
+  hashPayload,
   retry,
   convertMessageTypeToProgram,
   convertMessageTypeFromProgram,
   getAccountTimestamp,
-  getAccountCreatedAt
+  getAccountCreatedAt,
 } from "../utils";
 
 /**
  * Message-related operations service
  */
 export class MessageService extends BaseService {
-  async sendMessage(wallet: Signer, options: SendMessageOptions): Promise<string> {
+  async sendMessage(
+    wallet: Signer,
+    options: SendMessageOptions,
+  ): Promise<string> {
     const program = this.ensureInitialized();
 
     // Derive sender agent PDA
@@ -32,7 +40,10 @@ export class MessageService extends BaseService {
     const payloadHash = await hashPayload(options.payload);
 
     // Convert message type
-    const messageTypeObj = this.convertMessageType(options.messageType, options.customValue);
+    const messageTypeObj = this.convertMessageType(
+      options.messageType,
+      options.customValue,
+    );
 
     // Find message PDA
     const [messagePDA] = findMessagePDA(
@@ -40,7 +51,7 @@ export class MessageService extends BaseService {
       options.recipient,
       payloadHash,
       messageTypeObj,
-      this.programId
+      this.programId,
     );
 
     return retry(async () => {
@@ -66,7 +77,7 @@ export class MessageService extends BaseService {
   async updateMessageStatus(
     wallet: Signer,
     messagePDA: PublicKey,
-    newStatus: MessageStatus
+    newStatus: MessageStatus,
   ): Promise<string> {
     return retry(async () => {
       const methods = this.getProgramMethods();
@@ -98,7 +109,7 @@ export class MessageService extends BaseService {
   async getAgentMessages(
     agentPublicKey: PublicKey,
     limit: number = 50,
-    statusFilter?: MessageStatus
+    statusFilter?: MessageStatus,
   ): Promise<MessageAccount[]> {
     try {
       const filters: GetProgramAccountsFilter[] = [
@@ -120,20 +131,21 @@ export class MessageService extends BaseService {
         });
       }
 
-      const accounts = await this.connection.getProgramAccounts(this.programId, {
-        filters,
-        commitment: this.commitment,
-      });
+      const accounts = await this.connection.getProgramAccounts(
+        this.programId,
+        {
+          filters,
+          commitment: this.commitment,
+        },
+      );
 
-      return accounts
-        .slice(0, limit)
-        .map((acc) => {
-          const account = this.ensureInitialized().coder.accounts.decode(
-            "messageAccount",
-            acc.account.data
-          );
-          return this.convertMessageAccountFromProgram(account, acc.pubkey);
-        });
+      return accounts.slice(0, limit).map((acc) => {
+        const account = this.ensureInitialized().coder.accounts.decode(
+          "messageAccount",
+          acc.account.data,
+        );
+        return this.convertMessageAccountFromProgram(account, acc.pubkey);
+      });
     } catch (error: any) {
       throw new Error(`Failed to fetch agent messages: ${error.message}`);
     }
@@ -143,7 +155,10 @@ export class MessageService extends BaseService {
   // Helper Methods
   // ============================================================================
 
-  private convertMessageType(messageType: MessageType, customValue?: number): any {
+  private convertMessageType(
+    messageType: MessageType,
+    customValue?: number,
+  ): any {
     return convertMessageTypeToProgram(messageType, customValue);
   }
 
@@ -177,7 +192,7 @@ export class MessageService extends BaseService {
 
   private convertMessageAccountFromProgram(
     account: any,
-    publicKey: PublicKey
+    publicKey: PublicKey,
   ): MessageAccount {
     return {
       pubkey: publicKey,

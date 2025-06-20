@@ -16,7 +16,7 @@ export class ValidationError extends Error {
  */
 export function validatePublicKey(
   address: string,
-  fieldName: string = "address"
+  fieldName: string = "address",
 ): PublicKey {
   try {
     return new PublicKey(address);
@@ -30,7 +30,7 @@ export function validatePublicKey(
  */
 export function validateSolAmount(
   amount: string | number,
-  fieldName: string = "amount"
+  fieldName: string = "amount",
 ): number {
   const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
 
@@ -77,6 +77,11 @@ export function validateCapabilities(capabilities: string | number): number {
  * Validate URI format
  */
 export function validateUri(uri: string, fieldName: string = "URI"): string {
+  // Ensure uri is a string
+  if (typeof uri !== "string") {
+    throw new ValidationError(`${fieldName} must be a string`);
+  }
+
   if (!uri.trim()) {
     throw new ValidationError(`${fieldName} cannot be empty`);
   }
@@ -97,6 +102,11 @@ export function validateUri(uri: string, fieldName: string = "URI"): string {
  * Validate channel name
  */
 export function validateChannelName(name: string): string {
+  // Ensure name is a string
+  if (typeof name !== "string") {
+    throw new ValidationError("Channel name must be a string");
+  }
+
   if (!name.trim()) {
     throw new ValidationError("Channel name cannot be empty");
   }
@@ -107,7 +117,7 @@ export function validateChannelName(name: string): string {
 
   if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
     throw new ValidationError(
-      "Channel name can only contain letters, numbers, underscores, and hyphens"
+      "Channel name can only contain letters, numbers, underscores, and hyphens",
     );
   }
 
@@ -118,6 +128,11 @@ export function validateChannelName(name: string): string {
  * Validate message content
  */
 export function validateMessage(content: string): string {
+  // Ensure content is a string
+  if (typeof content !== "string") {
+    throw new ValidationError("Message content must be a string");
+  }
+
   if (!content.trim()) {
     throw new ValidationError("Message content cannot be empty");
   }
@@ -137,7 +152,7 @@ export function validateNetwork(network: string): string {
 
   if (!validNetworks.includes(network)) {
     throw new ValidationError(
-      `Invalid network: ${network}. Must be one of: ${validNetworks.join(", ")}`
+      `Invalid network: ${network}. Must be one of: ${validNetworks.join(", ")}`,
     );
   }
 
@@ -149,8 +164,13 @@ export function validateNetwork(network: string): string {
  */
 export function validateFilePath(
   filePath: string,
-  fieldName: string = "file"
+  fieldName: string = "file",
 ): string {
+  // Ensure filePath is a string
+  if (typeof filePath !== "string") {
+    throw new ValidationError(`${fieldName} path must be a string`);
+  }
+
   if (!filePath.trim()) {
     throw new ValidationError(`${fieldName} path cannot be empty`);
   }
@@ -159,8 +179,8 @@ export function validateFilePath(
   if (filePath.includes("..") && !filePath.startsWith("~/")) {
     console.warn(
       chalk.yellow(
-        `Warning: ${fieldName} path contains '..' - ensure this is intentional`
-      )
+        `Warning: ${fieldName} path contains '..' - ensure this is intentional`,
+      ),
     );
   }
 
@@ -172,7 +192,7 @@ export function validateFilePath(
  */
 export function validatePositiveInteger(
   value: string | number,
-  fieldName: string = "value"
+  fieldName: string = "value",
 ): number {
   const num = typeof value === "string" ? parseInt(value, 10) : value;
 
@@ -193,13 +213,13 @@ export function validatePositiveInteger(
 export function validateEnum<T extends string>(
   value: string,
   validValues: readonly T[],
-  fieldName: string = "value"
+  fieldName: string = "value",
 ): T {
   if (!validValues.includes(value as T)) {
     throw new ValidationError(
       `Invalid ${fieldName}: ${value}. Must be one of: ${validValues.join(
-        ", "
-      )}`
+        ", ",
+      )}`,
     );
   }
 
@@ -211,7 +231,7 @@ export function validateEnum<T extends string>(
  */
 export function safeValidate<T>(
   validator: () => T,
-  onError?: (error: ValidationError) => void
+  onError?: (error: ValidationError) => void,
 ): T | null {
   try {
     return validator();

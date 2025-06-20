@@ -11,7 +11,7 @@ export enum ErrorCode {
   SDK_ERROR = 4,
   FILE_ERROR = 5,
   CONFIG_ERROR = 6,
-  UNKNOWN_ERROR = 99
+  UNKNOWN_ERROR = 99,
 }
 
 /**
@@ -21,7 +21,7 @@ export class CliError extends Error {
   constructor(
     message: string,
     public code: ErrorCode = ErrorCode.UNKNOWN_ERROR,
-    public cause?: Error
+    public cause?: Error,
   ) {
     super(message);
     this.name = "CliError";
@@ -35,11 +35,7 @@ export class ErrorHandler {
   /**
    * Handle errors with spinner and user-friendly messages
    */
-  static handleError(
-    error: Error,
-    spinner?: Ora,
-    context?: string
-  ): never {
+  static handleError(error: Error, spinner?: Ora, context?: string): never {
     const errorMessage = this.getErrorMessage(error, context);
     const suggestions = this.getErrorSuggestions(error);
 
@@ -51,12 +47,13 @@ export class ErrorHandler {
 
     if (suggestions.length > 0) {
       console.log(chalk.yellow("\nSuggestions:"));
-      suggestions.forEach(suggestion => {
+      suggestions.forEach((suggestion) => {
         console.log(chalk.yellow(`• ${suggestion}`));
       });
     }
 
-    const exitCode = error instanceof CliError ? error.code : ErrorCode.UNKNOWN_ERROR;
+    const exitCode =
+      error instanceof CliError ? error.code : ErrorCode.UNKNOWN_ERROR;
     process.exit(exitCode);
   }
 
@@ -65,19 +62,19 @@ export class ErrorHandler {
    */
   private static getErrorMessage(error: Error, context?: string): string {
     const baseMessage = context ? `Failed to ${context}` : "Operation failed";
-    
+
     if (error.message.includes("Non-base58 character")) {
       return "Invalid address format - must be a valid Solana public key";
     }
-    
+
     if (error.message.includes("Network request failed")) {
       return "Network connection failed - check your internet connection";
     }
-    
+
     if (error.message.includes("Insufficient funds")) {
       return "Insufficient SOL balance - add funds to your wallet";
     }
-    
+
     if (error.message.includes("not yet implemented")) {
       return "This feature is not yet implemented";
     }
@@ -98,7 +95,9 @@ export class ErrorHandler {
 
     if (error.message.includes("Network")) {
       suggestions.push("Check your internet connection");
-      suggestions.push("Try switching networks with 'pod config set-network <network>'");
+      suggestions.push(
+        "Try switching networks with 'pod config set-network <network>'",
+      );
     }
 
     if (error.message.includes("Insufficient funds")) {
@@ -107,7 +106,9 @@ export class ErrorHandler {
     }
 
     if (error.message.includes("Keypair")) {
-      suggestions.push("Generate a new keypair with 'pod config generate-keypair'");
+      suggestions.push(
+        "Generate a new keypair with 'pod config generate-keypair'",
+      );
       suggestions.push("Check your keypair path with 'pod config show'");
     }
 
@@ -140,7 +141,7 @@ export class ErrorHandler {
 export async function safeExecute<T>(
   operation: () => Promise<T>,
   errorContext?: string,
-  spinner?: Ora
+  spinner?: Ora,
 ): Promise<T> {
   try {
     return await operation();

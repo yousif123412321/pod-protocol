@@ -3,7 +3,7 @@ import ora, { Ora } from "ora";
 import { PodComClient } from "@pod-protocol/sdk";
 import { createClient, getWallet, getKeypair } from "./client.js";
 import { Command } from "commander";
-import { ErrorHandler, safeExecute } from "./error-handler.js";
+import { safeExecute } from "./error-handler.js";
 
 export interface GlobalOptions {
   network?: string;
@@ -29,14 +29,19 @@ export function createCommandHandler<T extends any[]>(
     wallet: any,
     globalOpts: GlobalOptions,
     ...args: T
-  ) => Promise<void>
+  ) => Promise<void>,
 ) {
-  return async (globalOpts: GlobalOptions, ...args: T) => {
+  return async (...args: any[]) => {
     try {
+      // Commander.js passes the command object as the last argument
+      const cmd = args[args.length - 1];
+      const globalOpts = getCommandOpts(cmd);
+      const commandArgs = args.slice(0, -1) as T;
+
       const wallet = getWallet(globalOpts.keypair);
-      const keypair = getKeypair(globalOpts.keypair); 
+      const keypair = getKeypair(globalOpts.keypair);
       const client = await createClient(globalOpts.network, wallet);
-      await handler(client, keypair, globalOpts, ...args);
+      await handler(client, keypair, globalOpts, ...commandArgs);
     } catch (error: any) {
       handleCommandError(error, action);
     }
@@ -50,7 +55,7 @@ export function handleDryRun(
   globalOpts: GlobalOptions,
   spinner: Ora,
   action: string,
-  details?: Record<string, any>
+  details?: Record<string, any>,
 ): boolean {
   if (globalOpts.dryRun) {
     spinner.succeed(`Dry run: ${action} prepared`);
@@ -77,7 +82,7 @@ export function createSpinner(message: string): Ora {
 export function showSuccess(
   spinner: Ora,
   message: string,
-  details?: Record<string, any>
+  details?: Record<string, any>,
 ): void {
   spinner.succeed(message);
   if (details) {
@@ -102,7 +107,7 @@ export const getTableConfig = (title: string) => ({
  */
 export function formatValue(
   value: any,
-  type: "address" | "number" | "text" | "boolean" = "text"
+  type: "address" | "number" | "text" | "boolean" = "text",
 ): string {
   if (value === null || value === undefined) {
     return chalk.gray("N/A");
@@ -136,7 +141,7 @@ export function validatePublicKey(address: string, fieldName: string): void {
  */
 export function getCommandOpts(cmd: Command): GlobalOptions {
   // Try optsWithGlobals first (v8+)
-  if (typeof (cmd as any).optsWithGlobals === 'function') {
+  if (typeof (cmd as any).optsWithGlobals === "function") {
     return (cmd as any).optsWithGlobals();
   }
   // Fallback to parent opts (older versions)
@@ -148,12 +153,17 @@ export function getCommandOpts(cmd: Command): GlobalOptions {
  */
 export function createSafeCommandHandler(
   description: string,
-  handler: (client: PodComClient, wallet: any, globalOpts: GlobalOptions, ...args: any[]) => Promise<void>
+  handler: (
+    client: PodComClient,
+    wallet: any,
+    globalOpts: GlobalOptions,
+    ...args: any[]
+  ) => Promise<void>,
 ) {
   return async (...args: any[]) => {
     const cmd = args[args.length - 1];
     const globalOpts = getCommandOpts(cmd);
-    
+
     await safeExecute(async () => {
       const client = await createClient(globalOpts.network);
       const wallet = getWallet(globalOpts.keypair);

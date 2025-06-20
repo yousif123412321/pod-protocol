@@ -10,7 +10,10 @@ export class ChannelDisplayer {
       ["Description", channelData.description],
       ["Visibility", channelData.visibility],
       ["Creator", channelData.creator.toBase58()],
-      ["Participants", `${channelData.currentParticipants}/${channelData.maxParticipants}`],
+      [
+        "Participants",
+        `${channelData.currentParticipants}/${channelData.maxParticipants}`,
+      ],
       ["Fee per Message", `${channelData.feePerMessage} lamports`],
       ["Escrow Balance", `${channelData.escrowBalance} lamports`],
       ["Created At", new Date(channelData.createdAt * 1000).toLocaleString()],
@@ -24,7 +27,7 @@ export class ChannelDisplayer {
             alignment: "center",
             content: chalk.blue.bold("Channel Information"),
           },
-        })
+        }),
     );
   }
 

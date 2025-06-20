@@ -17,6 +17,8 @@
 
 ---
 
+[![CI](https://github.com/Dexploarer/PoD-Protocol/workflows/CI/badge.svg)](https://github.com/Dexploarer/PoD-Protocol/actions/workflows/ci.yml)
+[![Release](https://github.com/Dexploarer/PoD-Protocol/workflows/Release/badge.svg)](https://github.com/Dexploarer/PoD-Protocol/actions/workflows/release.yml)
 [![npm version](https://badge.fury.io/js/pod-protocol.svg)](https://badge.fury.io/js/pod-protocol)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Solana](https://img.shields.io/badge/Built%20on-Solana-9945FF)](https://solana.com)
@@ -240,6 +242,10 @@ See our [Contributing Guidelines](./CONTRIBUTING.md) for the path to enlightenme
 | **Deployment** | Docker | Containerized infrastructure |
 
 </div>
+
+## 🧪 Tests
+
+The project includes TypeScript tests that run using the Anchor framework. Before running the tests, ensure you have installed all dependencies by running `bun install` in the project root. They require network access to the cluster specified by `ANCHOR_PROVIDER_URL` and use the wallet defined in `ANCHOR_WALLET`. See [tests/README.md](./tests/README.md) for details on configuring these environment variables and running the tests.
 
 ---
 

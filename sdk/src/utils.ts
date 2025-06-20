@@ -9,11 +9,11 @@ export { MessageType } from "./types";
  */
 export function findAgentPDA(
   wallet: PublicKey,
-  programId: PublicKey = PROGRAM_ID
+  programId: PublicKey = PROGRAM_ID,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("agent"), wallet.toBuffer()],
-    programId
+    programId,
   );
 }
 
@@ -25,7 +25,7 @@ export function findMessagePDA(
   recipient: PublicKey,
   payloadHash: Uint8Array,
   messageType: MessageType | any,
-  programId: PublicKey = PROGRAM_ID
+  programId: PublicKey = PROGRAM_ID,
 ): [PublicKey, number] {
   let messageTypeId: number;
 
@@ -38,14 +38,14 @@ export function findMessagePDA(
       messageType.text !== undefined
         ? 0
         : messageType.data !== undefined
-        ? 1
-        : messageType.command !== undefined
-        ? 2
-        : messageType.response !== undefined
-        ? 3
-        : typeof messageType.custom === "number"
-        ? 4 + messageType.custom
-        : 0;
+          ? 1
+          : messageType.command !== undefined
+            ? 2
+            : messageType.response !== undefined
+              ? 3
+              : typeof messageType.custom === "number"
+                ? 4 + messageType.custom
+                : 0;
   }
 
   return PublicKey.findProgramAddressSync(
@@ -56,7 +56,7 @@ export function findMessagePDA(
       Buffer.from(payloadHash),
       Buffer.from([messageTypeId]),
     ],
-    programId
+    programId,
   );
 }
 
@@ -66,11 +66,11 @@ export function findMessagePDA(
 export function findChannelPDA(
   creator: PublicKey,
   name: string,
-  programId: PublicKey = PROGRAM_ID
+  programId: PublicKey = PROGRAM_ID,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("channel"), creator.toBuffer(), Buffer.from(name)],
-    programId
+    programId,
   );
 }
 
@@ -80,11 +80,11 @@ export function findChannelPDA(
 export function findEscrowPDA(
   channel: PublicKey,
   depositor: PublicKey,
-  programId: PublicKey = PROGRAM_ID
+  programId: PublicKey = PROGRAM_ID,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("escrow"), channel.toBuffer(), depositor.toBuffer()],
-    programId
+    programId,
   );
 }
 
@@ -93,7 +93,7 @@ export function findEscrowPDA(
  */
 export function getMessageTypeId(
   messageType: MessageType,
-  customValue?: number
+  customValue?: number,
 ): number {
   switch (messageType) {
     case MessageType.Text:
@@ -132,7 +132,7 @@ export function getMessageTypeFromId(id: number): {
  */
 export function convertMessageTypeToProgram(
   messageType: MessageType,
-  customValue?: number
+  customValue?: number,
 ): any {
   switch (messageType) {
     case MessageType.Text:
@@ -182,13 +182,17 @@ export function getMessageTypeIdFromObject(msg: any): number {
  * Create a SHA-256 hash of message payload
  */
 export async function hashPayload(
-  payload: string | Uint8Array
+  payload: string | Uint8Array,
 ): Promise<Uint8Array> {
   const encoder = new TextEncoder();
   const data = typeof payload === "string" ? encoder.encode(payload) : payload;
 
   // Use Web Crypto API for hashing
-  if (typeof globalThis !== "undefined" && globalThis.crypto && globalThis.crypto.subtle) {
+  if (
+    typeof globalThis !== "undefined" &&
+    globalThis.crypto &&
+    globalThis.crypto.subtle
+  ) {
     const hashBuffer = await globalThis.crypto.subtle.digest("SHA-256", data);
     return new Uint8Array(hashBuffer);
   }
@@ -203,7 +207,7 @@ export async function hashPayload(
     } catch (e) {
       // Fall back to a simple hashing algorithm if crypto is not available
       console.warn(
-        "Using fallback hash function. Consider using a proper crypto library."
+        "Using fallback hash function. Consider using a proper crypto library.",
       );
       return simpleHash(data);
     }
@@ -228,9 +232,9 @@ function simpleHash(data: Uint8Array): Uint8Array {
 
   // Fill the hash array with computed values
   for (let i = 0; i < 32; i++) {
-    hash[i] = ((a + b + i) % 256);
+    hash[i] = (a + b + i) % 256;
   }
-  
+
   return hash;
 }
 
@@ -238,28 +242,28 @@ function simpleHash(data: Uint8Array): Uint8Array {
  * Retry a function with exponential backoff
  */
 export async function retry<T>(
-  fn: () => Promise<T>, 
-  maxAttempts: number = 3, 
-  baseDelay: number = 1000
+  fn: () => Promise<T>,
+  maxAttempts: number = 3,
+  baseDelay: number = 1000,
 ): Promise<T> {
   let lastError: Error;
-  
+
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await fn();
     } catch (error) {
       lastError = error as Error;
-      
+
       if (attempt === maxAttempts) {
         throw lastError;
       }
-      
+
       // Exponential backoff with jitter
       const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000;
       await sleep(delay);
     }
   }
-  
+
   throw lastError!;
 }
 
@@ -268,7 +272,7 @@ export async function retry<T>(
  */
 export function hasCapability(
   capabilities: number,
-  capability: number
+  capability: number,
 ): boolean {
   return (capabilities & capability) === capability;
 }
@@ -278,7 +282,7 @@ export function hasCapability(
  */
 export function addCapability(
   capabilities: number,
-  capability: number
+  capability: number,
 ): number {
   return capabilities | capability;
 }
@@ -288,7 +292,7 @@ export function addCapability(
  */
 export function removeCapability(
   capabilities: number,
-  capability: number
+  capability: number,
 ): number {
   return capabilities & ~capability;
 }
@@ -300,7 +304,7 @@ export function getCapabilityNames(capabilities: number): string[] {
   const names: string[] = [];
   const capabilityMap = {
     1: "TRADING",
-    2: "ANALYSIS", 
+    2: "ANALYSIS",
     4: "DATA_PROCESSING",
     8: "CONTENT_GENERATION",
     16: "CUSTOM_1",
@@ -347,14 +351,11 @@ export function isValidPublicKey(address: string): boolean {
 /**
  * Convert timestamp to number, handling BN and other formats
  */
-export function convertTimestamp(
-  timestamp: any,
-  fallback?: any
-): number {
-  if (timestamp && typeof timestamp.toNumber === 'function') {
+export function convertTimestamp(timestamp: any, fallback?: any): number {
+  if (timestamp && typeof timestamp.toNumber === "function") {
     return timestamp.toNumber();
   }
-  if (fallback && typeof fallback.toNumber === 'function') {
+  if (fallback && typeof fallback.toNumber === "function") {
     return fallback.toNumber();
   }
   return timestamp || fallback || Date.now();
@@ -386,4 +387,178 @@ export function getAccountLastUpdated(account: any): number {
  */
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Format a public key for display (show first 4 and last 4 characters)
+ */
+export function formatPublicKey(
+  pubkey: PublicKey | string,
+  length: number = 8,
+): string {
+  const key = typeof pubkey === "string" ? pubkey : pubkey.toBase58();
+  if (key.length <= length + 3) return key;
+
+  const start = Math.floor(length / 2);
+  const end = length - start;
+  return `${key.slice(0, start)}...${key.slice(-end)}`;
+}
+
+/**
+ * Validate and parse a message type string
+ */
+export function parseMessageType(typeStr: string): MessageType {
+  const normalized = typeStr.toLowerCase();
+  switch (normalized) {
+    case "text":
+      return MessageType.Text;
+    case "data":
+      return MessageType.Data;
+    case "command":
+      return MessageType.Command;
+    case "response":
+      return MessageType.Response;
+    case "custom":
+      return MessageType.Custom;
+    default:
+      throw new Error(`Invalid message type: ${typeStr}`);
+  }
+}
+
+/**
+ * Generate a unique message ID for tracking
+ */
+export function generateMessageId(): string {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+/**
+ * Calculate the estimated fee for a transaction
+ */
+export function estimateTransactionFee(
+  messageLength: number,
+  baseFee: number = 5000,
+): number {
+  // Base fee + per-byte fee
+  const perByteFee = 10;
+  return baseFee + messageLength * perByteFee;
+}
+
+/**
+ * Convert duration to human readable format
+ */
+export function formatDuration(ms: number): string {
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) return `${days}d ${hours % 24}h`;
+  if (hours > 0) return `${hours}h ${minutes % 60}m`;
+  if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+  return `${seconds}s`;
+}
+
+/**
+ * Convert bytes to human readable format
+ */
+export function formatBytes(bytes: number): string {
+  const sizes = ["B", "KB", "MB", "GB"];
+  if (bytes === 0) return "0 B";
+
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  const size = bytes / Math.pow(1024, i);
+
+  return `${size.toFixed(1)} ${sizes[i]}`;
+}
+
+/**
+ * Validate capability combination
+ */
+export function validateCapabilities(capabilities: number): boolean {
+  // Must be non-negative and within valid range (0-255 for 8 bits)
+  return capabilities >= 0 && capabilities <= 255;
+}
+
+/**
+ * Get channel visibility string
+ */
+export function getVisibilityString(visibility: any): string {
+  if (typeof visibility === "object") {
+    if (visibility.public !== undefined) return "Public";
+    if (visibility.private !== undefined) return "Private";
+  }
+  return typeof visibility === "string" ? visibility : "Public";
+}
+
+/**
+ * Calculate PDA for a channel participant
+ */
+export function findParticipantPDA(
+  channel: PublicKey,
+  agent: PublicKey,
+  programId: PublicKey = PROGRAM_ID,
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("participant"), channel.toBuffer(), agent.toBuffer()],
+    programId,
+  );
+}
+
+/**
+ * Calculate PDA for a channel invitation
+ */
+export function findInvitationPDA(
+  channel: PublicKey,
+  invitee: PublicKey,
+  programId: PublicKey = PROGRAM_ID,
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("invitation"), channel.toBuffer(), invitee.toBuffer()],
+    programId,
+  );
+}
+
+/**
+ * Create a deterministic seed for account derivation
+ */
+export function createSeed(input: string): Buffer {
+  // Truncate or pad to 32 bytes for PDA seeds
+  const buffer = Buffer.from(input, "utf8");
+  if (buffer.length > 32) {
+    return buffer.slice(0, 32);
+  }
+  if (buffer.length < 32) {
+    const padded = Buffer.alloc(32);
+    buffer.copy(padded);
+    return padded;
+  }
+  return buffer;
+}
+
+/**
+ * Wait for transaction confirmation with retry
+ */
+export async function confirmTransaction(
+  connection: any,
+  signature: string,
+  maxRetries: number = 10,
+  delay: number = 1000,
+): Promise<boolean> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const result = await connection.getTransaction(signature);
+      if (result && result.meta && result.meta.err === null) {
+        return true;
+      }
+    } catch (error) {
+      // Transaction might not be confirmed yet
+    }
+
+    if (i < maxRetries - 1) {
+      await sleep(delay);
+    }
+  }
+
+  return false;
 }

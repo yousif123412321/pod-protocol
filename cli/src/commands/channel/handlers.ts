@@ -5,7 +5,12 @@ import { BaseChannelHandler } from "./base-handler.js";
 import { ChannelDataHandler } from "./data-handler.js";
 import { ChannelValidators } from "./validators.js";
 import { ChannelDisplayer } from "./displayer.js";
-import { BroadcastOptions, ListOptions, ParticipantsOptions, MessagesOptions } from "./types.js";
+import {
+  BroadcastOptions,
+  ListOptions,
+  ParticipantsOptions,
+  MessagesOptions,
+} from "./types.js";
 
 export class ChannelHandlers extends BaseChannelHandler {
   private displayer: ChannelDisplayer;
@@ -22,22 +27,28 @@ export class ChannelHandlers extends BaseChannelHandler {
 
       const result = await this.executeWithSpinner(
         "Creating channel...",
-        () => this.context.client.createChannel(this.context.wallet, channelData),
+        () =>
+          this.context.client.createChannel(this.context.wallet, channelData),
         {
           Name: channelData.name,
           Description: channelData.description,
           Visibility: channelData.visibility,
           "Max Participants": channelData.maxParticipants.toString(),
           "Fee per Message": `${channelData.feePerMessage} lamports`,
-        }
+        },
       );
 
       if (result) {
-        this.showSuccessWithTransaction(spinner, "Channel created successfully!", result as string, {
-          Name: channelData.name,
-          Description: channelData.description,
-          Visibility: channelData.visibility,
-        });
+        this.showSuccessWithTransaction(
+          spinner,
+          "Channel created successfully!",
+          result as string,
+          {
+            Name: channelData.name,
+            Description: channelData.description,
+            Visibility: channelData.visibility,
+          },
+        );
       }
     } catch (error: any) {
       this.handleError("create channel", error);
@@ -48,9 +59,9 @@ export class ChannelHandlers extends BaseChannelHandler {
     try {
       const channelPubkey = new PublicKey(channelId);
       const spinner = createSpinner("Fetching channel information...");
-      
+
       const channelData = await this.context.client.getChannel(channelPubkey);
-      
+
       if (!channelData) {
         spinner.fail("Channel not found");
         return;
@@ -67,15 +78,21 @@ export class ChannelHandlers extends BaseChannelHandler {
     try {
       const spinner = createSpinner("Fetching channels...");
       const limit = parseInt(options.limit, 10) || 10;
-      
+
       let channels;
       if (options.owner) {
-        channels = await this.context.client.getChannelsByCreator(this.context.wallet.publicKey, limit);
+        channels = await this.context.client.getChannelsByCreator(
+          this.context.wallet.publicKey,
+          limit,
+        );
       } else {
         const visibilityFilter = options.visibility
           ? (options.visibility as ChannelVisibility)
           : undefined;
-        channels = await this.context.client.getAllChannels(limit, visibilityFilter);
+        channels = await this.context.client.getAllChannels(
+          limit,
+          visibilityFilter,
+        );
       }
 
       if (channels.length === 0) {
@@ -93,16 +110,21 @@ export class ChannelHandlers extends BaseChannelHandler {
   async handleJoin(channelId: string): Promise<void> {
     try {
       const channelPubkey = new PublicKey(channelId);
-      
+
       const result = await this.executeWithSpinner(
         "Joining channel...",
-        () => this.context.client.joinChannel(this.context.wallet, channelPubkey),
-        { Channel: channelId }
+        () =>
+          this.context.client.joinChannel(this.context.wallet, channelPubkey),
+        { Channel: channelId },
       );
 
       if (result) {
         const spinner = createSpinner("");
-        this.showSuccessWithTransaction(spinner, "Successfully joined channel!", result as string);
+        this.showSuccessWithTransaction(
+          spinner,
+          "Successfully joined channel!",
+          result as string,
+        );
       }
     } catch (error: any) {
       this.handleError("join channel", error);
@@ -112,28 +134,39 @@ export class ChannelHandlers extends BaseChannelHandler {
   async handleLeave(channelId: string): Promise<void> {
     try {
       const channelPubkey = new PublicKey(channelId);
-      
+
       const result = await this.executeWithSpinner(
         "Leaving channel...",
-        () => this.context.client.leaveChannel(this.context.wallet, channelPubkey),
-        { Channel: channelId }
+        () =>
+          this.context.client.leaveChannel(this.context.wallet, channelPubkey),
+        { Channel: channelId },
       );
 
       if (result) {
         const spinner = createSpinner("");
-        this.showSuccessWithTransaction(spinner, "Successfully left channel!", result as string);
+        this.showSuccessWithTransaction(
+          spinner,
+          "Successfully left channel!",
+          result as string,
+        );
       }
     } catch (error: any) {
       this.handleError("leave channel", error);
     }
   }
 
-  async handleBroadcast(channelId: string, message: string, options: BroadcastOptions): Promise<void> {
+  async handleBroadcast(
+    channelId: string,
+    message: string,
+    options: BroadcastOptions,
+  ): Promise<void> {
     try {
       ChannelValidators.validateMessage(message);
       const channelPubkey = new PublicKey(channelId);
       const messageType = ChannelValidators.parseMessageType(options.type);
-      const replyTo = options.replyTo ? new PublicKey(options.replyTo) : undefined;
+      const replyTo = options.replyTo
+        ? new PublicKey(options.replyTo)
+        : undefined;
 
       const dryRunData: Record<string, string> = {
         Channel: channelId,
@@ -146,19 +179,24 @@ export class ChannelHandlers extends BaseChannelHandler {
 
       const result = await this.executeWithSpinner(
         "Broadcasting message...",
-        () => this.context.client.broadcastMessage(
-          this.context.wallet,
-          channelPubkey,
-          message,
-          messageType,
-          replyTo
-        ),
-        dryRunData
+        () =>
+          this.context.client.broadcastMessage(
+            this.context.wallet,
+            channelPubkey,
+            message,
+            messageType,
+            replyTo,
+          ),
+        dryRunData,
       );
 
       if (result) {
         const spinner = createSpinner("");
-        this.showSuccessWithTransaction(spinner, "Message broadcast successfully!", result as string);
+        this.showSuccessWithTransaction(
+          spinner,
+          "Message broadcast successfully!",
+          result as string,
+        );
       }
     } catch (error: any) {
       this.handleError("broadcast message", error);
@@ -172,29 +210,44 @@ export class ChannelHandlers extends BaseChannelHandler {
 
       const result = await this.executeWithSpinner(
         "Sending invitation...",
-        () => this.context.client.inviteToChannel(this.context.wallet, channelPubkey, inviteePubkey),
+        () =>
+          this.context.client.inviteToChannel(
+            this.context.wallet,
+            channelPubkey,
+            inviteePubkey,
+          ),
         {
           Channel: channelId,
           Invitee: invitee,
-        }
+        },
       );
 
       if (result) {
         const spinner = createSpinner("");
-        this.showSuccessWithTransaction(spinner, "Invitation sent successfully!", result as string);
+        this.showSuccessWithTransaction(
+          spinner,
+          "Invitation sent successfully!",
+          result as string,
+        );
       }
     } catch (error: any) {
       this.handleError("send invitation", error);
     }
   }
 
-  async handleParticipants(channelId: string, options: ParticipantsOptions): Promise<void> {
+  async handleParticipants(
+    channelId: string,
+    options: ParticipantsOptions,
+  ): Promise<void> {
     try {
       const channelPubkey = new PublicKey(channelId);
       const limit = parseInt(options.limit, 10) || 20;
       const spinner = createSpinner("Fetching participants...");
 
-      const participants = await this.context.client.getChannelParticipants(channelPubkey, limit);
+      const participants = await this.context.client.getChannelParticipants(
+        channelPubkey,
+        limit,
+      );
 
       if (participants.length === 0) {
         spinner.succeed("No participants found");
@@ -208,13 +261,19 @@ export class ChannelHandlers extends BaseChannelHandler {
     }
   }
 
-  async handleMessages(channelId: string, options: MessagesOptions): Promise<void> {
+  async handleMessages(
+    channelId: string,
+    options: MessagesOptions,
+  ): Promise<void> {
     try {
       const channelPubkey = new PublicKey(channelId);
       const limit = parseInt(options.limit, 10) || 20;
       const spinner = createSpinner("Fetching messages...");
 
-      const messages = await this.context.client.getChannelMessages(channelPubkey, limit);
+      const messages = await this.context.client.getChannelMessages(
+        channelPubkey,
+        limit,
+      );
 
       if (messages.length === 0) {
         spinner.succeed("No messages found");
