@@ -8,16 +8,25 @@ const __dirname = dirname(__filename);
 const cliPath = join(__dirname, "..", "index.ts");
 const cwd = join(__dirname, "..", "..");
 
-async function runCli(args: string[]) {
+async function runCli(args: string[], timeoutMs = 10000) {
   const proc = spawn(["bun", cliPath, "--no-banner", ...args], {
     cwd,
     stdout: "pipe",
     stderr: "pipe",
   });
   try {
-    const stdout = await new Response(proc.stdout).text();
-    const stderr = await new Response(proc.stderr).text();
-    const exitCode = await proc.exited;
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => {
+        proc.kill();
+        reject(new Error(`CLI command timed out after ${timeoutMs}ms`));
+      }, timeoutMs)
+    );
+    const processPromise = Promise.all([
+      new Response(proc.stdout).text(),
+      new Response(proc.stderr).text(),
+      proc.exited
+    ]);
+    const [stdout, stderr, exitCode] = await Promise.race([processPromise, timeoutPromise]) as [string, string, number];
     return { stdout, stderr, exitCode };
   } catch (error) {
     proc.kill();
