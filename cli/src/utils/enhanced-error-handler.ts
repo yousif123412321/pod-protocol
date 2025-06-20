@@ -224,6 +224,13 @@ export class EnhancedErrorHandler {
   private debugMode: boolean = false;
   private exitOnError: boolean = true;
 
+  /**
+   * Creates an instance of EnhancedErrorHandler.
+   * @param {object} [options={}] - Configuration options for the error handler.
+   * @param {boolean} [options.verbose=false] - If true, enables verbose error output.
+   * @param {boolean} [options.debug=false] - If true, enables debug mode for more detailed error information.
+   * @param {boolean} [options.exitOnError=true] - If true, the process will exit upon encountering an error.
+   */
   constructor(options: { verbose?: boolean; debug?: boolean; exitOnError?: boolean } = {}) {
     this.verbose = options.verbose || false;
     this.debugMode = options.debug || false;
