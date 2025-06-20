@@ -42,7 +42,6 @@ async function runCli(args: string[], timeoutMs = 10000) {
       }
       throw new Error(`CLI process error: ${error}`);
     }
-    return { stdout, stderr, exitCode };
   } catch (error) {
     proc.kill();
     throw new Error(`CLI process error: ${error}`);
