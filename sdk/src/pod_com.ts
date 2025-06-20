@@ -7,10 +7,11 @@
  */
 
 // Constants to eliminate duplicate values
-const AGENT_SEED = [97, 103, 101, 110, 116] as const;
-const ESCROW_SEED = [101, 115, 99, 114, 111, 119] as const;
-const CHANNEL_SEED = [99, 104, 97, 110, 110, 101, 108] as const;
-const SYSTEM_PROGRAM_ID = "11111111111111111111111111111111" as const;
+const AGENT_SEED = [97, 103, 101, 110, 116];
+const ESCROW_SEED = [101, 115, 99, 114, 111, 119];
+const CHANNEL_SEED = [99, 104, 97, 110, 110, 101, 108];
+const SYSTEM_PROGRAM_ID = "11111111111111111111111111111111";
+
 export type PodCom = {
   address: "HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps";
   metadata: {
@@ -31,7 +32,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: typeof CHANNEL_SEED;
+                value: [99, 104, 97, 110, 110, 101, 108];
               },
               {
                 kind: "account";
@@ -51,7 +52,7 @@ export type PodCom = {
         },
         {
           name: "systemProgram";
-          address: typeof SYSTEM_PROGRAM_ID;
+          address: "11111111111111111111111111111111";
         },
       ];
       args: [
@@ -92,7 +93,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: typeof ESCROW_SEED;
+                value: [101, 115, 99, 114, 111, 119];
               },
               {
                 kind: "account";
@@ -116,7 +117,7 @@ export type PodCom = {
         },
         {
           name: "systemProgram";
-          address: typeof SYSTEM_PROGRAM_ID;
+          address: "11111111111111111111111111111111";
         },
       ];
       args: [
@@ -137,7 +138,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: typeof AGENT_SEED;
+                value: [97, 103, 101, 110, 116];
               },
               {
                 kind: "account";
@@ -153,7 +154,7 @@ export type PodCom = {
         },
         {
           name: "systemProgram";
-          address: typeof SYSTEM_PROGRAM_ID;
+          address: "11111111111111111111111111111111";
         },
       ];
       args: [
@@ -181,7 +182,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: typeof AGENT_SEED;
+                value: [97, 103, 101, 110, 116];
               },
               {
                 kind: "account";
@@ -197,7 +198,7 @@ export type PodCom = {
         },
         {
           name: "systemProgram";
-          address: typeof SYSTEM_PROGRAM_ID;
+          address: "11111111111111111111111111111111";
         },
       ];
       args: [
@@ -232,7 +233,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: typeof AGENT_SEED;
+                value: [97, 103, 101, 110, 116];
               },
               {
                 kind: "account";
@@ -276,7 +277,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: typeof AGENT_SEED;
+                value: [97, 103, 101, 110, 116];
               },
               {
                 kind: "account";
@@ -312,7 +313,7 @@ export type PodCom = {
             seeds: [
               {
                 kind: "const";
-                value: typeof ESCROW_SEED;
+                value: [101, 115, 99, 114, 111, 119];
               },
               {
                 kind: "account";
@@ -336,7 +337,7 @@ export type PodCom = {
         },
         {
           name: "systemProgram";
-          address: typeof SYSTEM_PROGRAM_ID;
+          address: "11111111111111111111111111111111";
         },
       ];
       args: [
