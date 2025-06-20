@@ -15,12 +15,6 @@ async function runCli(args: string[], timeoutMs = 10000) {
     stderr: "pipe",
   });
   try {
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => {
-        proc.kill();
-        reject(new Error(`CLI command timed out after ${timeoutMs}ms`));
-      }, timeoutMs)
-    );
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort();
