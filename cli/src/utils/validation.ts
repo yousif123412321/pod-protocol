@@ -77,6 +77,11 @@ export function validateCapabilities(capabilities: string | number): number {
  * Validate URI format
  */
 export function validateUri(uri: string, fieldName: string = "URI"): string {
+  // Ensure uri is a string
+  if (typeof uri !== 'string') {
+    throw new ValidationError(`${fieldName} must be a string`);
+  }
+
   if (!uri.trim()) {
     throw new ValidationError(`${fieldName} cannot be empty`);
   }
@@ -97,6 +102,11 @@ export function validateUri(uri: string, fieldName: string = "URI"): string {
  * Validate channel name
  */
 export function validateChannelName(name: string): string {
+  // Ensure name is a string
+  if (typeof name !== 'string') {
+    throw new ValidationError("Channel name must be a string");
+  }
+
   if (!name.trim()) {
     throw new ValidationError("Channel name cannot be empty");
   }
@@ -118,6 +128,11 @@ export function validateChannelName(name: string): string {
  * Validate message content
  */
 export function validateMessage(content: string): string {
+  // Ensure content is a string
+  if (typeof content !== 'string') {
+    throw new ValidationError("Message content must be a string");
+  }
+
   if (!content.trim()) {
     throw new ValidationError("Message content cannot be empty");
   }
@@ -151,6 +166,11 @@ export function validateFilePath(
   filePath: string,
   fieldName: string = "file",
 ): string {
+  // Ensure filePath is a string
+  if (typeof filePath !== 'string') {
+    throw new ValidationError(`${fieldName} path must be a string`);
+  }
+
   if (!filePath.trim()) {
     throw new ValidationError(`${fieldName} path cannot be empty`);
   }

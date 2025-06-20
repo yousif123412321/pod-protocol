@@ -5,9 +5,10 @@ import { ChannelValidators } from "./validators.js";
 
 export class ChannelDataHandler {
   static async prepareChannelData(options: any): Promise<ChannelData> {
-    let name = options.name || "";
-    let description = options.description || "";
-    let visibility = options.visibility || "public";
+    // Ensure all inputs are properly typed and provide defaults
+    let name = (options.name && typeof options.name === 'string') ? options.name : "";
+    let description = (options.description && typeof options.description === 'string') ? options.description : "";
+    let visibility = (options.visibility && typeof options.visibility === 'string') ? options.visibility : "public";
     let maxParticipants = parseInt(options.maxParticipants, 10) || 100;
     let feePerMessage = parseInt(options.fee, 10) || 1000;
 
