@@ -54,7 +54,8 @@ const RATE_LIMIT_MESSAGES_PER_MINUTE: u16 = 60; // Rate limit for messages
 const MIN_REPUTATION_FOR_CHANNELS: u64 = 50; // Minimum reputation to create channels
 
 // Account Space Constants (8 bytes for discriminator + actual data)
-const AGENT_ACCOUNT_SPACE: usize = 8 + 32 + 8 + (4 + MAX_METADATA_URI_LENGTH) + 8 + 8 + 1 + 7; // 268 bytes
+// 8 discriminator + 32 pubkey + 8 capabilities + 4 len + uri + 8 reputation + 8 last_updated + 1 bump + padding
+const AGENT_ACCOUNT_SPACE: usize = 8 + 32 + 8 + (4 + MAX_METADATA_URI_LENGTH) + 8 + 8 + 1 + 7; // 276 bytes
 const MESSAGE_ACCOUNT_SPACE: usize = 8 + 32 + 32 + 32 + 1 + 8 + 8 + 1 + 1 + 7; // 130 bytes
 const CHANNEL_ACCOUNT_SPACE: usize = 8
     + 32
@@ -664,29 +665,27 @@ pub mod pod_com {
         let current_time = clock.unix_timestamp;
         let time_window = 60; // 1 minute window
 
-        // Check if last message was within the current minute window
+        let participant = &mut ctx.accounts.participant_account;
         if participant.last_message_at > 0 {
             let time_since_last = current_time - participant.last_message_at;
-            let _messages_in_window = if time_since_last < time_window {
-                // Within same minute window, check message count
-                let estimated_messages =
-                    participant.messages_sent % RATE_LIMIT_MESSAGES_PER_MINUTE as u64;
-                if estimated_messages >= RATE_LIMIT_MESSAGES_PER_MINUTE as u64
-                    && time_since_last < time_window
-                {
-                    return Err(PodComError::RateLimitExceeded.into());
-                }
-                estimated_messages + 1
-            } else {
-                // New time window, reset counter
-                1
-            };
 
-            // Additional check: minimum time between messages (1 second)
+            // Minimum time between messages
             if time_since_last < 1 {
                 return Err(PodComError::RateLimitExceeded.into());
             }
+
+            if time_since_last < time_window {
+                if participant.messages_sent >= RATE_LIMIT_MESSAGES_PER_MINUTE as u64 {
+                    return Err(PodComError::RateLimitExceeded.into());
+                }
+                participant.messages_sent += 1;
+            } else {
+                participant.messages_sent = 1;
+            }
+        } else {
+            participant.messages_sent = 1;
         }
+        participant.last_message_at = current_time;
 
         // Initialize message
         message.channel = channel.key();
@@ -699,11 +698,6 @@ pub mod pod_com {
         message.edited_at = None;
         message.reply_to = reply_to;
         message.bump = ctx.bumps.message_account;
-
-        // Update participant stats
-        let participant = &mut ctx.accounts.participant_account;
-        participant.messages_sent += 1;
-        participant.last_message_at = clock.unix_timestamp;
 
         msg!("Message broadcast to channel {:?}", channel.name);
         Ok(())
