@@ -21,12 +21,27 @@ async function runCli(args: string[], timeoutMs = 10000) {
         reject(new Error(`CLI command timed out after ${timeoutMs}ms`));
       }, timeoutMs)
     );
-    const processPromise = Promise.all([
-      new Response(proc.stdout).text(),
-      new Response(proc.stderr).text(),
-      proc.exited
-    ]);
-    const [stdout, stderr, exitCode] = await Promise.race([processPromise, timeoutPromise]) as [string, string, number];
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+      proc.kill();
+      throw new Error(`CLI command timed out after ${timeoutMs}ms`);
+    }, timeoutMs);
+
+    try {
+      const [stdout, stderr, exitCode] = await Promise.all([
+        new Response(proc.stdout, { signal: controller.signal }).text(),
+        new Response(proc.stderr, { signal: controller.signal }).text(),
+        proc.exited
+      ]);
+      clearTimeout(timeoutId);
+      return { stdout, stderr, exitCode };
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        proc.kill();
+      }
+      throw new Error(`CLI process error: ${error}`);
+    }
     return { stdout, stderr, exitCode };
   } catch (error) {
     proc.kill();
