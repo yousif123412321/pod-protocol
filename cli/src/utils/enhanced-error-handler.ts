@@ -222,25 +222,21 @@ export const ERROR_TEMPLATES: Record<ErrorCode, Omit<ErrorDetails, 'code'>> = {
 export class EnhancedErrorHandler {
   private verbose: boolean = false;
   private debugMode: boolean = false;
-
-  constructor(options: { verbose?: boolean; debug?: boolean } = {}) {
-    this.verbose = options.verbose || false;
-    this.debugMode = options.debug || false;
-  }
-
-  /**
-   * Handle and display a PodError with full formatting
-   */
-export class EnhancedErrorHandler {
-  private verbose: boolean = false;
-  private debugMode: boolean = false;
   private exitOnError: boolean = true;
 
+  /**
+   * Creates an instance of EnhancedErrorHandler.
+   * @param {object} [options={}] - Configuration options for the error handler.
+   * @param {boolean} [options.verbose=false] - If true, enables verbose error output.
+   * @param {boolean} [options.debug=false] - If true, enables debug mode for more detailed error information.
+   * @param {boolean} [options.exitOnError=true] - If true, the process will exit upon encountering an error.
+   */
   constructor(options: { verbose?: boolean; debug?: boolean; exitOnError?: boolean } = {}) {
     this.verbose = options.verbose || false;
     this.debugMode = options.debug || false;
     this.exitOnError = options.exitOnError ?? true;
   }
+
 
   public handleError(error: PodError | Error): void {
     if (error instanceof PodError) {
@@ -253,7 +249,6 @@ export class EnhancedErrorHandler {
       process.exit(1);
     }
   }
-}
 
   /**
    * Display a formatted PodError
