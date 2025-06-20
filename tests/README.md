@@ -1,6 +1,6 @@
 # 🧪 PoD Protocol Tests
 
-These tests use the Anchor framework and run against a live Solana cluster.
+These tests use the Anchor framework and run against a live Solana cluster. Before running the tests, ensure you have installed all dependencies by running `bun install` in the project root.
 Before running them you need to configure a few environment variables so the
 provider can connect to the network:
 
