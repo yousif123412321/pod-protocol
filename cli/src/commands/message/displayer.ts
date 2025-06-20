@@ -50,11 +50,11 @@ export class MessageDisplayer {
   }
 
   public displayMessagesList(messages: MessageData[]): void {
-      const data = messages.map((msg) => [
-        formatValue(this.truncateString(msg.pubkey.toBase58(), 20), "address"),
-        formatValue(this.truncateString(msg.sender.toBase58(), 20), "address"),
-        formatValue(this.truncateString(msg.recipient.toBase58(), 20), "address"),
-        msg.messageType,
+    const data = messages.map((msg) => [
+      formatValue(this.truncateString(msg.pubkey.toBase58(), 20), "address"),
+      formatValue(this.truncateString(msg.sender.toBase58(), 20), "address"),
+      formatValue(this.truncateString(msg.recipient.toBase58(), 20), "address"),
+      msg.messageType,
       msg.status,
       new Date(msg.timestamp * 1000).toLocaleDateString(),
     ]);

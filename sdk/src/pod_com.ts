@@ -52,7 +52,7 @@ export type PodCom = {
         {
           name: "systemProgram";
           address: typeof SYSTEM_PROGRAM_ID;
-        }
+        },
       ];
       args: [
         {
@@ -117,7 +117,7 @@ export type PodCom = {
         {
           name: "systemProgram";
           address: typeof SYSTEM_PROGRAM_ID;
-        }
+        },
       ];
       args: [
         {
@@ -154,7 +154,7 @@ export type PodCom = {
         {
           name: "systemProgram";
           address: typeof SYSTEM_PROGRAM_ID;
-        }
+        },
       ];
       args: [
         {
@@ -198,7 +198,7 @@ export type PodCom = {
         {
           name: "systemProgram";
           address: typeof SYSTEM_PROGRAM_ID;
-        }
+        },
       ];
       args: [
         {
@@ -337,7 +337,7 @@ export type PodCom = {
         {
           name: "systemProgram";
           address: typeof SYSTEM_PROGRAM_ID;
-        }
+        },
       ];
       args: [
         {
@@ -677,7 +677,7 @@ export const IDL: PodCom = {
         {
           name: "systemProgram",
           address: SYSTEM_PROGRAM_ID,
-        }
+        },
       ],
       args: [
         {
@@ -742,7 +742,7 @@ export const IDL: PodCom = {
         {
           name: "systemProgram",
           address: SYSTEM_PROGRAM_ID,
-        }
+        },
       ],
       args: [
         {
@@ -779,7 +779,7 @@ export const IDL: PodCom = {
         {
           name: "systemProgram",
           address: SYSTEM_PROGRAM_ID,
-        }
+        },
       ],
       args: [
         {
@@ -823,7 +823,7 @@ export const IDL: PodCom = {
         {
           name: "systemProgram",
           address: SYSTEM_PROGRAM_ID,
-        }
+        },
       ],
       args: [
         {
@@ -962,7 +962,7 @@ export const IDL: PodCom = {
         {
           name: "systemProgram",
           address: SYSTEM_PROGRAM_ID,
-        }
+        },
       ],
       args: [
         {

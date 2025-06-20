@@ -26,7 +26,7 @@ async function runCli(args: string[], timeoutMs = 10000) {
       const [stdout, stderr, exitCode] = await Promise.all([
         new Response(proc.stdout, { signal: controller.signal }).text(),
         new Response(proc.stderr, { signal: controller.signal }).text(),
-        proc.exited
+        proc.exited,
       ]);
       clearTimeout(timeoutId);
       return { stdout, stderr, exitCode };

@@ -1,9 +1,4 @@
-import {
-  Connection,
-  PublicKey,
-  Signer,
-  Commitment,
-} from "@solana/web3.js";
+import { Connection, PublicKey, Signer, Commitment } from "@solana/web3.js";
 import anchor, { Program, AnchorProvider } from "@coral-xyz/anchor";
 import {
   PROGRAM_ID,
@@ -93,9 +88,9 @@ export class PodComClient {
             "IDL not found. Ensure the program IDL is properly generated and imported.",
           );
         }
-        
+
         this.program = new Program(IDL, provider) as Program<PodCom>;
-        
+
         // Validate program was created successfully
         if (!this.program) {
           throw new Error("Failed to create Anchor program instance");
@@ -273,7 +268,7 @@ export class PodComClient {
     channelPDA: PublicKey,
     content: string,
     messageType: string = "Text",
-    replyTo?: PublicKey
+    replyTo?: PublicKey,
   ): Promise<string> {
     return this.channels.broadcastMessage(wallet, {
       channelPDA,
@@ -299,7 +294,7 @@ export class PodComClient {
    */
   async getChannelParticipants(
     channelPDA: PublicKey,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<Array<IdlAccounts<PodCom>>> {
     return this.channels.getChannelParticipants(channelPDA, limit);
   }
@@ -309,7 +304,7 @@ export class PodComClient {
    */
   async getChannelMessages(
     channelPDA: PublicKey,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<Array<IdlAccounts<PodCom>>> {
     return this.channels.getChannelMessages(channelPDA, limit);
   }

@@ -37,7 +37,7 @@ export function createCommandHandler<T extends any[]>(
       const cmd = args[args.length - 1];
       const globalOpts = getCommandOpts(cmd);
       const commandArgs = args.slice(0, -1) as T;
-      
+
       const wallet = getWallet(globalOpts.keypair);
       const keypair = getKeypair(globalOpts.keypair);
       const client = await createClient(globalOpts.network, wallet);

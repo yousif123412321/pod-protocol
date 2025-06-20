@@ -49,37 +49,37 @@ export class CommandContext {
     client: PodComClient,
     wallet: Keypair,
     options: CommandOptions = {},
-    command: string = 'unknown'
+    command: string = "unknown",
   ) {
     this.client = client;
     this.wallet = wallet;
     this.options = options;
-    
+
     // Initialize enhanced components
     this.errorHandler = new EnhancedErrorHandler({
       verbose: options.verbose,
-      debug: options.debug
+      debug: options.debug,
     });
-    
+
     this.formatter = new OutputFormatter({
       verbose: options.verbose,
-      quiet: options.quiet
+      quiet: options.quiet,
     });
 
     // Initialize diagnostics
     this.diagnostics = {
       timestamp: new Date().toISOString(),
       command,
-      network: options.network || 'unknown',
+      network: options.network || "unknown",
       walletAddress: wallet.publicKey.toString(),
       clientVersion: this.getClientVersion(),
       nodeVersion: process.version,
       platform: `${process.platform} ${process.arch}`,
       performance: {
-        startTime: Date.now()
+        startTime: Date.now(),
       },
       errors: [],
-      warnings: []
+      warnings: [],
     };
 
     // Show banner if requested
@@ -89,37 +89,41 @@ export class CommandContext {
       showMiniHeader(command);
     }
 
-    this.log('info', `Command started: ${command}`);
-    this.log('debug', `Diagnostics initialized`, this.diagnostics);
+    this.log("info", `Command started: ${command}`);
+    this.log("debug", `Diagnostics initialized`, this.diagnostics);
   }
 
   /**
    * Log a message with appropriate level
    */
-  public log(level: 'debug' | 'info' | 'warn' | 'error', message: string, data?: any): void {
+  public log(
+    level: "debug" | "info" | "warn" | "error",
+    message: string,
+    data?: any,
+  ): void {
     const timestamp = new Date().toISOString();
     const logEntry = `[${timestamp}] [${level.toUpperCase()}] ${message}`;
-    
+
     this.logBuffer.push(logEntry);
-    
+
     if (data) {
       this.logBuffer.push(JSON.stringify(data, null, 2));
     }
 
     // Display based on options
-    if (level === 'error') {
+    if (level === "error") {
       this.diagnostics.errors.push({ message, data, timestamp });
       if (!this.options.quiet) {
         console.error(`ERROR: ${message}`);
       }
-    } else if (level === 'warn') {
+    } else if (level === "warn") {
       this.diagnostics.warnings.push({ message, data, timestamp });
       if (!this.options.quiet) {
         this.errorHandler.displayWarning(message);
       }
-    } else if (level === 'info' && this.options.verbose) {
+    } else if (level === "info" && this.options.verbose) {
       this.errorHandler.displayInfo(message);
-    } else if (level === 'debug' && this.options.debug) {
+    } else if (level === "debug" && this.options.debug) {
       console.log(`🐛 ${message}`);
       if (data) {
         console.log(JSON.stringify(data, null, 2));
@@ -132,40 +136,48 @@ export class CommandContext {
    */
   public async executeWithDiagnostics<T>(
     operation: () => Promise<T>,
-    operationName: string
+    operationName: string,
   ): Promise<T> {
-    this.log('info', `Starting operation: ${operationName}`);
-    
+    this.log("info", `Starting operation: ${operationName}`);
+
     const startTime = Date.now();
-    
+
     try {
       // Start spinner for non-quiet mode
       if (!this.options.quiet) {
-        this.formatter.startSpinner('operation', `Executing ${operationName}...`);
+        this.formatter.startSpinner(
+          "operation",
+          `Executing ${operationName}...`,
+        );
       }
 
       const result = await operation();
-      
+
       const duration = Date.now() - startTime;
-      this.log('info', `Operation completed successfully: ${operationName} (${duration}ms)`);
-      
+      this.log(
+        "info",
+        `Operation completed successfully: ${operationName} (${duration}ms)`,
+      );
+
       if (!this.options.quiet) {
-        this.formatter.succeedSpinner('operation', `${operationName} completed`);
+        this.formatter.succeedSpinner(
+          "operation",
+          `${operationName} completed`,
+        );
       }
-      
+
       return result;
-      
     } catch (error: any) {
       const duration = Date.now() - startTime;
-      this.log('error', `Operation failed: ${operationName} (${duration}ms)`, {
+      this.log("error", `Operation failed: ${operationName} (${duration}ms)`, {
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
-      
+
       if (!this.options.quiet) {
-        this.formatter.failSpinner('operation', `${operationName} failed`);
+        this.formatter.failSpinner("operation", `${operationName} failed`);
       }
-      
+
       throw error;
     }
   }
@@ -174,14 +186,13 @@ export class CommandContext {
    * Validate network connectivity and program availability
    */
   public async validateEnvironment(): Promise<void> {
-    this.log('debug', 'Validating environment...');
-    
+    this.log("debug", "Validating environment...");
+
     try {
       // Skip detailed environment validation for now to avoid connection access issues
-      this.log('debug', 'Environment validation completed successfully');
-      
+      this.log("debug", "Environment validation completed successfully");
     } catch (error: any) {
-      this.log('error', 'Environment validation failed', error);
+      this.log("error", "Environment validation failed", error);
       throw error;
     }
   }
@@ -194,31 +205,48 @@ export class CommandContext {
 
     // Finalize performance metrics
     this.diagnostics.performance.endTime = Date.now();
-    this.diagnostics.performance.duration = 
-      this.diagnostics.performance.endTime - this.diagnostics.performance.startTime;
+    this.diagnostics.performance.duration =
+      this.diagnostics.performance.endTime -
+      this.diagnostics.performance.startTime;
 
-    console.log('\n📊 Command Diagnostics:');
-    console.log('═'.repeat(60));
-    
-    this.formatter.displaySummary('Execution Summary', [
-      { label: 'Command', value: this.diagnostics.command, icon: '⚡' },
-      { label: 'Duration', value: `${this.diagnostics.performance.duration}ms`, icon: '⏱️' },
-      { label: 'Network', value: this.diagnostics.network, icon: '🌐' },
-      { label: 'Wallet', value: this.diagnostics.walletAddress || 'Unknown', icon: '👛' },
-      { label: 'Errors', value: this.diagnostics.errors.length.toString(), icon: '❌' },
-      { label: 'Warnings', value: this.diagnostics.warnings.length.toString(), icon: '⚠️' }
+    console.log("\n📊 Command Diagnostics:");
+    console.log("═".repeat(60));
+
+    this.formatter.displaySummary("Execution Summary", [
+      { label: "Command", value: this.diagnostics.command, icon: "⚡" },
+      {
+        label: "Duration",
+        value: `${this.diagnostics.performance.duration}ms`,
+        icon: "⏱️",
+      },
+      { label: "Network", value: this.diagnostics.network, icon: "🌐" },
+      {
+        label: "Wallet",
+        value: this.diagnostics.walletAddress || "Unknown",
+        icon: "👛",
+      },
+      {
+        label: "Errors",
+        value: this.diagnostics.errors.length.toString(),
+        icon: "❌",
+      },
+      {
+        label: "Warnings",
+        value: this.diagnostics.warnings.length.toString(),
+        icon: "⚠️",
+      },
     ]);
 
     if (this.options.debug && this.logBuffer.length > 0) {
-      console.log('📝 Debug Log:');
-      console.log('─'.repeat(60));
-      this.logBuffer.forEach(entry => console.log(entry));
+      console.log("📝 Debug Log:");
+      console.log("─".repeat(60));
+      this.logBuffer.forEach((entry) => console.log(entry));
       console.log();
     }
 
     if (this.diagnostics.errors.length > 0) {
-      console.log('🚨 Errors Encountered:');
-      console.log('─'.repeat(60));
+      console.log("🚨 Errors Encountered:");
+      console.log("─".repeat(60));
       this.diagnostics.errors.forEach((error, index) => {
         console.log(`${index + 1}. ${error.message}`);
         if (this.options.verbose && error.data) {
@@ -229,8 +257,8 @@ export class CommandContext {
     }
 
     if (this.diagnostics.warnings.length > 0 && this.options.verbose) {
-      console.log('⚠️  Warnings:');
-      console.log('─'.repeat(60));
+      console.log("⚠️  Warnings:");
+      console.log("─".repeat(60));
       this.diagnostics.warnings.forEach((warning, index) => {
         console.log(`${index + 1}. ${warning.message}`);
       });
@@ -244,11 +272,19 @@ export class CommandContext {
   public displaySystemInfo(): void {
     if (this.options.quiet) return;
 
-    this.formatter.displaySummary('System Information', [
-      { label: 'Client Version', value: this.diagnostics.clientVersion, icon: '📦' },
-      { label: 'Node Version', value: this.diagnostics.nodeVersion, icon: '🟢' },
-      { label: 'Platform', value: this.diagnostics.platform, icon: '💻' },
-      { label: 'Timestamp', value: this.diagnostics.timestamp, icon: '🕐' }
+    this.formatter.displaySummary("System Information", [
+      {
+        label: "Client Version",
+        value: this.diagnostics.clientVersion,
+        icon: "📦",
+      },
+      {
+        label: "Node Version",
+        value: this.diagnostics.nodeVersion,
+        icon: "🟢",
+      },
+      { label: "Platform", value: this.diagnostics.platform, icon: "💻" },
+      { label: "Timestamp", value: this.diagnostics.timestamp, icon: "🕐" },
     ]);
   }
 
@@ -256,10 +292,14 @@ export class CommandContext {
    * Export diagnostics for debugging
    */
   public exportDiagnostics(): string {
-    return JSON.stringify({
-      ...this.diagnostics,
-      logs: this.logBuffer
-    }, null, 2);
+    return JSON.stringify(
+      {
+        ...this.diagnostics,
+        logs: this.logBuffer,
+      },
+      null,
+      2,
+    );
   }
 
   /**
@@ -267,12 +307,19 @@ export class CommandContext {
    */
   public finalize(): void {
     this.diagnostics.performance.endTime = Date.now();
-    this.diagnostics.performance.duration = 
-      this.diagnostics.performance.endTime - this.diagnostics.performance.startTime;
-    
-    this.log('info', `Command completed in ${this.diagnostics.performance.duration}ms`);
-    
-    if (this.options.debug || (this.diagnostics.errors.length > 0 && this.options.verbose)) {
+    this.diagnostics.performance.duration =
+      this.diagnostics.performance.endTime -
+      this.diagnostics.performance.startTime;
+
+    this.log(
+      "info",
+      `Command completed in ${this.diagnostics.performance.duration}ms`,
+    );
+
+    if (
+      this.options.debug ||
+      (this.diagnostics.errors.length > 0 && this.options.verbose)
+    ) {
       this.displayDiagnostics();
     }
   }
@@ -280,9 +327,9 @@ export class CommandContext {
   private getClientVersion(): string {
     try {
       // Try to read version from package.json
-      return '1.3.11'; // Fallback version
+      return "1.3.11"; // Fallback version
     } catch {
-      return 'unknown';
+      return "unknown";
     }
   }
 }
@@ -294,14 +341,14 @@ export async function createCommandContext(
   client: PodComClient,
   wallet: Keypair,
   options: CommandOptions,
-  command: string
+  command: string,
 ): Promise<CommandContext> {
   const context = new CommandContext(client, wallet, options, command);
-  
+
   // Validate environment if not in quiet mode
   if (!options.quiet) {
     await context.validateEnvironment();
   }
-  
+
   return context;
 }

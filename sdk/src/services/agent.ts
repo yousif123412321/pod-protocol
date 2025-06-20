@@ -141,7 +141,7 @@ export class AgentService extends BaseService {
         const idl = this.ensureIDL();
         program = new anchor.Program(idl, provider);
       }
-      
+
       const agentAccount = this.getAccount("agentAccount");
       const account = await agentAccount.fetch(agentPDA);
       return {
@@ -179,7 +179,7 @@ export class AgentService extends BaseService {
 
       const idl = this.ensureIDL();
       const program = new anchor.Program(idl, provider);
-      
+
       const agentAccount = this.getAccount("agentAccount");
       const accounts = await agentAccount.all();
 

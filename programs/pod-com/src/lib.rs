@@ -743,11 +743,11 @@ pub mod pod_com {
         // is typically queried off-chain via getProgramAccounts RPC calls for efficiency.
         // The channel account stores the current participant count, but individual
         // participant pubkeys are stored in separate ChannelParticipant accounts.
-        
+
         // For on-chain validation, we verify the channel exists and is active
         let channel = &ctx.accounts.channel_account;
         require!(channel.is_active, PodComError::NotInChannel);
-        
+
         // Return empty vector as participant enumeration is done off-chain
         // Off-chain clients should use:
         // - getProgramAccounts with ChannelParticipant discriminator

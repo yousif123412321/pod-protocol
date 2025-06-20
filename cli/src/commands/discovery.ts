@@ -19,7 +19,10 @@ import {
   formatValue,
   GlobalOptions,
 } from "../utils/shared.js";
-import { validatePublicKey, validatePositiveInteger } from "../utils/validation.js";
+import {
+  validatePublicKey,
+  validatePositiveInteger,
+} from "../utils/validation.js";
 
 /**
  * Discovery and search commands for finding agents, channels, and messages
@@ -35,14 +38,21 @@ export class DiscoveryCommands {
     discovery
       .command("agents")
       .description("Search for agents with advanced filtering")
-      .option("--capabilities <caps>", "Filter by capabilities (comma-separated)")
+      .option(
+        "--capabilities <caps>",
+        "Filter by capabilities (comma-separated)",
+      )
       .option("--min-reputation <num>", "Minimum reputation score")
       .option("--max-reputation <num>", "Maximum reputation score")
       .option("--metadata-contains <text>", "Filter by metadata content")
       .option("--active-since <date>", "Filter by last activity (YYYY-MM-DD)")
       .option("-l, --limit <number>", "Maximum results to return", "20")
       .option("-o, --offset <number>", "Results offset for pagination", "0")
-      .option("--sort <field>", "Sort by field (relevance, reputation, recent)", "relevance")
+      .option(
+        "--sort <field>",
+        "Sort by field (relevance, reputation, recent)",
+        "relevance",
+      )
       .option("--order <direction>", "Sort order (asc, desc)", "desc")
       .option("-i, --interactive", "Interactive search with filters")
       .option("--format <format>", "Output format (table, json)", "table")
@@ -97,7 +107,11 @@ export class DiscoveryCommands {
       .option("--created-before <date>", "Filter by creation date (YYYY-MM-DD)")
       .option("-l, --limit <number>", "Maximum results to return", "20")
       .option("-o, --offset <number>", "Results offset for pagination", "0")
-      .option("--sort <field>", "Sort by field (relevance, popular, recent)", "popular")
+      .option(
+        "--sort <field>",
+        "Sort by field (relevance, popular, recent)",
+        "popular",
+      )
       .option("--order <direction>", "Sort order (asc, desc)", "desc")
       .option("-i, --interactive", "Interactive search with filters")
       .option("--format <format>", "Output format (table, json)", "table")
@@ -114,7 +128,11 @@ export class DiscoveryCommands {
     discovery
       .command("recommend")
       .description("Get personalized recommendations")
-      .option("--type <type>", "Recommendation type (agents, channels)", "agents")
+      .option(
+        "--type <type>",
+        "Recommendation type (agents, channels)",
+        "agents",
+      )
       .option("--for-agent <address>", "Get recommendations for specific agent")
       .option("-l, --limit <number>", "Number of recommendations", "10")
       .option("--include-reason", "Include recommendation reasons")
@@ -139,7 +157,12 @@ export class DiscoveryCommands {
         createCommandHandler(
           "find similar agents",
           async (client, wallet, globalOpts, targetAddress, options) => {
-            await this.handleSimilarAgents(client, globalOpts, targetAddress, options);
+            await this.handleSimilarAgents(
+              client,
+              globalOpts,
+              targetAddress,
+              options,
+            );
           },
         ),
       );
@@ -163,7 +186,7 @@ export class DiscoveryCommands {
   private async handleSearchAgents(
     client: PodComClient,
     globalOpts: GlobalOptions,
-    options: Record<string, any>
+    options: Record<string, any>,
   ) {
     let filters = this.buildAgentFilters(options);
 
@@ -175,8 +198,10 @@ export class DiscoveryCommands {
 
     try {
       const results = await client.discovery.searchAgents(filters);
-      
-      spinner.succeed(`Found ${results.total} agents (showing ${results.items.length})`);
+
+      spinner.succeed(
+        `Found ${results.total} agents (showing ${results.items.length})`,
+      );
 
       if (options.format === "json") {
         console.log(JSON.stringify(results, null, 2));
@@ -193,7 +218,7 @@ export class DiscoveryCommands {
   private async handleSearchMessages(
     client: PodComClient,
     globalOpts: GlobalOptions,
-    options: Record<string, any>
+    options: Record<string, any>,
   ) {
     let filters = this.buildMessageFilters(options);
 
@@ -205,8 +230,10 @@ export class DiscoveryCommands {
 
     try {
       const results = await client.discovery.searchMessages(filters);
-      
-      spinner.succeed(`Found ${results.total} messages (showing ${results.items.length})`);
+
+      spinner.succeed(
+        `Found ${results.total} messages (showing ${results.items.length})`,
+      );
 
       if (options.format === "json") {
         console.log(JSON.stringify(results, null, 2));
@@ -223,7 +250,7 @@ export class DiscoveryCommands {
   private async handleSearchChannels(
     client: PodComClient,
     globalOpts: GlobalOptions,
-    options: Record<string, any>
+    options: Record<string, any>,
   ) {
     let filters = this.buildChannelFilters(options);
 
@@ -235,8 +262,10 @@ export class DiscoveryCommands {
 
     try {
       const results = await client.discovery.searchChannels(filters);
-      
-      spinner.succeed(`Found ${results.total} channels (showing ${results.items.length})`);
+
+      spinner.succeed(
+        `Found ${results.total} channels (showing ${results.items.length})`,
+      );
 
       if (options.format === "json") {
         console.log(JSON.stringify(results, null, 2));
@@ -253,7 +282,7 @@ export class DiscoveryCommands {
   private async handleRecommendations(
     client: PodComClient,
     globalOpts: GlobalOptions,
-    options: Record<string, any>
+    options: Record<string, any>,
   ) {
     const spinner = createSpinner("Getting recommendations...");
     const limit = parseInt(options.limit, 10);
@@ -262,14 +291,20 @@ export class DiscoveryCommands {
       const recommendationOptions = {
         limit,
         includeReason: options.includeReason,
-        forAgent: options.forAgent ? new PublicKey(options.forAgent) : undefined,
+        forAgent: options.forAgent
+          ? new PublicKey(options.forAgent)
+          : undefined,
       };
 
       let recommendations;
       if (options.type === "channels") {
-        recommendations = await client.discovery.getRecommendedChannels(recommendationOptions);
+        recommendations = await client.discovery.getRecommendedChannels(
+          recommendationOptions,
+        );
       } else {
-        recommendations = await client.discovery.getRecommendedAgents(recommendationOptions);
+        recommendations = await client.discovery.getRecommendedAgents(
+          recommendationOptions,
+        );
       }
 
       spinner.succeed(`Found ${recommendations.length} recommendations`);
@@ -290,20 +325,25 @@ export class DiscoveryCommands {
     client: PodComClient,
     globalOpts: GlobalOptions,
     targetAddress: string,
-    options: Record<string, any>
+    options: Record<string, any>,
   ) {
     const spinner = createSpinner("Finding similar agents...");
     const limit = parseInt(options.limit, 10);
 
     try {
-      const targetAgent = await client.agents.getAgent(new PublicKey(targetAddress));
+      const targetAgent = await client.agents.getAgent(
+        new PublicKey(targetAddress),
+      );
       if (!targetAgent) {
         spinner.fail("Target agent not found");
         return;
       }
 
-      const similarAgents = await client.discovery.findSimilarAgents(targetAgent, limit);
-      
+      const similarAgents = await client.discovery.findSimilarAgents(
+        targetAgent,
+        limit,
+      );
+
       spinner.succeed(`Found ${similarAgents.length} similar agents`);
 
       if (options.format === "json") {
@@ -321,14 +361,15 @@ export class DiscoveryCommands {
   private async handleTrending(
     client: PodComClient,
     globalOpts: GlobalOptions,
-    options: Record<string, any>
+    options: Record<string, any>,
   ) {
     const spinner = createSpinner("Getting trending data...");
     const limit = parseInt(options.limit, 10);
 
     try {
-      const trendingChannels = await client.discovery.getTrendingChannels(limit);
-      
+      const trendingChannels =
+        await client.discovery.getTrendingChannels(limit);
+
       spinner.succeed("Trending data retrieved");
 
       if (options.format === "json") {
@@ -356,7 +397,9 @@ export class DiscoveryCommands {
     };
 
     if (options.capabilities) {
-      const capNames = options.capabilities.split(",").map((c: string) => c.trim().toUpperCase());
+      const capNames = options.capabilities
+        .split(",")
+        .map((c: string) => c.trim().toUpperCase());
       filters.capabilities = capNames.map((name: string) => {
         return AGENT_CAPABILITIES[name as keyof typeof AGENT_CAPABILITIES] || 0;
       });
@@ -398,11 +441,15 @@ export class DiscoveryCommands {
     }
 
     if (options.status) {
-      filters.status = [MessageStatus[options.status as keyof typeof MessageStatus]];
+      filters.status = [
+        MessageStatus[options.status as keyof typeof MessageStatus],
+      ];
     }
 
     if (options.type) {
-      filters.messageType = [MessageType[options.type as keyof typeof MessageType]];
+      filters.messageType = [
+        MessageType[options.type as keyof typeof MessageType],
+      ];
     }
 
     if (options.contains) {
@@ -433,7 +480,9 @@ export class DiscoveryCommands {
     }
 
     if (options.visibility) {
-      filters.visibility = [ChannelVisibility[options.visibility as keyof typeof ChannelVisibility]];
+      filters.visibility = [
+        ChannelVisibility[options.visibility as keyof typeof ChannelVisibility],
+      ];
     }
 
     if (options.nameContains) {
@@ -484,8 +533,14 @@ export class DiscoveryCommands {
         choices: [
           { name: "Trading", value: AGENT_CAPABILITIES.TRADING },
           { name: "Analysis", value: AGENT_CAPABILITIES.ANALYSIS },
-          { name: "Data Processing", value: AGENT_CAPABILITIES.DATA_PROCESSING },
-          { name: "Content Generation", value: AGENT_CAPABILITIES.CONTENT_GENERATION },
+          {
+            name: "Data Processing",
+            value: AGENT_CAPABILITIES.DATA_PROCESSING,
+          },
+          {
+            name: "Content Generation",
+            value: AGENT_CAPABILITIES.CONTENT_GENERATION,
+          },
         ],
         default: initialFilters.capabilities || [],
       },
@@ -566,7 +621,9 @@ export class DiscoveryCommands {
       answers.recipient = new PublicKey(answers.recipient);
     }
     if (answers.status && answers.status !== "Any") {
-      answers.status = [MessageStatus[answers.status as keyof typeof MessageStatus]];
+      answers.status = [
+        MessageStatus[answers.status as keyof typeof MessageStatus],
+      ];
     }
 
     return { ...initialFilters, ...answers };
@@ -617,7 +674,9 @@ export class DiscoveryCommands {
 
     // Convert answers
     if (answers.visibility && answers.visibility !== "Any") {
-      answers.visibility = [ChannelVisibility[answers.visibility as keyof typeof ChannelVisibility]];
+      answers.visibility = [
+        ChannelVisibility[answers.visibility as keyof typeof ChannelVisibility],
+      ];
     }
 
     return { ...initialFilters, ...answers };
@@ -634,28 +693,36 @@ export class DiscoveryCommands {
     }
 
     console.log(chalk.blue.bold("\n🤖 Agent Search Results"));
-    console.log(chalk.gray(`Showing ${results.items.length} of ${results.total} results (${results.executionTime}ms)`));
+    console.log(
+      chalk.gray(
+        `Showing ${results.items.length} of ${results.total} results (${results.executionTime}ms)`,
+      ),
+    );
 
     const data = results.items.map((agent: any) => [
       formatValue(agent.pubkey.toBase58().slice(0, 8) + "...", "address"),
       formatValue(getCapabilityNames(agent.capabilities).join(", "), "text"),
       formatValue(agent.reputation.toString(), "number"),
-      formatValue(new Date(agent.lastUpdated * 1000).toLocaleDateString(), "text"),
+      formatValue(
+        new Date(agent.lastUpdated * 1000).toLocaleDateString(),
+        "text",
+      ),
     ]);
 
     console.log(
       "\n" +
         table(
-          [
-            ["Agent", "Capabilities", "Reputation", "Last Active"],
-            ...data,
-          ],
+          [["Agent", "Capabilities", "Reputation", "Last Active"], ...data],
           getTableConfig("Agent Search Results"),
         ),
     );
 
     if (results.hasMore) {
-      console.log(chalk.cyan(`\n💡 Use --offset ${results.items.length + results.searchParams.offset} to see more results`));
+      console.log(
+        chalk.cyan(
+          `\n💡 Use --offset ${results.items.length + results.searchParams.offset} to see more results`,
+        ),
+      );
     }
   }
 
@@ -666,15 +733,26 @@ export class DiscoveryCommands {
     }
 
     console.log(chalk.green.bold("\n📨 Message Search Results"));
-    console.log(chalk.gray(`Showing ${results.items.length} of ${results.total} results (${results.executionTime}ms)`));
+    console.log(
+      chalk.gray(
+        `Showing ${results.items.length} of ${results.total} results (${results.executionTime}ms)`,
+      ),
+    );
 
     const data = results.items.map((message: any) => [
       formatValue(message.sender.toBase58().slice(0, 8) + "...", "address"),
       formatValue(message.recipient.toBase58().slice(0, 8) + "...", "address"),
       formatValue(message.messageType.toString(), "text"),
       formatValue(message.status, "text"),
-      formatValue(message.payload.slice(0, 30) + (message.payload.length > 30 ? "..." : ""), "text"),
-      formatValue(new Date(message.timestamp * 1000).toLocaleDateString(), "text"),
+      formatValue(
+        message.payload.slice(0, 30) +
+          (message.payload.length > 30 ? "..." : ""),
+        "text",
+      ),
+      formatValue(
+        new Date(message.timestamp * 1000).toLocaleDateString(),
+        "text",
+      ),
     ]);
 
     console.log(
@@ -689,7 +767,11 @@ export class DiscoveryCommands {
     );
 
     if (results.hasMore) {
-      console.log(chalk.cyan(`\n💡 Use --offset ${results.items.length + results.searchParams.offset} to see more results`));
+      console.log(
+        chalk.cyan(
+          `\n💡 Use --offset ${results.items.length + results.searchParams.offset} to see more results`,
+        ),
+      );
     }
   }
 
@@ -700,22 +782,39 @@ export class DiscoveryCommands {
     }
 
     console.log(chalk.magenta.bold("\n🏛️  Channel Search Results"));
-    console.log(chalk.gray(`Showing ${results.items.length} of ${results.total} results (${results.executionTime}ms)`));
+    console.log(
+      chalk.gray(
+        `Showing ${results.items.length} of ${results.total} results (${results.executionTime}ms)`,
+      ),
+    );
 
     const data = results.items.map((channel: any) => [
       formatValue(channel.name, "text"),
-      formatValue(`${channel.participantCount}/${channel.maxParticipants}`, "number"),
+      formatValue(
+        `${channel.participantCount}/${channel.maxParticipants}`,
+        "number",
+      ),
       formatValue(channel.visibility, "text"),
       formatValue(`${lamportsToSol(channel.feePerMessage)} SOL`, "number"),
       formatValue(channel.escrowBalance > 0 ? "Yes" : "No", "text"),
-      formatValue(new Date(channel.createdAt * 1000).toLocaleDateString(), "text"),
+      formatValue(
+        new Date(channel.createdAt * 1000).toLocaleDateString(),
+        "text",
+      ),
     ]);
 
     console.log(
       "\n" +
         table(
           [
-            ["Channel", "Participants", "Visibility", "Fee", "Escrow", "Created"],
+            [
+              "Channel",
+              "Participants",
+              "Visibility",
+              "Fee",
+              "Escrow",
+              "Created",
+            ],
             ...data,
           ],
           getTableConfig("Channel Search Results"),
@@ -723,7 +822,11 @@ export class DiscoveryCommands {
     );
 
     if (results.hasMore) {
-      console.log(chalk.cyan(`\n💡 Use --offset ${results.items.length + results.searchParams.offset} to see more results`));
+      console.log(
+        chalk.cyan(
+          `\n💡 Use --offset ${results.items.length + results.searchParams.offset} to see more results`,
+        ),
+      );
     }
   }
 
@@ -733,14 +836,21 @@ export class DiscoveryCommands {
       return;
     }
 
-    console.log(chalk.yellow.bold(`\n⭐ Recommended ${type.charAt(0).toUpperCase() + type.slice(1)}`));
+    console.log(
+      chalk.yellow.bold(
+        `\n⭐ Recommended ${type.charAt(0).toUpperCase() + type.slice(1)}`,
+      ),
+    );
 
     if (type === "agents") {
       const data = recommendations.map((rec, index) => [
         `#${index + 1}`,
         formatValue(rec.item.pubkey.toBase58().slice(0, 8) + "...", "address"),
         formatValue(rec.item.reputation.toString(), "number"),
-        formatValue(getCapabilityNames(rec.item.capabilities).join(", "), "text"),
+        formatValue(
+          getCapabilityNames(rec.item.capabilities).join(", "),
+          "text",
+        ),
         formatValue(rec.reason || "General recommendation", "text"),
       ]);
 
@@ -758,7 +868,10 @@ export class DiscoveryCommands {
       const data = recommendations.map((rec, index) => [
         `#${index + 1}`,
         formatValue(rec.item.name, "text"),
-        formatValue(`${rec.item.participantCount}/${rec.item.maxParticipants}`, "number"),
+        formatValue(
+          `${rec.item.participantCount}/${rec.item.maxParticipants}`,
+          "number",
+        ),
         formatValue(rec.item.visibility, "text"),
         formatValue(rec.reason || "General recommendation", "text"),
       ]);
@@ -783,14 +896,21 @@ export class DiscoveryCommands {
     }
 
     console.log(chalk.cyan.bold("\n🔍 Similar Agents"));
-    console.log(chalk.gray(`Target: ${targetAgent.pubkey.toBase58().slice(0, 8)}... (${getCapabilityNames(targetAgent.capabilities).join(", ")})`));
+    console.log(
+      chalk.gray(
+        `Target: ${targetAgent.pubkey.toBase58().slice(0, 8)}... (${getCapabilityNames(targetAgent.capabilities).join(", ")})`,
+      ),
+    );
 
     const data = similarAgents.map((agent, index) => [
       `#${index + 1}`,
       formatValue(agent.pubkey.toBase58().slice(0, 8) + "...", "address"),
       formatValue(getCapabilityNames(agent.capabilities).join(", "), "text"),
       formatValue(agent.reputation.toString(), "number"),
-      formatValue(new Date(agent.lastUpdated * 1000).toLocaleDateString(), "text"),
+      formatValue(
+        new Date(agent.lastUpdated * 1000).toLocaleDateString(),
+        "text",
+      ),
     ]);
 
     console.log(
@@ -816,10 +936,16 @@ export class DiscoveryCommands {
     const data = channels.map((channel, index) => [
       `#${index + 1}`,
       formatValue(channel.name, "text"),
-      formatValue(`${channel.participantCount}/${channel.maxParticipants}`, "number"),
+      formatValue(
+        `${channel.participantCount}/${channel.maxParticipants}`,
+        "number",
+      ),
       formatValue(channel.visibility, "text"),
       formatValue(`${lamportsToSol(channel.feePerMessage)} SOL`, "number"),
-      formatValue(new Date(channel.createdAt * 1000).toLocaleDateString(), "text"),
+      formatValue(
+        new Date(channel.createdAt * 1000).toLocaleDateString(),
+        "text",
+      ),
     ]);
 
     console.log(

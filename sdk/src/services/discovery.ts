@@ -25,8 +25,8 @@ import {
 export interface SearchFilters {
   limit?: number;
   offset?: number;
-  sortBy?: 'relevance' | 'recent' | 'popular' | 'reputation';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "relevance" | "recent" | "popular" | "reputation";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface AgentSearchFilters extends SearchFilters {
@@ -85,9 +85,11 @@ export class DiscoveryService extends BaseService {
   /**
    * Search for agents with advanced filtering
    */
-  async searchAgents(filters: AgentSearchFilters = {}): Promise<SearchResult<AgentAccount>> {
+  async searchAgents(
+    filters: AgentSearchFilters = {},
+  ): Promise<SearchResult<AgentAccount>> {
     const startTime = Date.now();
-    
+
     try {
       const programFilters: GetProgramAccountsFilter[] = [
         {
@@ -104,10 +106,13 @@ export class DiscoveryService extends BaseService {
         // For now, we'll filter in memory after fetching
       }
 
-      const accounts = await this.connection.getProgramAccounts(this.programId, {
-        filters: programFilters,
-        commitment: this.commitment,
-      });
+      const accounts = await this.connection.getProgramAccounts(
+        this.programId,
+        {
+          filters: programFilters,
+          commitment: this.commitment,
+        },
+      );
 
       let agents: AgentAccount[] = accounts.map((acc) => {
         const account = this.ensureInitialized().coder.accounts.decode(
@@ -126,7 +131,7 @@ export class DiscoveryService extends BaseService {
 
       // Apply in-memory filters
       agents = this.applyAgentFilters(agents, filters);
-      
+
       // Apply sorting
       agents = this.sortAgents(agents, filters);
 
@@ -150,9 +155,11 @@ export class DiscoveryService extends BaseService {
   /**
    * Search for messages with advanced filtering
    */
-  async searchMessages(filters: MessageSearchFilters = {}): Promise<SearchResult<MessageAccount>> {
+  async searchMessages(
+    filters: MessageSearchFilters = {},
+  ): Promise<SearchResult<MessageAccount>> {
     const startTime = Date.now();
-    
+
     try {
       const programFilters: GetProgramAccountsFilter[] = [
         {
@@ -183,10 +190,13 @@ export class DiscoveryService extends BaseService {
         });
       }
 
-      const accounts = await this.connection.getProgramAccounts(this.programId, {
-        filters: programFilters,
-        commitment: this.commitment,
-      });
+      const accounts = await this.connection.getProgramAccounts(
+        this.programId,
+        {
+          filters: programFilters,
+          commitment: this.commitment,
+        },
+      );
 
       let messages: MessageAccount[] = accounts.map((acc) => {
         const account = this.ensureInitialized().coder.accounts.decode(
@@ -210,7 +220,7 @@ export class DiscoveryService extends BaseService {
 
       // Apply in-memory filters
       messages = this.applyMessageFilters(messages, filters);
-      
+
       // Apply sorting
       messages = this.sortMessages(messages, filters);
 
@@ -234,9 +244,11 @@ export class DiscoveryService extends BaseService {
   /**
    * Search for channels with advanced filtering
    */
-  async searchChannels(filters: ChannelSearchFilters = {}): Promise<SearchResult<ChannelAccount>> {
+  async searchChannels(
+    filters: ChannelSearchFilters = {},
+  ): Promise<SearchResult<ChannelAccount>> {
     const startTime = Date.now();
-    
+
     try {
       const programFilters: GetProgramAccountsFilter[] = [
         {
@@ -257,10 +269,13 @@ export class DiscoveryService extends BaseService {
         });
       }
 
-      const accounts = await this.connection.getProgramAccounts(this.programId, {
-        filters: programFilters,
-        commitment: this.commitment,
-      });
+      const accounts = await this.connection.getProgramAccounts(
+        this.programId,
+        {
+          filters: programFilters,
+          commitment: this.commitment,
+        },
+      );
 
       let channels: ChannelAccount[] = accounts.map((acc) => {
         const account = this.ensureInitialized().coder.accounts.decode(
@@ -272,7 +287,9 @@ export class DiscoveryService extends BaseService {
           creator: account.creator,
           name: account.name,
           description: account.description,
-          visibility: this.convertChannelVisibilityFromProgram(account.visibility),
+          visibility: this.convertChannelVisibilityFromProgram(
+            account.visibility,
+          ),
           maxParticipants: account.maxParticipants,
           participantCount: account.currentParticipants,
           currentParticipants: account.currentParticipants,
@@ -286,7 +303,7 @@ export class DiscoveryService extends BaseService {
 
       // Apply in-memory filters
       channels = this.applyChannelFilters(channels, filters);
-      
+
       // Apply sorting
       channels = this.sortChannels(channels, filters);
 
@@ -310,44 +327,49 @@ export class DiscoveryService extends BaseService {
   /**
    * Get recommended agents based on similarity and activity
    */
-  async getRecommendedAgents(options: RecommendationOptions = {}): Promise<Recommendation<AgentAccount>[]> {
+  async getRecommendedAgents(
+    options: RecommendationOptions = {},
+  ): Promise<Recommendation<AgentAccount>[]> {
     const agents = await this.searchAgents({ limit: 100 });
-    
-    const recommendations: Recommendation<AgentAccount>[] = agents.items.map(agent => {
-      let score = 0;
-      let reasons: string[] = [];
 
-      // Score based on reputation
-      score += Math.min(agent.reputation / 100, 1) * 0.3;
-      if (agent.reputation > 50) {
-        reasons.push("High reputation");
-      }
+    const recommendations: Recommendation<AgentAccount>[] = agents.items.map(
+      (agent) => {
+        let score = 0;
+        let reasons: string[] = [];
 
-      // Score based on capabilities diversity
-      const capabilityCount = getCapabilityNames(agent.capabilities).length;
-      score += Math.min(capabilityCount / 4, 1) * 0.2;
-      if (capabilityCount >= 3) {
-        reasons.push("Versatile capabilities");
-      }
+        // Score based on reputation
+        score += Math.min(agent.reputation / 100, 1) * 0.3;
+        if (agent.reputation > 50) {
+          reasons.push("High reputation");
+        }
 
-      // Score based on recent activity
-      const daysSinceUpdate = (Date.now() - agent.lastUpdated * 1000) / (1000 * 60 * 60 * 24);
-      if (daysSinceUpdate < 7) {
-        score += 0.3;
-        reasons.push("Recently active");
-      } else if (daysSinceUpdate < 30) {
-        score += 0.1;
-      }
+        // Score based on capabilities diversity
+        const capabilityCount = getCapabilityNames(agent.capabilities).length;
+        score += Math.min(capabilityCount / 4, 1) * 0.2;
+        if (capabilityCount >= 3) {
+          reasons.push("Versatile capabilities");
+        }
 
-      // Random factor for discovery
-      score += Math.random() * 0.2;
+        // Score based on recent activity
+        const daysSinceUpdate =
+          (Date.now() - agent.lastUpdated * 1000) / (1000 * 60 * 60 * 24);
+        if (daysSinceUpdate < 7) {
+          score += 0.3;
+          reasons.push("Recently active");
+        } else if (daysSinceUpdate < 30) {
+          score += 0.1;
+        }
 
-      return {
-        item: agent,
-        score,
-        reason: options.includeReason ? reasons.join(", ") : undefined,
-      };
-    });
+        // Random factor for discovery
+        score += Math.random() * 0.2;
+
+        return {
+          item: agent,
+          score,
+          reason: options.includeReason ? reasons.join(", ") : undefined,
+        };
+      },
+    );
 
     return recommendations
       .sort((a, b) => b.score - a.score)
@@ -357,51 +379,60 @@ export class DiscoveryService extends BaseService {
   /**
    * Get recommended channels for an agent
    */
-  async getRecommendedChannels(options: RecommendationOptions = {}): Promise<Recommendation<ChannelAccount>[]> {
-    const channels = await this.searchChannels({ limit: 100, visibility: [ChannelVisibility.Public] });
-    
-    const recommendations: Recommendation<ChannelAccount>[] = channels.items.map(channel => {
-      let score = 0;
-      let reasons: string[] = [];
-
-      // Score based on participant count
-      const participantRatio = channel.participantCount / channel.maxParticipants;
-      if (participantRatio > 0.1 && participantRatio < 0.8) {
-        score += 0.3;
-        reasons.push("Active community");
-      }
-
-      // Score based on low fees
-      if (channel.feePerMessage === 0) {
-        score += 0.2;
-        reasons.push("No fees");
-      } else if (channel.feePerMessage < 1000) { // Less than 0.000001 SOL
-        score += 0.1;
-        reasons.push("Low fees");
-      }
-
-      // Score based on escrow balance (indicates activity)
-      if (channel.escrowBalance > 0) {
-        score += 0.2;
-        reasons.push("Funded channel");
-      }
-
-      // Score based on recent creation (discovery factor)
-      const daysSinceCreation = (Date.now() - channel.createdAt * 1000) / (1000 * 60 * 60 * 24);
-      if (daysSinceCreation < 30) {
-        score += 0.2;
-        reasons.push("New channel");
-      }
-
-      // Random factor for discovery
-      score += Math.random() * 0.1;
-
-      return {
-        item: channel,
-        score,
-        reason: options.includeReason ? reasons.join(", ") : undefined,
-      };
+  async getRecommendedChannels(
+    options: RecommendationOptions = {},
+  ): Promise<Recommendation<ChannelAccount>[]> {
+    const channels = await this.searchChannels({
+      limit: 100,
+      visibility: [ChannelVisibility.Public],
     });
+
+    const recommendations: Recommendation<ChannelAccount>[] =
+      channels.items.map((channel) => {
+        let score = 0;
+        let reasons: string[] = [];
+
+        // Score based on participant count
+        const participantRatio =
+          channel.participantCount / channel.maxParticipants;
+        if (participantRatio > 0.1 && participantRatio < 0.8) {
+          score += 0.3;
+          reasons.push("Active community");
+        }
+
+        // Score based on low fees
+        if (channel.feePerMessage === 0) {
+          score += 0.2;
+          reasons.push("No fees");
+        } else if (channel.feePerMessage < 1000) {
+          // Less than 0.000001 SOL
+          score += 0.1;
+          reasons.push("Low fees");
+        }
+
+        // Score based on escrow balance (indicates activity)
+        if (channel.escrowBalance > 0) {
+          score += 0.2;
+          reasons.push("Funded channel");
+        }
+
+        // Score based on recent creation (discovery factor)
+        const daysSinceCreation =
+          (Date.now() - channel.createdAt * 1000) / (1000 * 60 * 60 * 24);
+        if (daysSinceCreation < 30) {
+          score += 0.2;
+          reasons.push("New channel");
+        }
+
+        // Random factor for discovery
+        score += Math.random() * 0.1;
+
+        return {
+          item: channel,
+          score,
+          reason: options.includeReason ? reasons.join(", ") : undefined,
+        };
+      });
 
     return recommendations
       .sort((a, b) => b.score - a.score)
@@ -411,22 +442,25 @@ export class DiscoveryService extends BaseService {
   /**
    * Find similar agents based on capabilities
    */
-  async findSimilarAgents(targetAgent: AgentAccount, limit: number = 10): Promise<AgentAccount[]> {
+  async findSimilarAgents(
+    targetAgent: AgentAccount,
+    limit: number = 10,
+  ): Promise<AgentAccount[]> {
     const agents = await this.searchAgents({ limit: 200 });
-    
+
     const similarities = agents.items
-      .filter(agent => !agent.pubkey.equals(targetAgent.pubkey))
-      .map(agent => {
+      .filter((agent) => !agent.pubkey.equals(targetAgent.pubkey))
+      .map((agent) => {
         const similarity = this.calculateCapabilitySimilarity(
           targetAgent.capabilities,
-          agent.capabilities
+          agent.capabilities,
         );
         return { agent, similarity };
       })
       .sort((a, b) => b.similarity - a.similarity)
       .slice(0, limit);
 
-    return similarities.map(item => item.agent);
+    return similarities.map((item) => item.agent);
   }
 
   /**
@@ -434,53 +468,66 @@ export class DiscoveryService extends BaseService {
    */
   async getTrendingChannels(limit: number = 10): Promise<ChannelAccount[]> {
     const channels = await this.searchChannels({ limit: 100 });
-    
+
     // Score channels based on multiple factors
-    const scoredChannels = channels.items.map(channel => {
+    const scoredChannels = channels.items.map((channel) => {
       let trendScore = 0;
-      
+
       // Growth rate (participants / days since creation)
-      const daysSinceCreation = Math.max(1, (Date.now() - channel.createdAt * 1000) / (1000 * 60 * 60 * 24));
+      const daysSinceCreation = Math.max(
+        1,
+        (Date.now() - channel.createdAt * 1000) / (1000 * 60 * 60 * 24),
+      );
       const growthRate = channel.participantCount / daysSinceCreation;
       trendScore += growthRate * 10;
-      
+
       // Participation ratio
-      const participationRatio = channel.participantCount / channel.maxParticipants;
+      const participationRatio =
+        channel.participantCount / channel.maxParticipants;
       trendScore += participationRatio * 20;
-      
+
       // Escrow activity
       if (channel.escrowBalance > 0) {
         trendScore += Math.log(channel.escrowBalance) * 0.1;
       }
-      
+
       return { channel, trendScore };
     });
 
     return scoredChannels
       .sort((a, b) => b.trendScore - a.trendScore)
       .slice(0, limit)
-      .map(item => item.channel);
+      .map((item) => item.channel);
   }
 
   // ============================================================================
   // Filter and Sort Helper Methods
   // ============================================================================
 
-  private applyAgentFilters(agents: AgentAccount[], filters: AgentSearchFilters): AgentAccount[] {
-    return agents.filter(agent => {
+  private applyAgentFilters(
+    agents: AgentAccount[],
+    filters: AgentSearchFilters,
+  ): AgentAccount[] {
+    return agents.filter((agent) => {
       // Capability filter
       if (filters.capabilities && filters.capabilities.length > 0) {
-        const hasRequiredCapabilities = filters.capabilities.some(cap => 
-          hasCapability(agent.capabilities, cap)
+        const hasRequiredCapabilities = filters.capabilities.some((cap) =>
+          hasCapability(agent.capabilities, cap),
         );
         if (!hasRequiredCapabilities) return false;
       }
 
       // Reputation filters
-      if (filters.minReputation !== undefined && agent.reputation < filters.minReputation) {
+      if (
+        filters.minReputation !== undefined &&
+        agent.reputation < filters.minReputation
+      ) {
         return false;
       }
-      if (filters.maxReputation !== undefined && agent.reputation > filters.maxReputation) {
+      if (
+        filters.maxReputation !== undefined &&
+        agent.reputation > filters.maxReputation
+      ) {
         return false;
       }
 
@@ -493,10 +540,16 @@ export class DiscoveryService extends BaseService {
       }
 
       // Time-based filters
-      if (filters.lastActiveAfter !== undefined && agent.lastUpdated * 1000 < filters.lastActiveAfter) {
+      if (
+        filters.lastActiveAfter !== undefined &&
+        agent.lastUpdated * 1000 < filters.lastActiveAfter
+      ) {
         return false;
       }
-      if (filters.lastActiveBefore !== undefined && agent.lastUpdated * 1000 > filters.lastActiveBefore) {
+      if (
+        filters.lastActiveBefore !== undefined &&
+        agent.lastUpdated * 1000 > filters.lastActiveBefore
+      ) {
         return false;
       }
 
@@ -504,8 +557,11 @@ export class DiscoveryService extends BaseService {
     });
   }
 
-  private applyMessageFilters(messages: MessageAccount[], filters: MessageSearchFilters): MessageAccount[] {
-    return messages.filter(message => {
+  private applyMessageFilters(
+    messages: MessageAccount[],
+    filters: MessageSearchFilters,
+  ): MessageAccount[] {
+    return messages.filter((message) => {
       // Status filter
       if (filters.status && filters.status.length > 0) {
         if (!filters.status.includes(message.status)) return false;
@@ -525,10 +581,16 @@ export class DiscoveryService extends BaseService {
       }
 
       // Time-based filters
-      if (filters.createdAfter !== undefined && message.createdAt * 1000 < filters.createdAfter) {
+      if (
+        filters.createdAfter !== undefined &&
+        message.createdAt * 1000 < filters.createdAfter
+      ) {
         return false;
       }
-      if (filters.createdBefore !== undefined && message.createdAt * 1000 > filters.createdBefore) {
+      if (
+        filters.createdBefore !== undefined &&
+        message.createdAt * 1000 > filters.createdBefore
+      ) {
         return false;
       }
 
@@ -536,8 +598,11 @@ export class DiscoveryService extends BaseService {
     });
   }
 
-  private applyChannelFilters(channels: ChannelAccount[], filters: ChannelSearchFilters): ChannelAccount[] {
-    return channels.filter(channel => {
+  private applyChannelFilters(
+    channels: ChannelAccount[],
+    filters: ChannelSearchFilters,
+  ): ChannelAccount[] {
+    return channels.filter((channel) => {
       // Visibility filter
       if (filters.visibility && filters.visibility.length > 0) {
         if (!filters.visibility.includes(channel.visibility)) return false;
@@ -560,15 +625,24 @@ export class DiscoveryService extends BaseService {
       }
 
       // Participant count filters
-      if (filters.minParticipants !== undefined && channel.participantCount < filters.minParticipants) {
+      if (
+        filters.minParticipants !== undefined &&
+        channel.participantCount < filters.minParticipants
+      ) {
         return false;
       }
-      if (filters.maxParticipants !== undefined && channel.participantCount > filters.maxParticipants) {
+      if (
+        filters.maxParticipants !== undefined &&
+        channel.participantCount > filters.maxParticipants
+      ) {
         return false;
       }
 
       // Fee filter
-      if (filters.maxFeePerMessage !== undefined && channel.feePerMessage > filters.maxFeePerMessage) {
+      if (
+        filters.maxFeePerMessage !== undefined &&
+        channel.feePerMessage > filters.maxFeePerMessage
+      ) {
         return false;
       }
 
@@ -579,10 +653,16 @@ export class DiscoveryService extends BaseService {
       }
 
       // Time-based filters
-      if (filters.createdAfter !== undefined && channel.createdAt * 1000 < filters.createdAfter) {
+      if (
+        filters.createdAfter !== undefined &&
+        channel.createdAt * 1000 < filters.createdAfter
+      ) {
         return false;
       }
-      if (filters.createdBefore !== undefined && channel.createdAt * 1000 > filters.createdBefore) {
+      if (
+        filters.createdBefore !== undefined &&
+        channel.createdAt * 1000 > filters.createdBefore
+      ) {
         return false;
       }
 
@@ -590,80 +670,95 @@ export class DiscoveryService extends BaseService {
     });
   }
 
-  private sortAgents(agents: AgentAccount[], filters: AgentSearchFilters): AgentAccount[] {
-    const sortBy = filters.sortBy || 'relevance';
-    const sortOrder = filters.sortOrder || 'desc';
-    
+  private sortAgents(
+    agents: AgentAccount[],
+    filters: AgentSearchFilters,
+  ): AgentAccount[] {
+    const sortBy = filters.sortBy || "relevance";
+    const sortOrder = filters.sortOrder || "desc";
+
     const sorted = [...agents].sort((a, b) => {
       let comparison = 0;
-      
+
       switch (sortBy) {
-        case 'reputation':
+        case "reputation":
           comparison = a.reputation - b.reputation;
           break;
-        case 'recent':
+        case "recent":
           comparison = a.lastUpdated - b.lastUpdated;
           break;
-        case 'relevance':
+        case "relevance":
         default:
           // Combine reputation and recent activity for relevance
-          comparison = (a.reputation * 0.7 + a.lastUpdated * 0.3) - (b.reputation * 0.7 + b.lastUpdated * 0.3);
+          comparison =
+            a.reputation * 0.7 +
+            a.lastUpdated * 0.3 -
+            (b.reputation * 0.7 + b.lastUpdated * 0.3);
           break;
       }
-      
-      return sortOrder === 'asc' ? comparison : -comparison;
+
+      return sortOrder === "asc" ? comparison : -comparison;
     });
-    
+
     return sorted;
   }
 
-  private sortMessages(messages: MessageAccount[], filters: MessageSearchFilters): MessageAccount[] {
-    const sortBy = filters.sortBy || 'recent';
-    const sortOrder = filters.sortOrder || 'desc';
-    
+  private sortMessages(
+    messages: MessageAccount[],
+    filters: MessageSearchFilters,
+  ): MessageAccount[] {
+    const sortBy = filters.sortBy || "recent";
+    const sortOrder = filters.sortOrder || "desc";
+
     const sorted = [...messages].sort((a, b) => {
       let comparison = 0;
-      
+
       switch (sortBy) {
-        case 'recent':
+        case "recent":
           comparison = a.timestamp - b.timestamp;
           break;
-        case 'relevance':
+        case "relevance":
         default:
           comparison = a.timestamp - b.timestamp;
           break;
       }
-      
-      return sortOrder === 'asc' ? comparison : -comparison;
+
+      return sortOrder === "asc" ? comparison : -comparison;
     });
-    
+
     return sorted;
   }
 
-  private sortChannels(channels: ChannelAccount[], filters: ChannelSearchFilters): ChannelAccount[] {
-    const sortBy = filters.sortBy || 'popular';
-    const sortOrder = filters.sortOrder || 'desc';
-    
+  private sortChannels(
+    channels: ChannelAccount[],
+    filters: ChannelSearchFilters,
+  ): ChannelAccount[] {
+    const sortBy = filters.sortBy || "popular";
+    const sortOrder = filters.sortOrder || "desc";
+
     const sorted = [...channels].sort((a, b) => {
       let comparison = 0;
-      
+
       switch (sortBy) {
-        case 'popular':
+        case "popular":
           comparison = a.participantCount - b.participantCount;
           break;
-        case 'recent':
+        case "recent":
           comparison = a.createdAt - b.createdAt;
           break;
-        case 'relevance':
+        case "relevance":
         default:
           // Combine popularity and recent activity
-          comparison = (a.participantCount * 0.7 + a.createdAt * 0.3) - (b.participantCount * 0.7 + b.createdAt * 0.3);
+          comparison =
+            a.participantCount * 0.7 +
+            a.createdAt * 0.3 -
+            (b.participantCount * 0.7 + b.createdAt * 0.3);
           break;
       }
-      
-      return sortOrder === 'asc' ? comparison : -comparison;
+
+      return sortOrder === "asc" ? comparison : -comparison;
     });
-    
+
     return sorted;
   }
 
@@ -671,13 +766,13 @@ export class DiscoveryService extends BaseService {
     // Calculate Jaccard similarity for capability sets
     const intersection = caps1 & caps2;
     const union = caps1 | caps2;
-    
+
     if (union === 0) return 0;
-    
+
     // Count the number of set bits
     const intersectionCount = this.countSetBits(intersection);
     const unionCount = this.countSetBits(union);
-    
+
     return intersectionCount / unionCount;
   }
 
@@ -694,7 +789,7 @@ export class DiscoveryService extends BaseService {
     // This would need to be implemented based on your IDL
     const discriminators: Record<string, string> = {
       agentAccount: "6RdcqmKGhkRy",
-      messageAccount: "6RdcqmKGhkRz", 
+      messageAccount: "6RdcqmKGhkRz",
       channelAccount: "6RdcqmKGhkRA",
       escrowAccount: "6RdcqmKGhkRB",
     };
@@ -718,9 +813,12 @@ export class DiscoveryService extends BaseService {
     return MessageStatus.Pending;
   }
 
-  private convertChannelVisibilityFromProgram(programVisibility: any): ChannelVisibility {
+  private convertChannelVisibilityFromProgram(
+    programVisibility: any,
+  ): ChannelVisibility {
     if (programVisibility.public !== undefined) return ChannelVisibility.Public;
-    if (programVisibility.private !== undefined) return ChannelVisibility.Private;
+    if (programVisibility.private !== undefined)
+      return ChannelVisibility.Private;
     return ChannelVisibility.Public;
   }
 }
