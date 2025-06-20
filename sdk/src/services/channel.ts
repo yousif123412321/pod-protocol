@@ -27,10 +27,13 @@ export class ChannelService extends BaseService {
     // Derive channel PDA
     const [channelPDA] = findChannelPDA(wallet.publicKey, options.name, this.programId);
 
+    // Derive participant PDA for creator
+    const [participantPDA] = this.findParticipantPDA(channelPDA, agentPDA);
+
     const visibilityObj = this.convertChannelVisibility(options.visibility);
 
-    const tx = await program.methods
-      .createChannel(
+    const tx = await (program.methods as any)
+      .createChannelV2(
         options.name,
         options.description,
         visibilityObj,
@@ -38,8 +41,9 @@ export class ChannelService extends BaseService {
         new anchor.BN(options.feePerMessage)
       )
       .accounts({
+        agentAccount: agentPDA,
         channelAccount: channelPDA,
-        creatorAgent: agentPDA,
+        participantAccount: participantPDA,
         creator: wallet.publicKey,
         systemProgram: SystemProgram.programId,
       })
