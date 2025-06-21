@@ -15,6 +15,8 @@ export { ChannelService } from "./services/channel";
 export { EscrowService } from "./services/escrow";
 export { AnalyticsService } from "./services/analytics";
 export { DiscoveryService } from "./services/discovery";
+export { IPFSService } from "./services/ipfs";
+export { ZKCompressionService } from "./services/zk-compression";
 
 // Service types
 export type {
@@ -34,6 +36,20 @@ export type {
   RecommendationOptions,
   Recommendation,
 } from "./services/discovery";
+
+export type {
+  IPFSConfig,
+  ChannelMessageContent,
+  ParticipantExtendedMetadata,
+  IPFSStorageResult,
+} from "./services/ipfs";
+
+export type {
+  ZKCompressionConfig,
+  CompressedChannelMessage,
+  CompressedChannelParticipant,
+  BatchSyncOperation,
+} from "./services/zk-compression";
 
 // Types and interfaces
 export {

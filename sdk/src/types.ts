@@ -168,6 +168,30 @@ export interface PodComConfig {
   programId?: PublicKey;
   /** Default commitment level */
   commitment?: "processed" | "confirmed" | "finalized";
+  /** IPFS configuration for off-chain storage */
+  ipfs?: {
+    /** IPFS node URL - defaults to Infura public gateway */
+    url?: string;
+    /** IPFS API endpoint - defaults to /api/v0 */
+    apiPath?: string;
+    /** Authorization headers for private IPFS nodes */
+    headers?: Record<string, string>;
+    /** Timeout for IPFS operations in milliseconds */
+    timeout?: number;
+  };
+  /** ZK Compression configuration for Light Protocol integration */
+  zkCompression?: {
+    /** Light Protocol RPC endpoint */
+    lightRpcUrl?: string;
+    /** Photon indexer endpoint */
+    photonIndexerUrl?: string;
+    /** Maximum batch size for compression operations */
+    maxBatchSize?: number;
+    /** Enable automatic batching */
+    enableBatching?: boolean;
+    /** Batch timeout in milliseconds */
+    batchTimeout?: number;
+  };
 }
 
 /**

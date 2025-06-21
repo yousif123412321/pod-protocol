@@ -28,6 +28,8 @@ import { ChannelService } from "./services/channel";
 import { EscrowService } from "./services/escrow";
 import { AnalyticsService } from "./services/analytics";
 import { DiscoveryService } from "./services/discovery";
+import { IPFSService, IPFSConfig } from "./services/ipfs";
+import { ZKCompressionService, ZKCompressionConfig } from "./services/zk-compression";
 
 /**
  * Main PoD Protocol SDK client for interacting with the protocol
@@ -46,6 +48,8 @@ export class PodComClient {
   public escrow: EscrowService;
   public analytics: AnalyticsService;
   public discovery: DiscoveryService;
+  public ipfs: IPFSService;
+  public zkCompression: ZKCompressionService;
 
   constructor(config: PodComConfig = {}) {
     this.connection = new Connection(
@@ -68,6 +72,16 @@ export class PodComClient {
     this.escrow = new EscrowService(serviceConfig);
     this.analytics = new AnalyticsService(serviceConfig);
     this.discovery = new DiscoveryService(serviceConfig);
+    
+    // Initialize IPFS service
+    this.ipfs = new IPFSService(serviceConfig, config.ipfs || {});
+    
+    // Initialize ZK Compression service with IPFS dependency
+    this.zkCompression = new ZKCompressionService(
+      serviceConfig,
+      config.zkCompression || {},
+      this.ipfs
+    );
   }
 
   /**
@@ -103,6 +117,8 @@ export class PodComClient {
         this.escrow.setProgram(this.program);
         this.analytics.setProgram(this.program);
         this.discovery.setProgram(this.program);
+        this.ipfs.setProgram(this.program);
+        this.zkCompression.setProgram(this.program);
       } else {
         // No wallet provided - validate IDL before setting on services
         if (!IDL) {
@@ -118,6 +134,8 @@ export class PodComClient {
         this.escrow.setIDL(IDL);
         this.analytics.setIDL(IDL);
         this.discovery.setIDL(IDL);
+        this.ipfs.setIDL(IDL);
+        this.zkCompression.setIDL(IDL);
       }
 
       // Validate initialization was successful

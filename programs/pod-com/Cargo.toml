@@ -24,6 +24,12 @@ anchor-lang = { version = "=0.31.1", default-features = false, features = ["init
 # Use solana-program for compatibility with Anchor macros
 solana-program = { version = "=2.3.0", default-features = false }
 
+# Light Protocol ZK Compression dependencies
+light-compressed-token = { version = "1.0.0", default-features = false }
+light-system-program = { version = "1.0.0", default-features = false }
+light-hasher = { version = "1.0.0", default-features = false }
+light-utils = { version = "1.0.0", default-features = false }
+
 # Spl dependencies (commented out as they're optional)
 # spl-token = { version = "=4.0.0", optional = true, default-features = false }
 # spl-associated-token-account = { version = "=2.0.0", optional = true, default-features = false }

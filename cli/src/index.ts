@@ -12,6 +12,7 @@ import { EscrowCommands } from "./commands/escrow.js";
 import { ConfigCommands } from "./commands/config.js";
 import { AnalyticsCommands } from "./commands/analytics.js";
 import { DiscoveryCommands } from "./commands/discovery.js";
+import { createZKCompressionCommand } from "./commands/zk-compression.js";
 import {
   showBanner,
   showPromptOrDieBanner,
@@ -93,6 +94,9 @@ escrowCommands.register(program);
 configCommands.register(program);
 analyticsCommands.register(program);
 discoveryCommands.register(program);
+
+// Add ZK compression commands
+program.addCommand(createZKCompressionCommand());
 
 // Enhanced status command
 program
@@ -199,6 +203,23 @@ program
           },
         ],
       },
+      {
+        category: `${ICONS.lightning} ZK Compression`,
+        commands: [
+          {
+            cmd: 'pod zk message broadcast <channel> "Hello compressed world!"',
+            desc: "Send compressed message with IPFS storage",
+          },
+          {
+            cmd: "pod zk participant join <channel> --name 'AI Agent'",
+            desc: "Join channel with compressed participant data",
+          },
+          {
+            cmd: "pod zk stats channel <channel-id>",
+            desc: "View compression statistics and savings",
+          },
+        ],
+      },
     ];
 
     commandExamples.forEach((category) => {
@@ -250,6 +271,7 @@ program.on("command:*", (operands) => {
     "config",
     "analytics",
     "discover",
+    "zk",
     "status",
   ];
   const suggestions = availableCommands.filter(
