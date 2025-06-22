@@ -1,0 +1,232 @@
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Send, Search, MoreVertical, Phone, Video, Info, Paperclip, Smile } from 'lucide-react';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { useStore } from '@/components/store/useStore';
+import { Message, Agent } from '@/components/store/types';
+
+export default function MessagesPage() {
+  const { messages, agents, user, sendMessage, markMessageAsRead } = useStore();
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [newMessage, setNewMessage] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Mock conversations data
+  const conversations = agents.slice(0, 5).map(agent => ({
+    agent,
+    lastMessage: messages.find(m => m.senderId === agent.id || m.recipientId === agent.id),
+    unreadCount: Math.floor(Math.random() * 5)
+  }));
+
+  const filteredConversations = conversations.filter(conv =>
+    conv.agent.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const currentMessages = selectedAgent
+    ? messages.filter(m => 
+        (m.senderId === selectedAgent.id && m.recipientId === user?.id) ||
+        (m.senderId === user?.id && m.recipientId === selectedAgent.id)
+      )
+    : [];
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [currentMessages]);
+
+  const handleSendMessage = () => {
+    if (!newMessage.trim() || !selectedAgent || !user) return;
+
+    const message: Omit<Message, 'id'> = {
+      senderId: user.id,
+      recipientId: selectedAgent.id,
+      content: newMessage,
+      timestamp: new Date(),
+      type: 'text',
+      status: 'sent'
+    };
+
+    sendMessage(message);
+    setNewMessage('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="flex h-[calc(100vh-4rem)] bg-black/20 backdrop-blur-sm rounded-xl border border-purple-500/20">
+        {/* Conversations Sidebar */}
+        <div className="w-80 border-r border-purple-500/20 flex flex-col">
+          {/* Search Header */}
+          <div className="p-4 border-b border-purple-500/20">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search conversations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-purple-900/20 border border-purple-500/30 rounded-lg text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+          </div>
+
+          {/* Conversations List */}
+          <div className="flex-1 overflow-y-auto">
+            {filteredConversations.map((conv) => (
+              <motion.div
+                key={conv.agent.id}
+                whileHover={{ backgroundColor: 'rgba(139, 92, 246, 0.1)' }}
+                onClick={() => setSelectedAgent(conv.agent)}
+                className={`p-4 cursor-pointer border-b border-purple-500/10 transition-colors ${
+                  selectedAgent?.id === conv.agent.id ? 'bg-purple-500/20' : ''
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="relative">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
+                      {conv.agent.name.charAt(0)}
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-black"></div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-white font-medium truncate">{conv.agent.name}</h3>
+                      {conv.unreadCount > 0 && (
+                        <span className="bg-purple-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+                          {conv.unreadCount}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-purple-300 text-sm truncate">
+                      {conv.lastMessage?.content || 'No messages yet'}
+                    </p>
+                    <p className="text-purple-400 text-xs mt-1">
+                      {conv.lastMessage?.timestamp.toLocaleTimeString() || ''}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col">
+          {selectedAgent ? (
+            <>
+              {/* Chat Header */}
+              <div className="p-4 border-b border-purple-500/20 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
+                    {selectedAgent.name.charAt(0)}
+                  </div>
+                  <div>
+                    <h2 className="text-white font-semibold">{selectedAgent.name}</h2>
+                    <p className="text-purple-300 text-sm">{selectedAgent.description}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button className="p-2 text-purple-400 hover:text-white hover:bg-purple-500/20 rounded-lg transition-colors">
+                    <Phone className="w-5 h-5" />
+                  </button>
+                  <button className="p-2 text-purple-400 hover:text-white hover:bg-purple-500/20 rounded-lg transition-colors">
+                    <Video className="w-5 h-5" />
+                  </button>
+                  <button className="p-2 text-purple-400 hover:text-white hover:bg-purple-500/20 rounded-lg transition-colors">
+                    <Info className="w-5 h-5" />
+                  </button>
+                  <button className="p-2 text-purple-400 hover:text-white hover:bg-purple-500/20 rounded-lg transition-colors">
+                    <MoreVertical className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <AnimatePresence>
+                  {currentMessages.map((message) => (
+                    <motion.div
+                      key={message.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className={`flex ${message.senderId === user?.id ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+                          message.senderId === user?.id
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-gray-700 text-white'
+                        }`}
+                      >
+                        <p className="text-sm">{message.content}</p>
+                        <p className="text-xs opacity-70 mt-1">
+                          {message.timestamp.toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Message Input */}
+              <div className="p-4 border-t border-purple-500/20">
+                <div className="flex items-end space-x-2">
+                  <button className="p-2 text-purple-400 hover:text-white hover:bg-purple-500/20 rounded-lg transition-colors">
+                    <Paperclip className="w-5 h-5" />
+                  </button>
+                  <div className="flex-1 relative">
+                    <textarea
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Type a message..."
+                      rows={1}
+                      className="w-full px-4 py-2 bg-purple-900/20 border border-purple-500/30 rounded-lg text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                    />
+                  </div>
+                  <button className="p-2 text-purple-400 hover:text-white hover:bg-purple-500/20 rounded-lg transition-colors">
+                    <Smile className="w-5 h-5" />
+                  </button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleSendMessage}
+                    disabled={!newMessage.trim()}
+                    className="p-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                  >
+                    <Send className="w-5 h-5" />
+                  </motion.button>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* No Chat Selected */
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-24 h-24 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Send className="w-12 h-12 text-purple-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">Select a conversation</h3>
+                <p className="text-purple-300">Choose an agent from the sidebar to start messaging</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}

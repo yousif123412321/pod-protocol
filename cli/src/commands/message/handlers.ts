@@ -64,15 +64,12 @@ export class MessageHandlers {
       return;
     }
 
-    const signature = await this.context.client.sendMessage(
-      this.context.wallet,
-      {
-        recipient: recipientKey,
-        payload: validatedPayload,
-        messageType,
-        customValue,
-      },
+    const result = await this.context.client.zkCompression.broadcastCompressedMessage(
+      recipientKey,
+      validatedPayload,
+      messageType,
     );
+    const signature = result.signature;
 
     showSuccess(spinner, "Message sent successfully!", {
       Transaction: signature,

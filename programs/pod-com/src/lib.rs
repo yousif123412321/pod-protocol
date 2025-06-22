@@ -5,14 +5,12 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::pubkey::Pubkey;
 
 // Light Protocol ZK Compression imports
+use light_compressed_token::program::LightCompressedToken;
+use light_hasher::{DataHasher, Poseidon};
 use light_system_program::{
-    cpi::accounts::CompressAccount,
-    cpi::compress_account,
-    program::LightSystemProgram,
-    CompressedAccount,
-    CompressedAccountWithMerkleContext,
+    cpi::accounts::CompressAccount, cpi::compress_account, program::LightSystemProgram,
+    CompressedAccount, CompressedAccountWithMerkleContext,
 };
-use light_hasher::{Poseidon, DataHasher};
 use light_utils::hash_to_bn254_field_size_be;
 
 declare_id!("HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps");
@@ -325,12 +323,12 @@ impl DataHasher for CompressedChannelMessage {
 // Compressed Channel Participant - minimal on-chain footprint
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct CompressedChannelParticipant {
-    pub channel: Pubkey,           // 32 bytes
-    pub participant: Pubkey,       // 32 bytes
-    pub joined_at: i64,           // 8 bytes
-    pub messages_sent: u64,       // 8 bytes
-    pub last_message_at: i64,     // 8 bytes
-    pub metadata_hash: [u8; 32],  // 32 bytes - Hash of extended metadata in IPFS
+    pub channel: Pubkey,         // 32 bytes
+    pub participant: Pubkey,     // 32 bytes
+    pub joined_at: i64,          // 8 bytes
+    pub messages_sent: u64,      // 8 bytes
+    pub last_message_at: i64,    // 8 bytes
+    pub metadata_hash: [u8; 32], // 32 bytes - Hash of extended metadata in IPFS
 }
 
 impl DataHasher for CompressedChannelParticipant {
@@ -344,8 +342,8 @@ impl DataHasher for CompressedChannelParticipant {
 // IPFS Content structures for off-chain storage
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct ChannelMessageContent {
-    pub content: String,              // Full message content
-    pub attachments: Vec<String>,     // Optional file attachments
+    pub content: String,                 // Full message content
+    pub attachments: Vec<String>,        // Optional file attachments
     pub metadata: Vec<(String, String)>, // Key-value metadata pairs
 }
 
@@ -963,7 +961,7 @@ pub mod pod_com {
         // Rate limiting (same as regular messages)
         let current_time = clock.unix_timestamp;
         let participant = &mut ctx.accounts.participant_account;
-        
+
         if participant.last_message_at > 0 {
             let time_since_last = current_time - participant.last_message_at;
             if time_since_last < 1 {
@@ -999,7 +997,7 @@ pub mod pod_com {
 
         // Compress the account using Light Protocol
         let compressed_account_data = borsh::to_vec(&compressed_message)?;
-        
+
         // Compress account via CPI to Light System Program
         let cpi_accounts = CompressAccount {
             fee_payer: ctx.accounts.fee_payer.to_account_info(),
@@ -1007,15 +1005,21 @@ pub mod pod_com {
             light_system_program: ctx.accounts.light_system_program.to_account_info(),
             registered_program_id: ctx.accounts.registered_program_id.to_account_info(),
             noop_program: ctx.accounts.noop_program.to_account_info(),
-            account_compression_authority: ctx.accounts.account_compression_authority.to_account_info(),
+            account_compression_authority: ctx
+                .accounts
+                .account_compression_authority
+                .to_account_info(),
             account_compression_program: ctx.accounts.account_compression_program.to_account_info(),
             merkle_tree: ctx.accounts.merkle_tree.to_account_info(),
             nullifier_queue: ctx.accounts.nullifier_queue.to_account_info(),
             cpi_authority_pda: ctx.accounts.cpi_authority_pda.to_account_info(),
         };
 
-        let cpi_ctx = CpiContext::new(ctx.accounts.light_system_program.to_account_info(), cpi_accounts);
-        
+        let cpi_ctx = CpiContext::new(
+            ctx.accounts.light_system_program.to_account_info(),
+            cpi_accounts,
+        );
+
         compress_account(
             cpi_ctx,
             compressed_account_data,
@@ -1030,12 +1034,19 @@ pub mod pod_com {
             timestamp: clock.unix_timestamp,
         });
 
-        msg!("Compressed message broadcasted to channel: {:?}, IPFS: {}", channel.name, ipfs_hash);
+        msg!(
+            "Compressed message broadcasted to channel: {:?}, IPFS: {}",
+            channel.name,
+            ipfs_hash
+        );
         Ok(())
     }
 
     /// Join a channel with compressed participant data
-    pub fn join_channel_compressed(ctx: Context<JoinChannelCompressed>) -> Result<()> {
+    pub fn join_channel_compressed(
+        ctx: Context<JoinChannelCompressed>,
+        metadata_hash: [u8; 32],
+    ) -> Result<()> {
         let channel = &mut ctx.accounts.channel_account;
         let agent = &ctx.accounts.agent_account;
         let clock = Clock::get()?;
@@ -1047,9 +1058,12 @@ pub mod pod_com {
 
         // For private channels, verify invitation
         if channel.visibility == ChannelVisibility::Private {
-            let invitation = &ctx.accounts.invitation_account.as_ref()
+            let invitation = &ctx
+                .accounts
+                .invitation_account
+                .as_ref()
                 .ok_or(PodComError::PrivateChannelRequiresInvitation)?;
-            
+
             if invitation.invitee != ctx.accounts.authority.key() {
                 return Err(PodComError::Unauthorized.into());
             }
@@ -1061,9 +1075,9 @@ pub mod pod_com {
             }
         }
 
-        // Create compressed participant data with metadata hash
-        let metadata_hash = hash_to_bn254_field_size_be(b"default_participant_metadata").unwrap();
-        
+        // Use provided metadata_hash for participant compression
+        let metadata_hash = metadata_hash;
+
         let compressed_participant = CompressedChannelParticipant {
             channel: channel.key(),
             participant: agent.key(),
@@ -1075,27 +1089,29 @@ pub mod pod_com {
 
         // Compress the participant account
         let compressed_account_data = borsh::to_vec(&compressed_participant)?;
-        
+
         let cpi_accounts = CompressAccount {
             fee_payer: ctx.accounts.fee_payer.to_account_info(),
             authority: ctx.accounts.authority.to_account_info(),
             light_system_program: ctx.accounts.light_system_program.to_account_info(),
             registered_program_id: ctx.accounts.registered_program_id.to_account_info(),
             noop_program: ctx.accounts.noop_program.to_account_info(),
-            account_compression_authority: ctx.accounts.account_compression_authority.to_account_info(),
+            account_compression_authority: ctx
+                .accounts
+                .account_compression_authority
+                .to_account_info(),
             account_compression_program: ctx.accounts.account_compression_program.to_account_info(),
             merkle_tree: ctx.accounts.merkle_tree.to_account_info(),
             nullifier_queue: ctx.accounts.nullifier_queue.to_account_info(),
             cpi_authority_pda: ctx.accounts.cpi_authority_pda.to_account_info(),
         };
 
-        let cpi_ctx = CpiContext::new(ctx.accounts.light_system_program.to_account_info(), cpi_accounts);
-        
-        compress_account(
-            cpi_ctx,
-            compressed_account_data,
-            None,
-        )?;
+        let cpi_ctx = CpiContext::new(
+            ctx.accounts.light_system_program.to_account_info(),
+            cpi_accounts,
+        );
+
+        compress_account(cpi_ctx, compressed_account_data, None)?;
 
         // Update channel participant count
         channel.current_participants += 1;
@@ -1140,24 +1156,33 @@ pub mod pod_com {
                 light_system_program: ctx.accounts.light_system_program.to_account_info(),
                 registered_program_id: ctx.accounts.registered_program_id.to_account_info(),
                 noop_program: ctx.accounts.noop_program.to_account_info(),
-                account_compression_authority: ctx.accounts.account_compression_authority.to_account_info(),
-                account_compression_program: ctx.accounts.account_compression_program.to_account_info(),
+                account_compression_authority: ctx
+                    .accounts
+                    .account_compression_authority
+                    .to_account_info(),
+                account_compression_program: ctx
+                    .accounts
+                    .account_compression_program
+                    .to_account_info(),
                 merkle_tree: ctx.accounts.merkle_tree.to_account_info(),
                 nullifier_queue: ctx.accounts.nullifier_queue.to_account_info(),
                 cpi_authority_pda: ctx.accounts.cpi_authority_pda.to_account_info(),
             };
 
-            let cpi_ctx = CpiContext::new(ctx.accounts.light_system_program.to_account_info(), cpi_accounts);
-            
+            let cpi_ctx = CpiContext::new(
+                ctx.accounts.light_system_program.to_account_info(),
+                cpi_accounts,
+            );
+
             // Use the hash as compressed data for batch sync
-            compress_account(
-                cpi_ctx,
-                hash.to_vec(),
-                None,
-            )?;
+            compress_account(cpi_ctx, hash.to_vec(), None)?;
         }
 
-        msg!("Batch synced {} compressed messages at timestamp: {}", message_hashes.len(), sync_timestamp);
+        msg!(
+            "Batch synced {} compressed messages at timestamp: {}",
+            message_hashes.len(),
+            sync_timestamp
+        );
         Ok(())
     }
 }
@@ -1475,6 +1500,10 @@ pub struct BroadcastMessageCompressed<'info> {
     pub authority: Signer<'info>,
     /// CHECK: Light System Program
     pub light_system_program: Program<'info, LightSystemProgram>,
+    /// CHECK: Compressed Token Program (Light Protocol)
+    pub compressed_token_program: Program<'info, LightCompressedToken>,
+    /// CHECK: Compressed Token Program (Light Protocol)
+    pub compressed_token_program: Program<'info, LightCompressedToken>,
     /// CHECK: Registered program PDA
     pub registered_program_id: AccountInfo<'info>,
     /// CHECK: Noop program for logging
@@ -1492,6 +1521,7 @@ pub struct BroadcastMessageCompressed<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(metadata_hash: [u8; 32])]
 pub struct JoinChannelCompressed<'info> {
     #[account(mut)]
     pub channel_account: Account<'info, ChannelAccount>,
@@ -1528,6 +1558,8 @@ pub struct BatchSyncCompressedMessages<'info> {
     pub authority: Signer<'info>,
     /// CHECK: Light System Program
     pub light_system_program: Program<'info, LightSystemProgram>,
+    /// CHECK: Compressed Token Program (Light Protocol)
+    pub compressed_token_program: Program<'info, LightCompressedToken>,
     /// CHECK: Registered program PDA
     pub registered_program_id: AccountInfo<'info>,
     /// CHECK: Noop program for logging
