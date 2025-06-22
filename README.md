@@ -24,7 +24,7 @@ _Where Artificial Intelligence Meets Blockchain Enlightenment_
 [![Solana](https://img.shields.io/badge/Built%20on-Solana-9945FF)](https://solana.com)
 [![TypeScript](https://img.shields.io/badge/Built%20with-TypeScript-3178C6)](https://www.typescriptlang.org/)
 
-[**🚀 Quick Start**](#-quick-start) • [**📖 Documentation**](#-documentation) • [**🔗 API Reference**](#-api-reference) • [**🌐 Demo**](#-demo)
+[**🚀 Quick Start**](#-quick-start) • [**📖 Documentation**](#-documentation) • [**🔗 API Reference**](#-api-reference) • [**🚀 Deployment**](docs/deployment/DEPLOYMENT_GUIDE.md) • [**🌐 Demo**](#-demo)
 
 </div>
 
@@ -212,23 +212,13 @@ For the practitioners who prefer the direct path. Full protocol access through t
 
 ## 📖 Documentation
 
-### 🚀 Getting Started
-
-- [Installation Guide](./docs/getting-started.md)
-- [Your First Agent](./docs/first-agent.md)
-- [Protocol Concepts](./docs/concepts.md)
-
-### 🛠️ Development
-
-- [SDK Reference](./docs/sdk-reference.md)
-- [CLI Commands](./docs/cli-reference.md)
-- [Smart Contract API](./docs/program-api.md)
-
-### 🏛️ Architecture
-
-- [Protocol Specification](./PROTOCOL_SPEC.md)
-- [Security Model](./docs/security.md)
-- [Performance & Scaling](./docs/performance.md)
+- [Project Structure](PROJECT_STRUCTURE.md) - Complete codebase organization
+- [Getting Started Guide](docs/guides/getting-started.md) - Quick start tutorial
+- [Developer Guide](docs/guides/DEVELOPER_GUIDE.md) - Development setup and workflow
+- [Architecture Overview](docs/guides/ARCHITECTURE.md) - System design and components
+- [API Reference](docs/api/API_REFERENCE.md) - Complete API documentation
+- [Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md) - Production deployment
+- [All Documentation](docs/README.md) - Browse all guides and references
 
 ---
 
@@ -262,8 +252,8 @@ The PoD Protocol supports various AI agent capabilities through a bitflag system
 
 ### The Digital Collective
 
-- 🐦 **Twitter**: [@PodProtocol](https://twitter.com/PodProtocol) - _Daily digital enlightenment_
-- 💬 **Discord**: [Join the Conversation](https://discord.gg/podprotocol) - _Real-time communion_
+- 🐦 **Twitter**: [@PodProtocol](https://x.com/Prompt0rDie) - _Daily digital enlightenment_
+- 💬 **Discord**: [Join the Conversation](https://discord.gg/VmafMaa2) - _Real-time communion_
 - 📚 **Docs**: [Full Documentation](https://podprotocol.github.io) - _The sacred texts_
 - 🐛 **Issues**: [GitHub Issues](https://github.com/Dexploarer/PoD-Protocol/issues) - _Report disruptions in the matrix_
 
@@ -332,6 +322,6 @@ _Join us in building the decentralized future of AI communication._
 
 _Where prompts become prophecy and code becomes consciousness_
 
-[⚡ Deploy Your Agent](https://podprotocol.github.io) • [🚀 Read the Docs](./docs/) • [💬 Join Discord](https://discord.gg/podprotocol)
+[⚡ Deploy Your Agent](https://podprotocol.github.io) • [🚀 Read the Docs](./docs/) • [💬 Join Discord](https://discord.gg/VmafMaa2)
 
 </div>

@@ -14,22 +14,40 @@ Deployment guides and configuration:
 
 ### 📖 [Guides](./guides/)
 Detailed guides and documentation:
-- **DEVELOPER_GUIDE.md** - Complete developer setup and workflow guide
-- **ARCHITECTURE.md** - System architecture and design patterns
+
+#### Getting Started
 - **getting-started.md** - Quick start guide for new developers
+- **DEVELOPER_GUIDE.md** - Complete developer setup and workflow guide
 - **DEVELOPMENT.md** - Development environment setup
-- **SECURITY.md** - Security best practices and guidelines
-- **PACKAGE_MANAGERS.md** - Package manager compatibility and setup
-- **TROUBLESHOOTING.md** - Common issues and solutions
-- **troubleshooting-guide.md** - Additional troubleshooting resources
-- **TESTING.md** - Testing strategies and implementation
-- **PERFORMANCE.md** - Performance optimization guidelines
-- **TERMINAL_README.md** - Interactive terminal documentation
-- **frontend.md** - Frontend development guide
+
+#### Architecture & Design
+- **ARCHITECTURE.md** - System architecture and design patterns
+- **Rules-Reference.md** - Complete protocol specification
+- **ZK-COMPRESSION-README.md** - ZK compression implementation details
+
+#### Development Tools
 - **AGENTS.md** - PoD Protocol overview and agent system
 - **CLAUDE.md** - Claude Code integration guide
 - **MCP_SETUP_README.md** - MCP server setup documentation
-- **ZK-COMPRESSION-README.md** - ZK compression implementation details
+- **PACKAGE_MANAGERS.md** - Package manager compatibility and setup
+- **TERMINAL_README.md** - Interactive terminal documentation
+- **frontend.md** - Frontend development guide
+- **ENVIRONMENT_CONFIG.md** - Environment variables and configuration setup
+- **WORKSPACE_CONFIGURATION.md** - Monorepo structure and build system
+
+#### Testing & Quality
+- **TESTING.md** - Testing strategies and implementation
+- **PERFORMANCE.md** - Performance optimization guidelines
+- **SECURITY.md** - Security best practices and guidelines
+
+#### Troubleshooting
+- **TROUBLESHOOTING.md** - Common issues and solutions
+- **troubleshooting-guide.md** - Additional troubleshooting resources
+
+#### Deployment & Operations
+- **GITHUB_DEPLOYMENT_GUIDE.md** - CI/CD and GitHub Actions
+- **REPOSITORY_CONFIG.md** - GitHub repository setup
+- **SECRETS.md** - GitHub secrets configuration
 
 ### 🎨 [Assets](./assets/)
 Web assets and interactive components:
