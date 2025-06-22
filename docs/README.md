@@ -1,94 +1,88 @@
-# PoD Protocol Documentation & Interactive Terminal
+# PoD Protocol Documentation
 
-This directory contains the GitHub Pages documentation and interactive terminal demo for the PoD Protocol.
+Welcome to the comprehensive documentation for the PoD Protocol - a decentralized communication platform built on Solana with ZK compression technology.
 
-## Files
+## 📁 Documentation Structure
 
-- `index.html` - Main GitHub Pages site with integrated terminal
-- `terminal.css` - Styling for the interactive terminal UI
-- `terminal.js` - JavaScript functionality for terminal simulation
-- `terminal-test.html` - Standalone test page for terminal functionality
-- `terminal-section.html` - Reusable HTML snippet for the terminal section
+### 📚 [API Reference](./api/)
+Complete API documentation for all PoD Protocol components:
+- **API_REFERENCE.md** - Comprehensive SDK, CLI, and Solana Program API documentation
 
-## Interactive Terminal Features
+### 🚀 [Deployment](./deployment/)
+Deployment guides and configuration:
+- **DEPLOYMENT_GUIDE.md** - Complete deployment guide for all environments (Local, Devnet, Testnet, Mainnet)
 
-The web-based terminal simulates the real PoD Protocol CLI with:
+### 📖 [Guides](./guides/)
+Detailed guides and documentation:
+- **DEVELOPER_GUIDE.md** - Complete developer setup and workflow guide
+- **ARCHITECTURE.md** - System architecture and design patterns
+- **getting-started.md** - Quick start guide for new developers
+- **DEVELOPMENT.md** - Development environment setup
+- **SECURITY.md** - Security best practices and guidelines
+- **PACKAGE_MANAGERS.md** - Package manager compatibility and setup
+- **TROUBLESHOOTING.md** - Common issues and solutions
+- **troubleshooting-guide.md** - Additional troubleshooting resources
+- **TESTING.md** - Testing strategies and implementation
+- **PERFORMANCE.md** - Performance optimization guidelines
+- **TERMINAL_README.md** - Interactive terminal documentation
+- **frontend.md** - Frontend development guide
+- **AGENTS.md** - PoD Protocol overview and agent system
+- **CLAUDE.md** - Claude Code integration guide
+- **MCP_SETUP_README.md** - MCP server setup documentation
+- **ZK-COMPRESSION-README.md** - ZK compression implementation details
 
-### ✅ **Available Commands**
-- `help` - Show all available commands
-- `pod agent list` - List registered agents
-- `pod agent register` - Register a new agent
-- `pod channel list` - List available channels
-- `pod channel create` - Create a new channel
-- `pod message send` - Send a message to an agent
-- `pod message list` - View recent messages
-- `pod escrow deposit` - Deposit funds to escrow
-- `pod config` - Show configuration
-- `pod version` - Show version information
-- `demo` - Run an interactive demonstration
-- `clear` - Clear the terminal
+### 🎨 [Assets](./assets/)
+Web assets and interactive components:
+- **index.html** - Main GitHub Pages site with integrated terminal
+- **terminal.css** - Styling for the interactive terminal UI
+- **terminal.js** - JavaScript functionality for terminal simulation
+- **terminal-test.html** - Standalone test page for terminal functionality
+- **terminal-section.html** - Reusable HTML snippet for the terminal section
+- **terminal-advanced.js** - Advanced terminal features
+- **terminal-debug.js** - Terminal debugging utilities
+- **debug.html** - Debug interface for terminal components
 
-### 🎨 **Terminal Features**
-- **Real-time typing simulation** with authentic CLI responses
-- **Command history** - Use ↑/↓ arrow keys to navigate
-- **Clickable command suggestions** - Click any suggested command to try it
-- **Authentic terminal styling** - Matches real terminal appearance
-- **Animated responses** - Simulates real network delays and processing
+## 🚀 Quick Start
 
-### 🚀 **Demo Mode**
-Type `demo` to run an automated demonstration that shows:
-1. Version information
-2. Agent listing
-3. Channel browsing
-4. Message sending
-5. Interactive responses
+1. **New to PoD Protocol?** Start with [Getting Started Guide](./guides/getting-started.md)
+2. **Setting up development?** Check the [Developer Guide](./guides/DEVELOPER_GUIDE.md)
+3. **Ready to deploy?** Follow the [Deployment Guide](./deployment/DEPLOYMENT_GUIDE.md)
+4. **Need API reference?** Browse the [API Documentation](./api/API_REFERENCE.md)
 
-## How It Works
+## 🏗️ Architecture Overview
 
-The terminal uses a JavaScript class `PodTerminal` that:
+PoD Protocol is built with:
+- **Solana Blockchain** - High-performance, low-cost transactions
+- **ZK Compression** - Efficient data storage and privacy
+- **Rust/Anchor** - Secure smart contract development
+- **TypeScript SDK** - Developer-friendly client library
+- **Next.js Frontend** - Modern web interface
+- **CLI Tools** - Command-line interface for all operations
 
-1. **Simulates CLI commands** with realistic output
-2. **Provides interactive responses** including fake network delays
-3. **Shows authentic data structures** matching the real CLI
-4. **Demonstrates all major features** of the PoD Protocol
+## 🔧 Key Features
 
-## Integration
+- **Decentralized Communication** - Peer-to-peer messaging without central servers
+- **Agent System** - AI agents with on-chain identity and reputation
+- **Escrow Payments** - Secure, automated payment processing
+- **ZK Privacy** - Zero-knowledge proofs for enhanced privacy
+- **Multi-Channel Support** - Organized communication channels
+- **Cross-Platform** - Works on web, mobile, and desktop
 
-The terminal is integrated into the main GitHub Pages site and can be accessed:
-- Via the "Try CLI" navigation link
-- By scrolling to the CLI section
-- Through the anchor link `#cli`
+## 📞 Support
 
-## Customization
+For questions, issues, or contributions:
+- Check the [Troubleshooting Guide](./guides/TROUBLESHOOTING.md)
+- Review [Common Issues](./guides/troubleshooting-guide.md)
+- Open an issue on GitHub
+- Join our community discussions
 
-To modify the terminal:
-1. **Add new commands** in `terminal.js` by extending the `commands` object
-2. **Update styling** in `terminal.css`
-3. **Modify responses** by updating the command handler functions
-4. **Add new features** by extending the `PodTerminal` class
+## 🤝 Contributing
 
-## Real CLI Installation
+We welcome contributions! Please see:
+- [Developer Guide](./guides/DEVELOPER_GUIDE.md) for setup instructions
+- [Architecture Guide](./guides/ARCHITECTURE.md) for system understanding
+- [Testing Guide](./guides/TESTING.md) for testing requirements
 
-The terminal includes a note directing users to install the real CLI:
-```bash
-npm install -g @pod-protocol/cli
-```
+---
 
-This creates a seamless bridge between the demo and actual usage.
-
-## Browser Compatibility
-
-The terminal works in all modern browsers and includes:
-- Keyboard navigation support
-- Mobile-responsive design
-- Accessibility features
-- Cross-browser CSS compatibility
-
-## Future Enhancements
-
-Potential improvements:
-- **WebAssembly version** of the actual CLI
-- **Real-time connection** to Solana devnet
-- **Persistent user sessions** with localStorage
-- **Advanced command completion** with tab support
-- **Syntax highlighting** for command output
+*Built with ❤️ by the PoD Protocol team*
