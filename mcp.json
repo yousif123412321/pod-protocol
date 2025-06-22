@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "fs": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/blind/PoD-Protocol-1"]
+    },
+    "git": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-git", "--repository", "/home/blind/PoD-Protocol-1"]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"]
+    },
+    "task-manager": {
+      "command": "npx",
+      "args": ["mcp-task-manager-server"]
+    }
+  }
+}

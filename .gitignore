@@ -118,6 +118,9 @@ keypairs/
 !tsconfig.json
 !Anchor.toml
 !src/idl.json
+!mcp.json
+!mcp_config.jsonc
+!qodo_mcp_config.jsonc
 
 # IDE
 .vscode/
