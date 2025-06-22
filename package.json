@@ -25,6 +25,8 @@
     "test:coverage": "cd sdk && bun run test:coverage && cd ../cli && bun run test:coverage",
     "deploy": "anchor deploy",
     "deploy:prod": "anchor deploy --provider.cluster mainnet-beta",
+    "deploy:frontend": "./scripts/deploy-frontend.sh --preview",
+    "deploy:frontend:prod": "./scripts/deploy-frontend.sh --production",
     "clean": "rm -rf target/ && cd sdk && bun run clean && cd ../cli && bun run clean",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" --write",
@@ -40,6 +42,7 @@
     "production:deploy": "yarn run production:test && yarn run build:prod",
     "ci:build": "yarn run build:verify && yarn run build:all",
     "ci:test": "yarn run test:all && yarn run lint:all",
+    "validate:workflows": "node scripts/validate-workflows.js",
     "pretest": "yarn run build:verify",
     "prepublishOnly": "yarn run production:test && yarn run build:all"
   },

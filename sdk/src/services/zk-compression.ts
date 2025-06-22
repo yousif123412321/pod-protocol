@@ -245,11 +245,30 @@ export class ZKCompressionService extends BaseService {
       };
 
       // Create transaction using Light Protocol
-      // TODO: Implement proper Light Protocol integration
       const program = this.ensureInitialized();
       
-      // Placeholder implementation - replace with actual Light Protocol calls
-      const signature = 'placeholder_signature';
+      // Create Light Protocol compressed account transaction
+      const tx = await (program as any).methods
+        .joinChannelCompressed(Array.from(Buffer.from(metadataHash, 'hex')))
+        .accounts({
+          channelAccount: channelId,
+          agentAccount: participantId,
+          invitationAccount: null,
+          feePayer: this.provider.wallet.publicKey,
+          authority: this.provider.wallet.publicKey,
+          lightSystemProgram: new PublicKey('H5sFv8VwWmjxHYS2GB4fTDsK7uTtnRT4WiixtHrET3bN'),
+          registeredProgramId: new PublicKey('noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'),
+          noopProgram: new PublicKey('noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'),
+          accountCompressionAuthority: new PublicKey('5QPEJ5zDsVou9FQS3KCHdPeeWDfWDcXYRKZaAkXRBGSW'),
+          accountCompressionProgram: new PublicKey('cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'),
+          merkleTree: channelId, // Use channel as merkle tree
+          nullifierQueue: new PublicKey('11111111111111111111111111111111'),
+          cpiAuthorityPda: new PublicKey('11111111111111111111111111111111'),
+        })
+        .transaction();
+
+      const provider = program.provider as AnchorProvider;
+      const signature = await provider.sendAndConfirm(tx);
 
       return {
         signature,
@@ -282,18 +301,27 @@ export class ZKCompressionService extends BaseService {
         Array.from(Buffer.from(hash, 'hex'))
       );
 
-      // TODO: Implement Light Protocol integration
-      // const tx = await (program as any).methods
-      //   .batchSyncCompressedMessages(hashBytes, timestamp)
-      //   .accounts({
-      //     channelAccount: channelId,
-      //     // Add other required accounts for Light Protocol
-      //   })
-      //   .transaction();
+      // Implement Light Protocol integration
+      const tx = await (program as any).methods
+        .batchSyncCompressedMessages(hashBytes, timestamp)
+        .accounts({
+          channelAccount: channelId,
+          feePayer: this.provider.wallet.publicKey,
+          authority: this.provider.wallet.publicKey,
+          lightSystemProgram: new PublicKey('H5sFv8VwWmjxHYS2GB4fTDsK7uTtnRT4WiixtHrET3bN'),
+          compressedTokenProgram: new PublicKey('cTokenmWW8bLPjZEBAUgYy3zKxQZW6VKi7bqNFEVv3m'),
+          registeredProgramId: new PublicKey('noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'),
+          noopProgram: new PublicKey('noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'),
+          accountCompressionAuthority: new PublicKey('5QPEJ5zDsVou9FQS3KCHdPeeWDfWDcXYRKZaAkXRBGSW'),
+          accountCompressionProgram: new PublicKey('cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'),
+          merkleTree: channelId,
+          nullifierQueue: new PublicKey('11111111111111111111111111111111'),
+          cpiAuthorityPda: new PublicKey('11111111111111111111111111111111'),
+        })
+        .transaction();
 
-      // const provider = program.provider as AnchorProvider;
-      // const signature = await provider.sendAndConfirm(tx);
-      const signature = 'placeholder_signature';
+      const provider = program.provider as AnchorProvider;
+      const signature = await provider.sendAndConfirm(tx);
 
       return {
         signature,
@@ -448,24 +476,33 @@ export class ZKCompressionService extends BaseService {
     try {
       const program = this.ensureInitialized();
       
-      // TODO: Implement Light Protocol integration
-      // const tx = await program.methods
-      //   .broadcastMessageCompressed(
-      //     // This would need to be updated based on the actual content stored in IPFS
-      //     'compressed', // content placeholder
-      //     message.messageType,
-      //     message.replyTo || null,
-      //     message.ipfsHash
-      //   )
-      //   .accounts({
-      //     channelAccount: message.channel,
-      //     // Add other required accounts
-      //   })
-      //   .transaction();
+      // Implement Light Protocol integration
+      const tx = await (program as any).methods
+        .broadcastMessageCompressed(
+          message.contentHash, // Use content hash instead of full content
+          message.messageType,
+          message.replyTo || null,
+          message.ipfsHash
+        )
+        .accounts({
+          channelAccount: message.channel,
+          participantAccount: message.sender,
+          feePayer: this.provider.wallet.publicKey,
+          authority: this.provider.wallet.publicKey,
+          lightSystemProgram: new PublicKey('H5sFv8VwWmjxHYS2GB4fTDsK7uTtnRT4WiixtHrET3bN'),
+          compressedTokenProgram: new PublicKey('cTokenmWW8bLPjZEBAUgYy3zKxQZW6VKi7bqNFEVv3m'),
+          registeredProgramId: new PublicKey('noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'),
+          noopProgram: new PublicKey('noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'),
+          accountCompressionAuthority: new PublicKey('5QPEJ5zDsVou9FQS3KCHdPeeWDfWDcXYRKZaAkXRBGSW'),
+          accountCompressionProgram: new PublicKey('cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'),
+          merkleTree: message.channel,
+          nullifierQueue: new PublicKey('11111111111111111111111111111111'),
+          cpiAuthorityPda: new PublicKey('11111111111111111111111111111111'),
+        })
+        .transaction();
 
-      // const provider = program.provider as AnchorProvider;
-      // const signature = await provider.sendAndConfirm(tx);
-      const signature = 'placeholder_signature';
+      const provider = program.provider as AnchorProvider;
+      const signature = await provider.sendAndConfirm(tx);
 
       return {
         signature,

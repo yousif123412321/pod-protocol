@@ -5,12 +5,11 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::pubkey::Pubkey;
 
 // Light Protocol ZK Compression imports
+use light_compressed_token::cpi::{compress_account, CompressAccount};
 use light_compressed_token::program::LightCompressedToken;
+use light_hasher::errors::HasherError;
 use light_hasher::{DataHasher, Hasher, Poseidon};
-use light_system_program::{
-    cpi::accounts::CompressAccount, cpi::compress_account, program::LightSystemProgram,
-    CompressedAccount, CompressedAccountWithMerkleContext,
-};
+use light_system_program::program::LightSystemProgram;
 use light_utils::hash_to_bn254_field_size_be;
 
 declare_id!("HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps");
@@ -119,7 +118,7 @@ pub enum PodComError {
 }
 
 // Message types
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
 pub enum MessageType {
     Text,
     Data,
@@ -312,11 +311,9 @@ pub struct CompressedChannelMessage {
     pub reply_to: Option<Pubkey>,  // 33 bytes
 }
 
-impl DataHasher for CompressedChannelMessage {
-    fn hash(&self) -> Result<[u8; 32], Box<dyn std::error::Error>> {
-        let data = borsh::to_vec(self)?;
-        let hash_result = Poseidon::hash(&data)?;
-        Ok(hash_result)
+impl light_hasher::DataHasher for CompressedChannelMessage {
+    fn to_array_of_bytes(&self) -> Vec<u8> {
+        borsh::to_vec(self).unwrap()
     }
 }
 
@@ -331,11 +328,9 @@ pub struct CompressedChannelParticipant {
     pub metadata_hash: [u8; 32], // 32 bytes - Hash of extended metadata in IPFS
 }
 
-impl DataHasher for CompressedChannelParticipant {
-    fn hash(&self) -> Result<[u8; 32], Box<dyn std::error::Error>> {
-        let data = borsh::to_vec(self)?;
-        let hash_result = Poseidon::hash(&data)?;
-        Ok(hash_result)
+impl light_hasher::DataHasher for CompressedChannelParticipant {
+    fn to_array_of_bytes(&self) -> Vec<u8> {
+        borsh::to_vec(self).unwrap()
     }
 }
 
@@ -399,7 +394,11 @@ pub mod pod_com {
         Ok(())
     }
 
-    // Send a message from one agent to another
+    /// **DEPRECATED**: Use `broadcast_message_compressed` (ZK compression) for cost-efficient messaging instead of plain send_message
+    // Send a message from one agent to another (uncompressed, deprecated)
+    #[deprecated(
+        note = "Use broadcast_message_compressed for ZK compression instead of send_message"
+    )]
     pub fn send_message(
         ctx: Context<SendMessage>,
         recipient: Pubkey,
@@ -998,7 +997,6 @@ pub mod pod_com {
         // Compress the account using Light Protocol
         let compressed_account_data = borsh::to_vec(&compressed_message)?;
 
-        // Compress account via CPI to Light System Program
         let cpi_accounts = CompressAccount {
             fee_payer: ctx.accounts.fee_payer.to_account_info(),
             authority: ctx.accounts.authority.to_account_info(),
@@ -1014,17 +1012,11 @@ pub mod pod_com {
             nullifier_queue: ctx.accounts.nullifier_queue.to_account_info(),
             cpi_authority_pda: ctx.accounts.cpi_authority_pda.to_account_info(),
         };
-
         let cpi_ctx = CpiContext::new(
             ctx.accounts.light_system_program.to_account_info(),
             cpi_accounts,
         );
-
-        compress_account(
-            cpi_ctx,
-            compressed_account_data,
-            None, // No old nullifier for new account
-        )?;
+        compress_account(cpi_ctx, compressed_account_data, None)?;
 
         // Emit event for indexing
         emit!(MessageBroadcast {
@@ -1105,12 +1097,10 @@ pub mod pod_com {
             nullifier_queue: ctx.accounts.nullifier_queue.to_account_info(),
             cpi_authority_pda: ctx.accounts.cpi_authority_pda.to_account_info(),
         };
-
         let cpi_ctx = CpiContext::new(
             ctx.accounts.light_system_program.to_account_info(),
             cpi_accounts,
         );
-
         compress_account(cpi_ctx, compressed_account_data, None)?;
 
         // Update channel participant count
@@ -1168,13 +1158,10 @@ pub mod pod_com {
                 nullifier_queue: ctx.accounts.nullifier_queue.to_account_info(),
                 cpi_authority_pda: ctx.accounts.cpi_authority_pda.to_account_info(),
             };
-
             let cpi_ctx = CpiContext::new(
                 ctx.accounts.light_system_program.to_account_info(),
                 cpi_accounts,
             );
-
-            // Use the hash as compressed data for batch sync
             compress_account(cpi_ctx, hash.to_vec(), None)?;
         }
 

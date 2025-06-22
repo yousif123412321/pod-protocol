@@ -16,8 +16,29 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/v1.18.26/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          solana --version
+
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/v1.18.26/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          solana --version
         with:
           components: rustfmt, clippy
+
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/v1.18.26/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          solana --version
 
       - name: Cache dependencies
         uses: actions/cache@v4
@@ -29,6 +50,9 @@ jobs:
             node_modules
             sdk/node_modules
             cli/node_modules
+            frontend/node_modules
+            frontend/node_modules
+            frontend/node_modules
           key: ${{ runner.os }}-lint-${{ hashFiles('**/bun.lock', '**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-lint-
@@ -37,12 +61,19 @@ jobs:
         run: |
           echo "📦 Installing workspace dependencies..."
           bun install --frozen-lockfile
-          echo "✅ Root dependencies installed"
+          echo "📦 Installing frontend dependencies..."
+          cd frontend && bun install --frozen-lockfile
+          echo "✅ All dependencies installed"
 
       - name: Lint TypeScript & Prettier
         run: |
           echo "🎨 Running TypeScript and Prettier linting..."
           bun run lint:all
+
+      - name: Lint Frontend
+        run: |
+          echo "🎨 Running frontend linting..."
+          cd frontend && bun run lint
 
       - name: Lint Rust
         run: |
@@ -96,7 +127,9 @@ jobs:
         run: |
           echo "📦 Installing all workspace dependencies..."
           bun install --frozen-lockfile
-          echo "✅ All dependencies installed"
+          echo "📦 Installing frontend dependencies..."
+          cd frontend && bun install --frozen-lockfile
+          echo "�� All dependencies installed"
 
       - name: Build Solana Program
         run: |
@@ -116,6 +149,12 @@ jobs:
           cd cli && bun run build
           echo "✅ CLI built successfully"
 
+      - name: Build Frontend
+        run: |
+          echo "🌐 Building Frontend..."
+          cd frontend && bun install --frozen-lockfile && bun run build
+          echo "✅ Frontend built successfully"
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -125,6 +164,7 @@ jobs:
             target/idl/
             sdk/dist/
             cli/dist/
+            frontend/.next/
 
   test:
     name: "🧪 Test Suite"
@@ -176,6 +216,8 @@ jobs:
         run: |
           echo "📦 Installing workspace dependencies for testing..."
           bun install --frozen-lockfile
+          echo "📦 Installing frontend dependencies..."
+          cd frontend && bun install --frozen-lockfile
           echo "✅ Dependencies installed"
 
       - name: Setup Solana keypair

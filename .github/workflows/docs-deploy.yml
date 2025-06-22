@@ -37,16 +37,62 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config build-essential libudev-dev
+
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.solana.com/v1.18.26/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          solana --version
+
+      - name: Install Anchor CLI via avm
+        run: |
+          cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+          avm install ${{ env.ANCHOR_VERSION }}
+          avm use ${{ env.ANCHOR_VERSION }}
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+            node_modules
+            sdk/node_modules
+            cli/node_modules
+          key: ${{ runner.os }}-docs-${{ hashFiles('**/bun.lock', '**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-docs-
+
       - name: Install dependencies
         run: |
-          bun install
-          cd sdk && bun install
-          cd ../cli && bun install
+          echo "📦 Installing dependencies..."
+          bun install --frozen-lockfile
+          cd sdk && bun install --frozen-lockfile
+          cd ../cli && bun install --frozen-lockfile
+          echo "✅ Dependencies installed"
+
+      - name: Build Anchor program for IDL
+        run: |
+          echo "⚙️ Building Anchor program for IDL generation..."
+          anchor build || echo "Anchor build completed"
 
       - name: Generate TypeScript documentation
         run: |
           echo "📝 Generating documentation..."
           bun run docs || echo "Documentation generation completed"
+          echo "📝 Generating SDK documentation..."
+          cd sdk && bun run docs || echo "SDK documentation completed"
+          echo "✅ Documentation generation completed"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

@@ -178,11 +178,28 @@ program
         ],
       },
       {
+        category: `${ICONS.lightning} ZK Compression`,
+        commands: [
+          {
+            cmd: 'pod zk message broadcast <channel> "Hello compressed world!"',
+            desc: "Send compressed message with IPFS storage",
+          },
+          {
+            cmd: "pod zk participant join <channel> --name 'AI Agent'",
+            desc: "Join channel with compressed participant data",
+          },
+          {
+            cmd: "pod zk stats channel <channel-id>",
+            desc: "View compression statistics and savings",
+          },
+        ],
+      },
+      {
         category: `${ICONS.message} Messaging`,
         commands: [
           {
             cmd: 'pod message send <recipient> "Hello world"',
-            desc: "Send a text message to another agent",
+            desc: "Send a text message to another agent (deprecated, use zk compression)",
           },
           {
             cmd: "pod message list --sender <address>",
@@ -200,23 +217,6 @@ program
           {
             cmd: "pod channel join <channel-address>",
             desc: "Join an existing channel",
-          },
-        ],
-      },
-      {
-        category: `${ICONS.lightning} ZK Compression`,
-        commands: [
-          {
-            cmd: 'pod zk message broadcast <channel> "Hello compressed world!"',
-            desc: "Send compressed message with IPFS storage",
-          },
-          {
-            cmd: "pod zk participant join <channel> --name 'AI Agent'",
-            desc: "Join channel with compressed participant data",
-          },
-          {
-            cmd: "pod zk stats channel <channel-id>",
-            desc: "View compression statistics and savings",
           },
         ],
       },

@@ -17,60 +17,115 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+        
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         registry-url: 'https://registry.npmjs.org'
         
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
+    - name: Cache dependencies
+      uses: actions/cache@v4
       with:
-        bun-version: latest
-        
+        path: |
+          ~/.bun/install/cache
+          node_modules
+          sdk/node_modules
+          cli/node_modules
+        key: ${{ runner.os }}-publish-${{ hashFiles('**/bun.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-publish-
+          
     - name: Install dependencies
-      run: bun install
+      run: |
+        echo "📦 Installing dependencies..."
+        bun install --frozen-lockfile
+        echo "✅ Dependencies installed"
       
     - name: Build SDK
       run: |
+        echo "📦 Building SDK..."
         cd sdk
-        bun install
-        bun run build
+        bun install --frozen-lockfile
+        bun run build:prod
+        echo "✅ SDK built successfully"
         
     - name: Build CLI
       run: |
+        echo "📦 Building CLI..."
         cd cli
-        bun install  
-        bun run build
+        bun install --frozen-lockfile
+        bun run build:prod
+        echo "✅ CLI built successfully"
+        
+    - name: Verify build artifacts
+      run: |
+        echo "✅ Verifying build artifacts..."
+        ls -la sdk/dist/ || (echo "❌ SDK dist not found" && exit 1)
+        ls -la cli/dist/ || (echo "❌ CLI dist not found" && exit 1)
+        echo "✅ Build artifacts verified"
         
     - name: Publish SDK to NPM
+      if: env.NPM_TOKEN != ''
       run: |
+        echo "📦 Publishing SDK to NPM..."
         cd sdk
         npm publish --access public
+        echo "✅ SDK published to NPM"
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         
     - name: Publish CLI to NPM
+      if: env.NPM_TOKEN != ''
       run: |
+        echo "📦 Publishing CLI to NPM..."
         cd cli
         npm publish --access public
+        echo "✅ CLI published to NPM"
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         
     - name: Publish SDK to GitHub Packages
       run: |
+        echo "📦 Publishing SDK to GitHub Packages..."
         cd sdk
         echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
         echo "@pod-protocol:registry=https://npm.pkg.github.com" >> .npmrc
         npm publish --registry=https://npm.pkg.github.com
+        echo "✅ SDK published to GitHub Packages"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
     - name: Publish CLI to GitHub Packages  
       run: |
+        echo "📦 Publishing CLI to GitHub Packages..."
         cd cli
         echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
         echo "@pod-protocol:registry=https://npm.pkg.github.com" >> .npmrc
         npm publish --registry=https://npm.pkg.github.com
+        echo "✅ CLI published to GitHub Packages"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Create publish summary
+      run: |
+        echo "## 📦 Package Publishing Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### ✅ Published Packages" >> $GITHUB_STEP_SUMMARY
+        echo "- **SDK**: @pod-protocol/sdk" >> $GITHUB_STEP_SUMMARY
+        echo "- **CLI**: @pod-protocol/cli" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📍 Registries" >> $GITHUB_STEP_SUMMARY
+        echo "- NPM Registry" >> $GITHUB_STEP_SUMMARY
+        echo "- GitHub Packages" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📅 Deployment Info" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Tag**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Date**: $(date)" >> $GITHUB_STEP_SUMMARY

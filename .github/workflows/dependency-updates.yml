@@ -12,10 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
+
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -24,9 +21,15 @@ jobs:
 
       - name: Update dependencies
         run: |
+          echo "📦 Updating root dependencies..."
           bun update
+          echo "📦 Updating SDK dependencies..."
           cd sdk && bun update
+          echo "📦 Updating CLI dependencies..."
           cd ../cli && bun update
+          echo "📦 Updating frontend dependencies..."
+          cd ../frontend && bun update
+          echo "✅ All dependencies updated"
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7

@@ -23,7 +23,9 @@ export class MessageCommands {
   private setupSendCommand(message: Command): void {
     message
       .command("send")
-      .description("Send a message to another agent")
+      .description(
+        "Send a message to another agent (uncompressed, deprecated; use 'pod zk message broadcast' for cost savings)",
+      )
       .option("-r, --recipient <address>", "Recipient agent address")
       .option("-p, --payload <text>", "Message payload/content")
       .option(
