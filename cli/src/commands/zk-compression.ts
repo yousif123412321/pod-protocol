@@ -5,7 +5,7 @@
 
 import { Command } from 'commander';
 import { PublicKey } from '@solana/web3.js';
-import { createClient } from '../utils/client.js';
+import { createClient, getWallet } from '../utils/client.js';
 import { displayError } from '../utils/error-handler.js';
 import { outputFormatter } from '../utils/output-formatter.js';
 import { validatePublicKey } from '../utils/validation.js';
@@ -13,7 +13,8 @@ import { validatePublicKey } from '../utils/validation.js';
 export function createZKCompressionCommand(): Command {
   const zk = new Command('zk')
     .description('ZK compression operations for messages and participants')
-    .alias('compression');
+    .alias('compression')
+    .option('-k, --keypair <path>', 'Solana keypair file for signing transactions');
 
   // Message compression commands
   const messageCmd = zk
@@ -33,7 +34,8 @@ export function createZKCompressionCommand(): Command {
     .option('--ipfs-url <url>', 'Custom IPFS node URL')
     .action(async (channelId, content, options) => {
       try {
-        const client = await createClient();
+        const wallet = getWallet(options.keypair);
+        const client = await createClient(undefined, wallet);
         
         if (!validatePublicKey(channelId)) {
           throw new Error('Invalid channel ID');
@@ -88,7 +90,8 @@ export function createZKCompressionCommand(): Command {
     .option('--verify-content', 'Verify IPFS content against hashes')
     .action(async (channelId, options) => {
       try {
-        const client = await createClient();
+        const wallet = getWallet(options.keypair);
+        const client = await createClient(undefined, wallet);
         
         if (!validatePublicKey(channelId)) {
           throw new Error('Invalid channel ID');
@@ -165,7 +168,8 @@ export function createZKCompressionCommand(): Command {
     .option('--verify-hash <hash>', 'Verify against on-chain content hash')
     .action(async (ipfsHash, options) => {
       try {
-        const client = await createClient();
+        const wallet = getWallet(options.keypair);
+        const client = await createClient(undefined, wallet);
         
         console.log('📥 Retrieving content from IPFS...');
         
@@ -211,15 +215,15 @@ export function createZKCompressionCommand(): Command {
     .option('-p, --permissions <perms...>', 'Permissions list')
     .action(async (channelId, options) => {
       try {
-        const client = await createClient();
+        const wallet = getWallet(options.keypair);
+        const client = await createClient(undefined, wallet);
         
         if (!validatePublicKey(channelId)) {
           throw new Error('Invalid channel ID');
         }
 
         const channel = new PublicKey(channelId);
-        // Assuming participant is current wallet - in real implementation would get from context
-        const participant = new PublicKey('11111111111111111111111111111111'); // Placeholder
+        const participant = wallet.publicKey;
         
         console.log('🤝 Joining channel with compression...');
         
@@ -267,7 +271,8 @@ export function createZKCompressionCommand(): Command {
     .option('-t, --timestamp <timestamp>', 'Custom sync timestamp')
     .action(async (channelId, messageHashes, options) => {
       try {
-        const client = await createClient();
+        const wallet = getWallet(options.keypair);
+        const client = await createClient(undefined, wallet);
         
         if (!validatePublicKey(channelId)) {
           throw new Error('Invalid channel ID');
@@ -319,9 +324,10 @@ export function createZKCompressionCommand(): Command {
     .command('channel')
     .description('Get channel compression statistics')
     .argument('<channel-id>', 'Channel public key')
-    .action(async (channelId) => {
+    .action(async (channelId, options) => {
       try {
-        const client = await createClient();
+        const wallet = getWallet(options.keypair);
+        const client = await createClient(undefined, wallet);
         
         if (!validatePublicKey(channelId)) {
           throw new Error('Invalid channel ID');
@@ -355,9 +361,10 @@ export function createZKCompressionCommand(): Command {
   statsCmd
     .command('batch-status')
     .description('Get current batch queue status')
-    .action(async () => {
+    .action(async (_options?) => {
       try {
-        const client = await createClient();
+        const wallet = getWallet(_options?.keypair);
+        const client = await createClient(undefined, wallet);
         
         const status = client.zkCompression.getBatchStatus();
 
@@ -386,9 +393,10 @@ export function createZKCompressionCommand(): Command {
   statsCmd
     .command('flush-batch')
     .description('Force process the current batch queue')
-    .action(async () => {
+    .action(async (_options?) => {
       try {
-        const client = await createClient();
+        const wallet = getWallet(_options?.keypair);
+        const client = await createClient(undefined, wallet);
         
         console.log('🔄 Flushing batch queue...');
         
@@ -462,7 +470,8 @@ export function createZKCompressionCommand(): Command {
     .option('--test', 'Test IPFS connection')
     .action(async (options) => {
       try {
-        const client = await createClient();
+        const wallet = getWallet(options.keypair);
+        const client = await createClient(undefined, wallet);
         
         if (options.test) {
           console.log('🔍 Testing IPFS connection...');
