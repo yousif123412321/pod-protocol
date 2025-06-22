@@ -85,7 +85,7 @@ export class ErrorHandler {
   /**
    * Get helpful suggestions based on error type
    */
-  private static getErrorSuggestions(error: Error): string[] {
+  static getErrorSuggestions(error: Error): string[] {
     const suggestions: string[] = [];
 
     if (error.message.includes("Non-base58")) {
@@ -147,5 +147,20 @@ export async function safeExecute<T>(
     return await operation();
   } catch (error) {
     ErrorHandler.handleError(error as Error, spinner, errorContext);
+  }
+}
+
+/**
+ * Display error with context and suggestions
+ */
+export function displayError(context: string, error: Error): void {
+  console.error(chalk.red("Error:"), `${context}: ${error.message}`);
+  
+  const suggestions = ErrorHandler.getErrorSuggestions(error);
+  if (suggestions.length > 0) {
+    console.log(chalk.yellow("\nSuggestions:"));
+    suggestions.forEach((suggestion) => {
+      console.log(chalk.yellow(`• ${suggestion}`));
+    });
   }
 }

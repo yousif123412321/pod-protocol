@@ -18,14 +18,21 @@ export class ChannelService extends BaseService {
   /**
    * Create a new channel
    */
-  async createChannel(wallet: Signer, options: CreateChannelOptions): Promise<string> {
+  async createChannel(
+    wallet: Signer,
+    options: CreateChannelOptions,
+  ): Promise<string> {
     const program = this.ensureInitialized();
 
     // Derive agent PDA
     const [agentPDA] = findAgentPDA(wallet.publicKey, this.programId);
 
     // Derive channel PDA
-    const [channelPDA] = findChannelPDA(wallet.publicKey, options.name, this.programId);
+    const [channelPDA] = findChannelPDA(
+      wallet.publicKey,
+      options.name,
+      this.programId,
+    );
 
     // Derive participant PDA for creator
     const [participantPDA] = this.findParticipantPDA(channelPDA, agentPDA);
@@ -33,12 +40,12 @@ export class ChannelService extends BaseService {
     const visibilityObj = this.convertChannelVisibility(options.visibility);
 
     const tx = await (program.methods as any)
-      .createChannelV2(
+      .createChannel(
         options.name,
         options.description,
         visibilityObj,
         options.maxParticipants,
-        new anchor.BN(options.feePerMessage)
+        new anchor.BN(options.feePerMessage),
       )
       .accounts({
         agentAccount: agentPDA,
@@ -72,7 +79,7 @@ export class ChannelService extends BaseService {
    */
   async getAllChannels(
     limit: number = 50,
-    visibilityFilter?: ChannelVisibility
+    visibilityFilter?: ChannelVisibility,
   ): Promise<ChannelAccount[]> {
     try {
       const channelAccount = this.getAccount("channelAccount");
@@ -83,9 +90,11 @@ export class ChannelService extends BaseService {
         filters.push({
           memcmp: {
             offset: 8 + 32 + 4 + 50 + 4 + 200, // After name and description
-            bytes: anchor.utils.bytes.bs58.encode(Buffer.from([
-              visibilityFilter === ChannelVisibility.Public ? 0 : 1
-            ])),
+            bytes: anchor.utils.bytes.bs58.encode(
+              Buffer.from([
+                visibilityFilter === ChannelVisibility.Public ? 0 : 1,
+              ]),
+            ),
           },
         });
       }
@@ -93,7 +102,9 @@ export class ChannelService extends BaseService {
       const accounts = await channelAccount.all(filters);
       return accounts
         .slice(0, limit)
-        .map((acc: any) => this.convertChannelAccountFromProgram(acc.account, acc.publicKey));
+        .map((acc: any) =>
+          this.convertChannelAccountFromProgram(acc.account, acc.publicKey),
+        );
     } catch (error) {
       console.warn("Error fetching channels:", error);
       return [];
@@ -105,7 +116,7 @@ export class ChannelService extends BaseService {
    */
   async getChannelsByCreator(
     creator: PublicKey,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<ChannelAccount[]> {
     try {
       const channelAccount = this.getAccount("channelAccount");
@@ -121,7 +132,9 @@ export class ChannelService extends BaseService {
       const accounts = await channelAccount.all(filters);
       return accounts
         .slice(0, limit)
-        .map((acc: any) => this.convertChannelAccountFromProgram(acc.account, acc.publicKey));
+        .map((acc: any) =>
+          this.convertChannelAccountFromProgram(acc.account, acc.publicKey),
+        );
     } catch (error) {
       console.warn("Error fetching channels by creator:", error);
       return [];
@@ -147,7 +160,7 @@ export class ChannelService extends BaseService {
         channelPDA.toBuffer(),
         wallet.publicKey.toBuffer(),
       ],
-      this.programId
+      this.programId,
     );
 
     // Check if invitation exists for private channels
@@ -159,7 +172,7 @@ export class ChannelService extends BaseService {
       // Invitation doesn't exist, which is fine for public channels
     }
 
-    const tx = await program.methods
+    const tx = await (program.methods as any)
       .joinChannel()
       .accounts({
         channelAccount: channelPDA,
@@ -187,7 +200,7 @@ export class ChannelService extends BaseService {
     // Derive participant PDA
     const [participantPDA] = this.findParticipantPDA(channelPDA, agentPDA);
 
-    const tx = await program.methods
+    const tx = await (program.methods as any)
       .leaveChannel()
       .accounts({
         channelAccount: channelPDA,
@@ -204,7 +217,10 @@ export class ChannelService extends BaseService {
   /**
    * Broadcast a message to a channel
    */
-  async broadcastMessage(wallet: Signer, options: BroadcastMessageOptions): Promise<string> {
+  async broadcastMessage(
+    wallet: Signer,
+    options: BroadcastMessageOptions,
+  ): Promise<string> {
     const program = this.ensureInitialized();
 
     // Generate unique nonce for message
@@ -214,7 +230,10 @@ export class ChannelService extends BaseService {
     const [agentPDA] = findAgentPDA(wallet.publicKey, this.programId);
 
     // Derive participant PDA
-    const [participantPDA] = this.findParticipantPDA(options.channelPDA, agentPDA);
+    const [participantPDA] = this.findParticipantPDA(
+      options.channelPDA,
+      agentPDA,
+    );
 
     // Derive message PDA
     const nonceBuffer = Buffer.alloc(8);
@@ -227,17 +246,19 @@ export class ChannelService extends BaseService {
         wallet.publicKey.toBuffer(),
         nonceBuffer,
       ],
-      this.programId
+      this.programId,
     );
 
-    const messageTypeObj = this.convertMessageType(options.messageType || "Text");
+    const messageTypeObj = this.convertMessageType(
+      options.messageType || "Text",
+    );
 
-    const tx = await program.methods
+    const tx = await (program.methods as any)
       .broadcastMessage(
         options.content,
         messageTypeObj,
         options.replyTo || null,
-        new anchor.BN(nonce)
+        new anchor.BN(nonce),
       )
       .accounts({
         channelAccount: options.channelPDA,
@@ -259,7 +280,7 @@ export class ChannelService extends BaseService {
   async inviteToChannel(
     wallet: Signer,
     channelPDA: PublicKey,
-    invitee: PublicKey
+    invitee: PublicKey,
   ): Promise<string> {
     const program = this.ensureInitialized();
 
@@ -272,10 +293,10 @@ export class ChannelService extends BaseService {
     // Derive invitation PDA
     const [invitationPDA] = PublicKey.findProgramAddressSync(
       [Buffer.from("invitation"), channelPDA.toBuffer(), invitee.toBuffer()],
-      this.programId
+      this.programId,
     );
 
-    const tx = await program.methods
+    const tx = await (program.methods as any)
       .inviteToChannel(invitee)
       .accounts({
         channelAccount: channelPDA,
@@ -297,7 +318,7 @@ export class ChannelService extends BaseService {
   async getChannelParticipants(
     channelPDA: PublicKey,
     limit: number = 50
-  ): Promise<Array<IdlAccounts<PodCom>>> {
+  ): Promise<Array<any>> {
     try {
       const participantAccount = this.getAccount("channelParticipant");
       const filters = [
@@ -323,7 +344,7 @@ export class ChannelService extends BaseService {
   async getChannelMessages(
     channelPDA: PublicKey,
     limit: number = 50
-  ): Promise<Array<IdlAccounts<PodCom>>> {
+  ): Promise<Array<any>> {
     try {
       const messageAccount = this.getAccount("channelMessage");
       const filters = [
@@ -359,10 +380,11 @@ export class ChannelService extends BaseService {
   }
 
   private convertChannelVisibilityFromProgram(
-    programVisibility: any
+    programVisibility: any,
   ): ChannelVisibility {
     if (programVisibility.public !== undefined) return ChannelVisibility.Public;
-    if (programVisibility.private !== undefined) return ChannelVisibility.Private;
+    if (programVisibility.private !== undefined)
+      return ChannelVisibility.Private;
     return ChannelVisibility.Public;
   }
 
@@ -386,7 +408,7 @@ export class ChannelService extends BaseService {
 
   private convertChannelAccountFromProgram(
     account: any,
-    publicKey: PublicKey
+    publicKey: PublicKey,
   ): ChannelAccount {
     return {
       pubkey: publicKey,
@@ -407,15 +429,11 @@ export class ChannelService extends BaseService {
 
   private findParticipantPDA(
     channelPDA: PublicKey,
-    agentPDA: PublicKey
+    agentPDA: PublicKey,
   ): [PublicKey, number] {
     return PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("participant"),
-        channelPDA.toBuffer(),
-        agentPDA.toBuffer(),
-      ],
-      this.programId
+      [Buffer.from("participant"), channelPDA.toBuffer(), agentPDA.toBuffer()],
+      this.programId,
     );
   }
 }

@@ -37,30 +37,40 @@ export class ConfigCommands {
     writeFileSync(configPath, JSON.stringify(config, null, 2));
   }
 
-  private async tryMultipleAirdropSources(publicKey: string, amount: number, spinner: any): Promise<{success: boolean, signature?: string, source?: string}> {
+  private async tryMultipleAirdropSources(
+    publicKey: string,
+    amount: number,
+    spinner: any,
+  ): Promise<{ success: boolean; signature?: string; source?: string }> {
     const lamports = amount * 1000000000; // Convert SOL to lamports
-    
+
     // Primary RPC endpoints to try
     const rpcEndpoints = [
       { name: "Official Devnet", url: "https://api.devnet.solana.com" },
       { name: "Solana Labs RPC", url: "https://devnet.solana.com" },
-      { name: "GenesysGo RPC", url: "https://solana-devnet.g.alchemy.com/v2/demo" },
-      { name: "QuickNode Public", url: "https://greatest-fittest-tent.solana-devnet.quiknode.pro/0e9f2c7e-de71-4f35-b449-8b37aac10c1b/" },
+      {
+        name: "GenesysGo RPC",
+        url: "https://solana-devnet.g.alchemy.com/v2/demo",
+      },
+      {
+        name: "QuickNode Public",
+        url: "https://greatest-fittest-tent.solana-devnet.quiknode.pro/0e9f2c7e-de71-4f35-b449-8b37aac10c1b/",
+      },
     ];
-    
+
     // Try RPC endpoints first
     for (const endpoint of rpcEndpoints) {
       spinner.text = `Trying ${endpoint.name}...`;
-      
+
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
-        
+
         const response = await fetch(endpoint.url, {
           method: "POST",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
-            "User-Agent": "PoD-Protocol-CLI/1.4.0"
+            "User-Agent": "PoD-Protocol-CLI/1.4.0",
           },
           body: JSON.stringify({
             jsonrpc: "2.0",
@@ -70,7 +80,7 @@ export class ConfigCommands {
           }),
           signal: controller.signal,
         });
-        
+
         clearTimeout(timeoutId);
 
         if (!response.ok) {
@@ -90,7 +100,7 @@ export class ConfigCommands {
             continue; // Rate limited, try next
           }
           if (data.error.message?.includes("rate")) {
-            continue; // Rate limited, try next  
+            continue; // Rate limited, try next
           }
         }
       } catch (error) {
@@ -98,19 +108,29 @@ export class ConfigCommands {
         continue;
       }
     }
-    
+
     // Try web-based faucet APIs as backup
     const webFaucets = [
       {
         name: "SOL-Utils Faucet",
-        tryAirdrop: () => this.tryWebFaucet(publicKey, amount, "https://sol-utils.com/api/faucet")
+        tryAirdrop: () =>
+          this.tryWebFaucet(
+            publicKey,
+            amount,
+            "https://sol-utils.com/api/faucet",
+          ),
       },
       {
-        name: "Community Faucet",  
-        tryAirdrop: () => this.tryWebFaucet(publicKey, amount, "https://faucet.solana.com/api/airdrop")
-      }
+        name: "Community Faucet",
+        tryAirdrop: () =>
+          this.tryWebFaucet(
+            publicKey,
+            amount,
+            "https://faucet.solana.com/api/airdrop",
+          ),
+      },
     ];
-    
+
     for (const faucet of webFaucets) {
       spinner.text = `Trying ${faucet.name}...`;
       try {
@@ -130,11 +150,15 @@ export class ConfigCommands {
     return { success: false };
   }
 
-  private async tryWebFaucet(publicKey: string, amount: number, endpoint: string): Promise<{success: boolean, signature?: string}> {
+  private async tryWebFaucet(
+    publicKey: string,
+    amount: number,
+    endpoint: string,
+  ): Promise<{ success: boolean; signature?: string }> {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
-      
+
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
@@ -148,7 +172,7 @@ export class ConfigCommands {
         }),
         signal: controller.signal,
       });
-      
+
       clearTimeout(timeoutId);
 
       if (response.ok) {
@@ -163,63 +187,73 @@ export class ConfigCommands {
     } catch (error) {
       // Fail silently and let caller try next option
     }
-    
+
     return { success: false };
   }
 
   private showAlternativeFaucetOptions(publicKey: string): void {
     console.log(chalk.yellow("\n🚰 Alternative Devnet SOL Faucet Options:"));
     console.log();
-    
+
     const faucets = [
       {
         name: "Official Solana Faucet",
         url: "https://faucet.solana.com/",
         description: "Web interface, up to 5 SOL every 2 hours",
-        icon: "🔹"
+        icon: "🔹",
       },
       {
-        name: "QuickNode Multi-chain Faucet", 
+        name: "QuickNode Multi-chain Faucet",
         url: "https://faucet.quicknode.com/solana/devnet",
         description: "0.1 SOL every 24 hours",
-        icon: "🔸"
+        icon: "🔸",
       },
       {
         name: "SOL-Utils Faucet",
         url: "https://sol-utils.com/faucet",
         description: "Instant SOL, SPL tokens, and NFTs",
-        icon: "🔶"
+        icon: "🔶",
       },
       {
         name: "Stakely Faucet",
         url: "https://stakely.io/en/faucet/solana-sol",
         description: "1 SOL every 24 hours",
-        icon: "🔷"
-      }
+        icon: "🔷",
+      },
     ];
 
     faucets.forEach((faucet, index) => {
-      console.log(`${faucet.icon} ${chalk.cyan.bold(`${index + 1}. ${faucet.name}`)}`);
+      console.log(
+        `${faucet.icon} ${chalk.cyan.bold(`${index + 1}. ${faucet.name}`)}`,
+      );
       console.log(`   ${chalk.white("URL:")} ${chalk.blue(faucet.url)}`);
       console.log(`   ${chalk.gray(faucet.description)}`);
       console.log();
     });
 
     console.log(chalk.magenta.bold("💡 Pro Tips:"));
-    console.log(chalk.gray("   • Try different faucets if one is rate-limited"));
-    console.log(chalk.gray("   • Some faucets offer more SOL for GitHub authentication"));
-    console.log(chalk.gray("   • Rate limits reset at different times for each service"));
-    console.log(chalk.gray("   • Use VPN to change IP if all services are rate-limited"));
+    console.log(
+      chalk.gray("   • Try different faucets if one is rate-limited"),
+    );
+    console.log(
+      chalk.gray("   • Some faucets offer more SOL for GitHub authentication"),
+    );
+    console.log(
+      chalk.gray("   • Rate limits reset at different times for each service"),
+    );
+    console.log(
+      chalk.gray("   • Use VPN to change IP if all services are rate-limited"),
+    );
     console.log();
-    
+
     console.log(chalk.cyan.bold("📋 Your Wallet Address:"));
     console.log(chalk.white(`   ${publicKey}`));
     console.log();
-    
+
     // Show QR code for easy copying
     console.log(chalk.blue("📱 QR Code for easy mobile access:"));
     qrcode.generate(publicKey, { small: true });
-    
+
     console.log(chalk.green.bold("🔄 Retry Command:"));
     console.log(chalk.white(`   pod config airdrop --amount 2`));
   }
@@ -499,11 +533,18 @@ export class ConfigCommands {
 
           try {
             // Enhanced multi-endpoint airdrop with comprehensive fallbacks
-            const success = await this.tryMultipleAirdropSources(publicKey, amount, spinner);
-            
+            const success = await this.tryMultipleAirdropSources(
+              publicKey,
+              amount,
+              spinner,
+            );
+
             if (success.success) {
               spinner.succeed("Airdrop successful!");
-              console.log(chalk.green("Transaction signature:"), success.signature);
+              console.log(
+                chalk.green("Transaction signature:"),
+                success.signature,
+              );
               console.log(chalk.green("Source:"), success.source);
               console.log(
                 chalk.cyan(
@@ -511,7 +552,9 @@ export class ConfigCommands {
                 ),
               );
             } else {
-              spinner.fail("All automated airdrop sources are currently rate-limited");
+              spinner.fail(
+                "All automated airdrop sources are currently rate-limited",
+              );
               this.showAlternativeFaucetOptions(publicKey);
             }
           } catch (error: any) {
@@ -739,7 +782,10 @@ export class ConfigCommands {
         try {
           await this.checkFaucetStatus();
         } catch (error: any) {
-          console.error(chalk.red("Failed to check faucet status:"), error.message);
+          console.error(
+            chalk.red("Failed to check faucet status:"),
+            error.message,
+          );
           process.exit(1);
         }
       });
@@ -751,7 +797,7 @@ export class ConfigCommands {
       .action(async () => {
         try {
           const currentConfig = this.loadConfig();
-          
+
           if (!existsSync(currentConfig.keypairPath)) {
             console.error(
               chalk.red("Error: Keypair file not found:"),
@@ -773,7 +819,10 @@ export class ConfigCommands {
 
           this.showAlternativeFaucetOptions(publicKey);
         } catch (error: any) {
-          console.error(chalk.red("Failed to show faucet help:"), error.message);
+          console.error(
+            chalk.red("Failed to show faucet help:"),
+            error.message,
+          );
           process.exit(1);
         }
       });
@@ -794,31 +843,43 @@ export class ConfigCommands {
 
     for (const faucet of faucets) {
       spinner.text = `Checking ${faucet.name}...`;
-      
+
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
+
         const response = await fetch(faucet.url, {
           method: "HEAD",
           signal: controller.signal,
         });
-        
+
         clearTimeout(timeoutId);
-        
+
         if (response.ok) {
-          console.log(`✅ ${chalk.green(faucet.name)}: ${chalk.cyan("Available")}`);
+          console.log(
+            `✅ ${chalk.green(faucet.name)}: ${chalk.cyan("Available")}`,
+          );
         } else {
-          console.log(`⚠️  ${chalk.yellow(faucet.name)}: ${chalk.red("Unavailable")} (${response.status})`);
+          console.log(
+            `⚠️  ${chalk.yellow(faucet.name)}: ${chalk.red("Unavailable")} (${response.status})`,
+          );
         }
       } catch (error) {
-        console.log(`❌ ${chalk.red(faucet.name)}: ${chalk.red("Connection failed")}`);
+        console.log(
+          `❌ ${chalk.red(faucet.name)}: ${chalk.red("Connection failed")}`,
+        );
       }
     }
 
     spinner.stop();
     console.log();
-    console.log(chalk.gray("Note: This checks website availability, not API rate limits"));
-    console.log(chalk.cyan("Tip: Try 'pod config airdrop' to test actual faucet functionality"));
+    console.log(
+      chalk.gray("Note: This checks website availability, not API rate limits"),
+    );
+    console.log(
+      chalk.cyan(
+        "Tip: Try 'pod config airdrop' to test actual faucet functionality",
+      ),
+    );
   }
 }

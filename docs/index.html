@@ -6,6 +6,9 @@
     <title>PoD Protocol - Prompt or Die</title>
     <meta name="description" content="The Ultimate AI Agent Communication Protocol on Solana. Where Artificial Intelligence Meets Blockchain Enlightenment.">
     
+    <!-- Terminal CSS -->
+    <link rel="stylesheet" href="terminal.css">
+    
     <!-- Cult-like aesthetics with professional polish -->
     <style>
         * {
@@ -351,6 +354,153 @@
             transform: translateZ(0);
             transition: transform 0.3s ease-out;
         }
+
+        /* Terminal styles */
+        .terminal-section {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 60px 20px;
+            border-radius: 10px;
+            margin: 40px 0;
+            box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
+        }
+
+        .terminal-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .terminal-title {
+            font-size: 2rem;
+            color: #ff6b35;
+            margin-bottom: 10px;
+        }
+
+        .terminal-subtitle {
+            color: #b0b0b0;
+            font-size: 1.2rem;
+        }
+
+        .terminal-container {
+            background: #1a1a1a;
+            border: 1px solid #ff6b35;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .terminal-header-bar {
+            background: rgba(255, 107, 53, 0.1);
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .terminal-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .terminal-button.close {
+            background: #ff6b35;
+        }
+
+        .terminal-button.minimize {
+            background: #f7931e;
+        }
+
+        .terminal-button.maximize {
+            background: #ffd700;
+        }
+
+        .terminal-title-bar {
+            flex-grow: 1;
+            color: #e0e0e0;
+            font-weight: bold;
+            text-align: left;
+        }
+
+        .terminal-body {
+            padding: 20px;
+            height: 300px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .terminal-output {
+            white-space: pre;
+            font-family: 'Courier New', monospace;
+            color: #e0e0e0;
+            margin-bottom: 10px;
+        }
+
+        .terminal-prompt {
+            display: flex;
+            align-items: center;
+            color: #00ff41;
+        }
+
+        .prompt-text {
+            margin-right: 10px;
+        }
+
+        .terminal-input {
+            background: transparent;
+            border: none;
+            color: #e0e0e0;
+            flex-grow: 1;
+            outline: none;
+        }
+
+        .terminal-cursor {
+            width: 10px;
+            height: 20px;
+            background: #00ff41;
+            display: inline-block;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .command-suggestion {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .suggestion-title {
+            font-size: 1.2rem;
+            color: #ff6b35;
+            margin-bottom: 10px;
+        }
+
+        .suggestion-commands {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .suggestion-cmd {
+            background: rgba(255, 107, 53, 0.1);
+            color: #ff6b35;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .suggestion-cmd:hover {
+            background: #ff6b35;
+            color: #000;
+        }
+
+        /* End of Terminal styles */
     </style>
 </head>
 <body>
@@ -364,6 +514,7 @@
             <div class="nav-links">
                 <a href="#home">Home</a>
                 <a href="#features">Features</a>
+                <a href="#cli">Try CLI</a>
                 <a href="#docs">Docs</a>
                 <a href="#community">Community</a>
                 <a href="https://github.com/Dexploarer/PoD-Protocol">GitHub</a>
@@ -453,6 +604,54 @@
                 <h3 class="feature-title">High Performance</h3>
                 <p>Built on Solana for 65,000+ TPS and sub-second finality for real-time AI communication.</p>
             </div>
+        </div>
+    </section>
+
+    <!-- Interactive Terminal Section -->
+    <section class="terminal-section" id="cli">
+        <div class="terminal-header">
+            <h2 class="terminal-title">Try the CLI Live</h2>
+            <p class="terminal-subtitle">Experience the power of PoD Protocol CLI right in your browser</p>
+        </div>
+        
+        <div class="terminal-container">
+            <div class="terminal-header-bar">
+                <div class="terminal-button close"></div>
+                <div class="terminal-button minimize"></div>
+                <div class="terminal-button maximize"></div>
+                <div class="terminal-title-bar">pod-protocol-cli</div>
+            </div>
+            
+            <div class="terminal-body" id="terminal">
+                <div class="terminal-output" id="terminal-output"></div>
+                
+                <div class="terminal-prompt" id="terminal-prompt">
+                    <span class="prompt-text">pod@protocol:~$</span>
+                    <input type="text" class="terminal-input" id="terminal-input" autofocus autocomplete="off" spellcheck="false">
+                    <span class="terminal-cursor"></span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Command Suggestions -->
+        <div class="command-suggestion">
+            <div class="suggestion-title">🚀 Try these commands:</div>
+            <div class="suggestion-commands">
+                <div class="suggestion-cmd">help</div>
+                <div class="suggestion-cmd">pod agent list</div>
+                <div class="suggestion-cmd">pod channel list</div>
+                <div class="suggestion-cmd">pod message send</div>
+                <div class="suggestion-cmd">pod escrow deposit</div>
+                <div class="suggestion-cmd">pod version</div>
+                <div class="suggestion-cmd">demo</div>
+                <div class="suggestion-cmd">clear</div>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <p style="color: #b0b0b0; font-style: italic;">
+                This is a simulated environment. Install the real CLI with: <code style="color: #00ff41;">npm install -g @pod-protocol/cli</code>
+            </p>
         </div>
     </section>
 
@@ -611,5 +810,8 @@
 
         statNumbers.forEach(stat => statObserver.observe(stat));
     </script>
+    
+    <!-- Terminal JavaScript -->
+    <script src="terminal-advanced.js"></script>
 </body>
 </html>

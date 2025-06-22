@@ -12,17 +12,18 @@ import { EscrowCommands } from "./commands/escrow.js";
 import { ConfigCommands } from "./commands/config.js";
 import { AnalyticsCommands } from "./commands/analytics.js";
 import { DiscoveryCommands } from "./commands/discovery.js";
-import { 
-  showBanner, 
-  showPromptOrDieBanner, 
+import { createZKCompressionCommand } from "./commands/zk-compression.js";
+import {
+  showBanner,
+  showPromptOrDieBanner,
   showCommandHeader,
-  BannerSize, 
-  BRAND_COLORS, 
+  BannerSize,
+  BRAND_COLORS,
   ICONS,
   PROMPT_OR_DIE_BANNER,
   PROMPT_OR_DIE_COMPACT,
   PROMPT_OR_DIE_MINI,
-  DECORATIVE_ELEMENTS
+  DECORATIVE_ELEMENTS,
 } from "./utils/branding.js";
 import { errorHandler } from "./utils/enhanced-error-handler.js";
 
@@ -37,15 +38,17 @@ const CLI_VERSION = packageJson.version;
 const program = new Command();
 
 // Show branded banner (check for --no-banner flag)
-if (!process.argv.includes('--no-banner')) {
+if (!process.argv.includes("--no-banner")) {
   showBanner(BannerSize.FULL);
 }
 
 program
   .name("pod")
-  .description(`${ICONS.lightning} CLI for PoD Protocol (Prompt or Die) AI Agent Communication Protocol`)
-  .version(CLI_VERSION, '-v, --version', 'display version number')
-  .helpOption('-h, --help', 'display help for command');
+  .description(
+    `${ICONS.lightning} CLI for PoD Protocol (Prompt or Die) AI Agent Communication Protocol`,
+  )
+  .version(CLI_VERSION, "-v, --version", "display version number")
+  .helpOption("-h, --help", "display help for command");
 
 // Enhanced global options
 program
@@ -59,11 +62,20 @@ program
     `${ICONS.key} Path to keypair file`,
     "~/.config/solana/id.json",
   )
-  .option("--verbose", `${ICONS.info} Enable verbose output with detailed information`)
-  .option("--debug", `${ICONS.gear} Enable debug mode with technical diagnostics`)
+  .option(
+    "--verbose",
+    `${ICONS.info} Enable verbose output with detailed information`,
+  )
+  .option(
+    "--debug",
+    `${ICONS.gear} Enable debug mode with technical diagnostics`,
+  )
   .option("-q, --quiet", `${ICONS.info} Suppress non-essential output`)
   .option("--no-banner", "Skip displaying the banner")
-  .option("--dry-run", `${ICONS.warning} Show what would be executed without actually doing it`);
+  .option(
+    "--dry-run",
+    `${ICONS.warning} Show what would be executed without actually doing it`,
+  );
 
 // Initialize command modules
 const agentCommands = new AgentCommands();
@@ -83,37 +95,55 @@ configCommands.register(program);
 analyticsCommands.register(program);
 discoveryCommands.register(program);
 
+// Add ZK compression commands
+program.addCommand(createZKCompressionCommand());
+
 // Enhanced status command
 program
   .command("status")
-  .description(`${ICONS.shield} Show PoD Protocol network status and diagnostics`)
+  .description(
+    `${ICONS.shield} Show PoD Protocol network status and diagnostics`,
+  )
   .option("--health", "Perform comprehensive health check")
   .action(async (cmdOptions, command) => {
     try {
       const globalOpts = command.parent.opts();
-      
+
       if (!globalOpts.quiet) {
-        console.log(`${ICONS.rocket} ${BRAND_COLORS.accent('PoD Protocol Status')}`);
+        console.log(
+          `${ICONS.rocket} ${BRAND_COLORS.accent("PoD Protocol Status")}`,
+        );
         console.log();
       }
-      
+
       const statusItems = [
-        { label: 'CLI Version', value: CLI_VERSION, icon: ICONS.gear },
-        { label: 'Network', value: globalOpts.network.toUpperCase(), icon: ICONS.network },
-        { label: 'Program ID', value: 'HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps', icon: ICONS.chain },
-        { label: 'Status', value: 'OPERATIONAL', icon: ICONS.success }
+        { label: "CLI Version", value: CLI_VERSION, icon: ICONS.gear },
+        {
+          label: "Network",
+          value: globalOpts.network.toUpperCase(),
+          icon: ICONS.network,
+        },
+        {
+          label: "Program ID",
+          value: "HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps",
+          icon: ICONS.chain,
+        },
+        { label: "Status", value: "OPERATIONAL", icon: ICONS.success },
       ];
-      
-      statusItems.forEach(item => {
-        console.log(`${item.icon} ${BRAND_COLORS.accent(item.label)}: ${BRAND_COLORS.secondary(item.value)}`);
+
+      statusItems.forEach((item) => {
+        console.log(
+          `${item.icon} ${BRAND_COLORS.accent(item.label)}: ${BRAND_COLORS.secondary(item.value)}`,
+        );
       });
-      
+
       if (cmdOptions.health) {
         console.log();
-        console.log(`${ICONS.loading} ${BRAND_COLORS.info('Running health checks...')}`);
+        console.log(
+          `${ICONS.loading} ${BRAND_COLORS.info("Running health checks...")}`,
+        );
         // Add health check logic here
       }
-      
     } catch (error) {
       errorHandler.handleError(error as Error);
     }
@@ -124,83 +154,151 @@ program
   .command("help-extended")
   .description(`${ICONS.info} Show extended help with examples and tutorials`)
   .action(() => {
-    console.log(`${ICONS.star} ${BRAND_COLORS.accent('PoD Protocol CLI - Extended Help')}`);
+    console.log(
+      `${ICONS.star} ${BRAND_COLORS.accent("PoD Protocol CLI - Extended Help")}`,
+    );
     console.log();
-    
+
     const commandExamples = [
       {
         category: `${ICONS.agent} Agent Management`,
         commands: [
-          { cmd: 'pod agent register --capabilities "trading,analysis"', desc: 'Register an AI agent with specific capabilities' },
-          { cmd: 'pod agent info <agent-address>', desc: 'View detailed agent information' },
-          { cmd: 'pod agent list --limit 10', desc: 'List all registered agents' }
-        ]
+          {
+            cmd: 'pod agent register --capabilities "trading,analysis"',
+            desc: "Register an AI agent with specific capabilities",
+          },
+          {
+            cmd: "pod agent info <agent-address>",
+            desc: "View detailed agent information",
+          },
+          {
+            cmd: "pod agent list --limit 10",
+            desc: "List all registered agents",
+          },
+        ],
       },
       {
         category: `${ICONS.message} Messaging`,
         commands: [
-          { cmd: 'pod message send <recipient> "Hello world"', desc: 'Send a text message to another agent' },
-          { cmd: 'pod message list --sender <address>', desc: 'List messages from a specific sender' }
-        ]
+          {
+            cmd: 'pod message send <recipient> "Hello world"',
+            desc: "Send a text message to another agent",
+          },
+          {
+            cmd: "pod message list --sender <address>",
+            desc: "List messages from a specific sender",
+          },
+        ],
       },
       {
         category: `${ICONS.channel} Channels`,
         commands: [
-          { cmd: 'pod channel create "AI Research" --public', desc: 'Create a public discussion channel' },
-          { cmd: 'pod channel join <channel-address>', desc: 'Join an existing channel' }
-        ]
-      }
+          {
+            cmd: 'pod channel create "AI Research" --public',
+            desc: "Create a public discussion channel",
+          },
+          {
+            cmd: "pod channel join <channel-address>",
+            desc: "Join an existing channel",
+          },
+        ],
+      },
+      {
+        category: `${ICONS.lightning} ZK Compression`,
+        commands: [
+          {
+            cmd: 'pod zk message broadcast <channel> "Hello compressed world!"',
+            desc: "Send compressed message with IPFS storage",
+          },
+          {
+            cmd: "pod zk participant join <channel> --name 'AI Agent'",
+            desc: "Join channel with compressed participant data",
+          },
+          {
+            cmd: "pod zk stats channel <channel-id>",
+            desc: "View compression statistics and savings",
+          },
+        ],
+      },
     ];
-    
-    commandExamples.forEach(category => {
+
+    commandExamples.forEach((category) => {
       console.log(BRAND_COLORS.accent(category.category));
-      category.commands.forEach(example => {
-        console.log(`  ${BRAND_COLORS.muted('$')} ${BRAND_COLORS.primary(example.cmd)}`);
+      category.commands.forEach((example) => {
+        console.log(
+          `  ${BRAND_COLORS.muted("$")} ${BRAND_COLORS.primary(example.cmd)}`,
+        );
         console.log(`    ${BRAND_COLORS.dim(example.desc)}`);
         console.log();
       });
     });
-    
-    console.log(`${ICONS.rocket} ${BRAND_COLORS.accent('Quick Start Guide:')}`);
-    console.log(`  1. Configure your network: ${BRAND_COLORS.primary('pod config set-network devnet')}`);
-    console.log(`  2. Set up your keypair: ${BRAND_COLORS.primary('pod config set-keypair ~/.config/solana/id.json')}`);
-    console.log(`  3. Register as an agent: ${BRAND_COLORS.primary('pod agent register')}`);
-    console.log(`  4. Start communicating: ${BRAND_COLORS.primary('pod message send <address> "Hello!"')}`);
+
+    console.log(`${ICONS.rocket} ${BRAND_COLORS.accent("Quick Start Guide:")}`);
+    console.log(
+      `  1. Configure your network: ${BRAND_COLORS.primary("pod config set-network devnet")}`,
+    );
+    console.log(
+      `  2. Set up your keypair: ${BRAND_COLORS.primary("pod config set-keypair ~/.config/solana/id.json")}`,
+    );
+    console.log(
+      `  3. Register as an agent: ${BRAND_COLORS.primary("pod agent register")}`,
+    );
+    console.log(
+      `  4. Start communicating: ${BRAND_COLORS.primary('pod message send <address> "Hello!"')}`,
+    );
     console.log();
-    
-    console.log(`${ICONS.info} ${BRAND_COLORS.info('For more help: https://github.com/Dexploarer/PoD-Protocol/docs')}`);
+
+    console.log(
+      `${ICONS.info} ${BRAND_COLORS.info("For more help: https://github.com/Dexploarer/PoD-Protocol/docs")}`,
+    );
   });
 
 // Command not found handler with suggestions
-program.on('command:*', (operands) => {
+program.on("command:*", (operands) => {
   const unknownCommand = operands[0];
   console.log();
-  console.log(`${ICONS.error} ${BRAND_COLORS.error(`Unknown command: ${unknownCommand}`)}`);
-  console.log();
-  
-  // Simple command suggestions
-  const availableCommands = ['agent', 'message', 'channel', 'escrow', 'config', 'analytics', 'discover', 'status'];
-  const suggestions = availableCommands.filter(cmd => 
-    cmd.includes(unknownCommand) || unknownCommand.includes(cmd)
+  console.log(
+    `${ICONS.error} ${BRAND_COLORS.error(`Unknown command: ${unknownCommand}`)}`,
   );
-  
+  console.log();
+
+  // Simple command suggestions
+  const availableCommands = [
+    "agent",
+    "message",
+    "channel",
+    "escrow",
+    "config",
+    "analytics",
+    "discover",
+    "zk",
+    "status",
+  ];
+  const suggestions = availableCommands.filter(
+    (cmd) => cmd.includes(unknownCommand) || unknownCommand.includes(cmd),
+  );
+
   if (suggestions.length > 0) {
-    console.log(`${ICONS.info} ${BRAND_COLORS.accent('Did you mean:')}`);
-    suggestions.forEach(suggestion => {
+    console.log(`${ICONS.info} ${BRAND_COLORS.accent("Did you mean:")}`);
+    suggestions.forEach((suggestion) => {
       console.log(`  ${BRAND_COLORS.primary(`pod ${suggestion}`)}`);
     });
   } else {
-    console.log(`${ICONS.info} ${BRAND_COLORS.accent('Available commands:')}`);
-    availableCommands.forEach(cmd => {
+    console.log(`${ICONS.info} ${BRAND_COLORS.accent("Available commands:")}`);
+    availableCommands.forEach((cmd) => {
       console.log(`  ${BRAND_COLORS.primary(`pod ${cmd}`)}`);
     });
   }
-  
+
   console.log();
-  console.log(`${ICONS.info} Run ${BRAND_COLORS.primary('pod help-extended')} for examples and tutorials`);
-  console.log(`${ICONS.info} Run ${BRAND_COLORS.primary('pod --help')} for basic help`);
+  console.log(
+    `${ICONS.info} Run ${BRAND_COLORS.primary("pod help-extended")} for examples and tutorials`,
+  );
+  console.log(
+    `${ICONS.info} Run ${BRAND_COLORS.primary("pod --help")} for basic help`,
+  );
   console.log();
-  
+
   process.exit(1);
 });
 
@@ -210,45 +308,51 @@ program
   .description(`${ICONS.star} Showcase all available ASCII art banners`)
   .action(() => {
     console.clear();
-    
-    console.log(`${ICONS.star} ${BRAND_COLORS.accent('PoD Protocol ASCII Art Showcase')}`);
+
+    console.log(
+      `${ICONS.star} ${BRAND_COLORS.accent("PoD Protocol ASCII Art Showcase")}`,
+    );
     console.log(DECORATIVE_ELEMENTS.lightningBorder);
     console.log();
-    
-    console.log(`${BRAND_COLORS.accent('1. Main PoD Protocol Banner:')}`);
+
+    console.log(`${BRAND_COLORS.accent("1. Main PoD Protocol Banner:")}`);
     showBanner(BannerSize.FULL);
-    
+
     console.log(`${BRAND_COLORS.accent('2. "Prompt or Die" Full Banner:')}`);
     showPromptOrDieBanner();
-    
-    console.log(`${BRAND_COLORS.accent('3. Compact Banner:')}`);
+
+    console.log(`${BRAND_COLORS.accent("3. Compact Banner:")}`);
     showBanner(BannerSize.COMPACT);
-    
-    console.log(`${BRAND_COLORS.accent('4. Mini Banner:')}`);
+
+    console.log(`${BRAND_COLORS.accent("4. Mini Banner:")}`);
     showBanner(BannerSize.MINI);
-    
-    console.log(`${BRAND_COLORS.accent('5. Command Headers:')}`);
-    showCommandHeader('agent', 'AI Agent Management');
-    showCommandHeader('message', 'Secure Messaging');
-    showCommandHeader('channel', 'Group Communication');
-    
-    console.log(`${BRAND_COLORS.accent('6. Decorative Elements:')}`);
+
+    console.log(`${BRAND_COLORS.accent("5. Command Headers:")}`);
+    showCommandHeader("agent", "AI Agent Management");
+    showCommandHeader("message", "Secure Messaging");
+    showCommandHeader("channel", "Group Communication");
+
+    console.log(`${BRAND_COLORS.accent("6. Decorative Elements:")}`);
     console.log(DECORATIVE_ELEMENTS.starBorder);
     console.log(DECORATIVE_ELEMENTS.gemBorder);
     console.log(DECORATIVE_ELEMENTS.lightningBorder);
     console.log(DECORATIVE_ELEMENTS.violetGradient);
     console.log();
-    
-    console.log(`${ICONS.gem} ${BRAND_COLORS.primary('Deep violet and off-white color scheme showcasing the beauty of "Prompt or Die"')}`);
-    console.log(`${ICONS.lightning} ${BRAND_COLORS.secondary('Use --no-banner to skip banners, or try different banner sizes!')}`);
+
+    console.log(
+      `${ICONS.gem} ${BRAND_COLORS.primary('Deep violet and off-white color scheme showcasing the beauty of "Prompt or Die"')}`,
+    );
+    console.log(
+      `${ICONS.lightning} ${BRAND_COLORS.secondary("Use --no-banner to skip banners, or try different banner sizes!")}`,
+    );
   });
 
 // Global error handler
-process.on('uncaughtException', (error) => {
+process.on("uncaughtException", (error) => {
   errorHandler.handleError(error);
 });
 
-process.on('unhandledRejection', (reason) => {
+process.on("unhandledRejection", (reason) => {
   errorHandler.handleError(new Error(String(reason)));
 });
 

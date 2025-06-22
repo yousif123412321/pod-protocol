@@ -29,8 +29,7 @@ export class AgentService extends BaseService {
       }
 
       try {
-        const tx = await program.methods // Potentially remove 'as any' if types allow
-
+        const tx = await (program.methods as any)
           .registerAgent(new BN(options.capabilities), options.metadataUri)
           .accounts({
             agentAccount: agentPDA,
@@ -141,7 +140,7 @@ export class AgentService extends BaseService {
         const idl = this.ensureIDL();
         program = new anchor.Program(idl, provider);
       }
-      
+
       const agentAccount = this.getAccount("agentAccount");
       const account = await agentAccount.fetch(agentPDA);
       return {
@@ -179,7 +178,7 @@ export class AgentService extends BaseService {
 
       const idl = this.ensureIDL();
       const program = new anchor.Program(idl, provider);
-      
+
       const agentAccount = this.getAccount("agentAccount");
       const accounts = await agentAccount.all();
 

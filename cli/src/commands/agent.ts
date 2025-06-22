@@ -3,10 +3,7 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 import { table } from "table";
 import { PublicKey } from "@solana/web3.js";
-import {
-  AGENT_CAPABILITIES,
-  getCapabilityNames,
-} from "@pod-protocol/sdk";
+import { AGENT_CAPABILITIES, getCapabilityNames } from "@pod-protocol/sdk";
 import {
   createCommandHandler,
   handleDryRun,
@@ -57,7 +54,8 @@ export class AgentCommands {
         createCommandHandler(
           "register agent",
           async (client, wallet, globalOpts, options: AgentRegisterOptions) => {
-            const { capabilities, metadataUri } = await this.prepareRegistrationData(options);
+            const { capabilities, metadataUri } =
+              await this.prepareRegistrationData(options);
 
             const spinner = createSpinner("Registering agent...");
 
@@ -80,8 +78,8 @@ export class AgentCommands {
               Capabilities: getCapabilityNames(capabilities).join(", "),
               "Metadata URI": metadataUri,
             });
-          }
-        )
+          },
+        ),
       );
   }
 
@@ -108,7 +106,7 @@ export class AgentCommands {
         } catch (error: any) {
           console.error(
             chalk.red("Failed to fetch agent info:"),
-            error.message
+            error.message,
           );
           process.exit(1);
         }
@@ -140,12 +138,15 @@ export class AgentCommands {
             spinner.succeed("Dry run: Agent update prepared");
             console.log(
               chalk.cyan("Updates:"),
-              JSON.stringify(updateOptions, null, 2)
+              JSON.stringify(updateOptions, null, 2),
             );
             return;
           }
 
-          const signature = await client.agents.updateAgent(keypair, updateOptions);
+          const signature = await client.agents.updateAgent(
+            keypair,
+            updateOptions,
+          );
 
           spinner.succeed("Agent updated successfully!");
           console.log(chalk.green("Transaction:"), signature);
@@ -167,7 +168,9 @@ export class AgentCommands {
         try {
           const spinner = ora("Fetching agents...").start();
           const client = await createClient(globalOpts.network);
-          const agents = await client.agents.getAllAgents(parseInt(options.limit, 10));
+          const agents = await client.agents.getAllAgents(
+            parseInt(options.limit, 10),
+          );
 
           if (agents.length === 0) {
             spinner.succeed("No agents found");
@@ -193,7 +196,7 @@ export class AgentCommands {
       const answers = await this.promptForRegistrationData();
       capabilities = answers.capabilities.reduce(
         (acc: number, cap: number) => acc | cap,
-        0
+        0,
       );
       metadataUri = answers.metadataUri;
     }
@@ -233,7 +236,10 @@ export class AgentCommands {
     ]);
   }
 
-  private resolveWalletAddress(address: string | undefined, globalOpts: Record<string, any>): PublicKey {
+  private resolveWalletAddress(
+    address: string | undefined,
+    globalOpts: Record<string, any>,
+  ): PublicKey {
     if (address) {
       return new PublicKey(address);
     } else {
@@ -245,16 +251,10 @@ export class AgentCommands {
   private displayAgentInfo(agentData: Record<string, any>) {
     const data = [
       ["Public Key", agentData.pubkey.toBase58()],
-      [
-        "Capabilities",
-        getCapabilityNames(agentData.capabilities).join(", "),
-      ],
+      ["Capabilities", getCapabilityNames(agentData.capabilities).join(", ")],
       ["Reputation", agentData.reputation.toString()],
       ["Metadata URI", agentData.metadataUri],
-      [
-        "Last Updated",
-        new Date(agentData.lastUpdated * 1000).toLocaleString(),
-      ],
+      ["Last Updated", new Date(agentData.lastUpdated * 1000).toLocaleString()],
     ];
 
     console.log(
@@ -264,17 +264,17 @@ export class AgentCommands {
             alignment: "center",
             content: chalk.blue.bold("Agent Information"),
           },
-        })
+        }),
     );
   }
 
   private prepareUpdateOptions(options: Record<string, any>) {
     const updateOptions: Record<string, any> = {};
-    
+
     if (options.capabilities) {
       updateOptions.capabilities = parseInt(options.capabilities, 10);
     }
-    
+
     if (options.metadata) {
       updateOptions.metadataUri = options.metadata;
     }
@@ -283,27 +283,24 @@ export class AgentCommands {
   }
 
   private displayAgentsList(agents: Record<string, any>[]) {
-          const data = agents.map((agent: Record<string, any>) => [
-            agent.pubkey.toBase58().slice(0, 8) + "...",
-            getCapabilityNames(agent.capabilities).join(", "),
-            agent.reputation.toString(),
-            new Date(agent.lastUpdated * 1000).toLocaleDateString(),
-          ]);
+    const data = agents.map((agent: Record<string, any>) => [
+      agent.pubkey.toBase58().slice(0, 8) + "...",
+      getCapabilityNames(agent.capabilities).join(", "),
+      agent.reputation.toString(),
+      new Date(agent.lastUpdated * 1000).toLocaleDateString(),
+    ]);
 
-          console.log(
-            "\n" +
-              table(
-                [
-                  ["Address", "Capabilities", "Reputation", "Last Updated"],
-                  ...data,
-                ],
-                {
-                  header: {
-                    alignment: "center",
-                    content: chalk.blue.bold("Registered Agents"),
-                  },
-                }
-              )
-          );
+    console.log(
+      "\n" +
+        table(
+          [["Address", "Capabilities", "Reputation", "Last Updated"], ...data],
+          {
+            header: {
+              alignment: "center",
+              content: chalk.blue.bold("Registered Agents"),
+            },
+          },
+        ),
+    );
   }
 }

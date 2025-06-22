@@ -15,16 +15,23 @@ export class EscrowService extends BaseService {
   /**
    * Deposit funds to escrow for a channel
    */
-  async depositEscrow(wallet: Signer, options: DepositEscrowOptions): Promise<string> {
+  async depositEscrow(
+    wallet: Signer,
+    options: DepositEscrowOptions,
+  ): Promise<string> {
     const program = this.ensureInitialized();
 
     // Derive agent PDA
     const [agentPDA] = findAgentPDA(wallet.publicKey, this.programId);
 
     // Derive escrow PDA
-    const [escrowPDA] = findEscrowPDA(options.channel, wallet.publicKey, this.programId);
+    const [escrowPDA] = findEscrowPDA(
+      options.channel,
+      wallet.publicKey,
+      this.programId,
+    );
 
-    const tx = await program.methods
+    const tx = await (program.methods as any)
       .depositEscrow(new anchor.BN(options.amount))
       .accounts({
         escrowAccount: escrowPDA,
@@ -42,16 +49,23 @@ export class EscrowService extends BaseService {
   /**
    * Withdraw funds from escrow
    */
-  async withdrawEscrow(wallet: Signer, options: WithdrawEscrowOptions): Promise<string> {
+  async withdrawEscrow(
+    wallet: Signer,
+    options: WithdrawEscrowOptions,
+  ): Promise<string> {
     const program = this.ensureInitialized();
 
     // Derive agent PDA
     const [agentPDA] = findAgentPDA(wallet.publicKey, this.programId);
 
     // Derive escrow PDA
-    const [escrowPDA] = findEscrowPDA(options.channel, wallet.publicKey, this.programId);
+    const [escrowPDA] = findEscrowPDA(
+      options.channel,
+      wallet.publicKey,
+      this.programId,
+    );
 
-    const tx = await program.methods
+    const tx = await (program.methods as any)
       .withdrawEscrow(new anchor.BN(options.amount))
       .accounts({
         escrowAccount: escrowPDA,
@@ -71,7 +85,7 @@ export class EscrowService extends BaseService {
    */
   async getEscrow(
     channel: PublicKey,
-    depositor: PublicKey
+    depositor: PublicKey,
   ): Promise<EscrowAccount | null> {
     try {
       const [escrowPDA] = findEscrowPDA(channel, depositor, this.programId);
@@ -79,7 +93,10 @@ export class EscrowService extends BaseService {
       const account = await escrowAccount.fetch(escrowPDA);
       return this.convertEscrowAccountFromProgram(account);
     } catch (error) {
-      console.warn(`Escrow not found for channel: ${channel.toString()}, depositor: ${depositor.toString()}`, error);
+      console.warn(
+        `Escrow not found for channel: ${channel.toString()}, depositor: ${depositor.toString()}`,
+        error,
+      );
       return null;
     }
   }
@@ -89,7 +106,7 @@ export class EscrowService extends BaseService {
    */
   async getEscrowsByDepositor(
     depositor: PublicKey,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<EscrowAccount[]> {
     try {
       const escrowAccount = this.getAccount("escrowAccount");

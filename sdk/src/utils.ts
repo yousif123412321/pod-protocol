@@ -188,7 +188,11 @@ export async function hashPayload(
   const data = typeof payload === "string" ? encoder.encode(payload) : payload;
 
   // Use Web Crypto API for hashing
-  if (typeof globalThis !== "undefined" && globalThis.crypto && globalThis.crypto.subtle) {
+  if (
+    typeof globalThis !== "undefined" &&
+    globalThis.crypto &&
+    globalThis.crypto.subtle
+  ) {
     const hashBuffer = await globalThis.crypto.subtle.digest("SHA-256", data);
     return new Uint8Array(hashBuffer);
   }
@@ -203,7 +207,7 @@ export async function hashPayload(
     } catch (e) {
       // Fall back to a simple hashing algorithm if crypto is not available
       console.warn(
-        "Using fallback hash function. Consider using a proper crypto library."
+        "Using fallback hash function. Consider using a proper crypto library.",
       );
       return simpleHash(data);
     }
@@ -228,9 +232,9 @@ function simpleHash(data: Uint8Array): Uint8Array {
 
   // Fill the hash array with computed values
   for (let i = 0; i < 32; i++) {
-    hash[i] = ((a + b + i) % 256);
+    hash[i] = (a + b + i) % 256;
   }
-  
+
   return hash;
 }
 
@@ -238,28 +242,28 @@ function simpleHash(data: Uint8Array): Uint8Array {
  * Retry a function with exponential backoff
  */
 export async function retry<T>(
-  fn: () => Promise<T>, 
-  maxAttempts: number = 3, 
-  baseDelay: number = 1000
+  fn: () => Promise<T>,
+  maxAttempts: number = 3,
+  baseDelay: number = 1000,
 ): Promise<T> {
   let lastError: Error;
-  
+
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await fn();
     } catch (error) {
       lastError = error as Error;
-      
+
       if (attempt === maxAttempts) {
         throw lastError;
       }
-      
+
       // Exponential backoff with jitter
       const delay = baseDelay * Math.pow(2, attempt - 1) + Math.random() * 1000;
       await sleep(delay);
     }
   }
-  
+
   throw lastError!;
 }
 
@@ -300,7 +304,7 @@ export function getCapabilityNames(capabilities: number): string[] {
   const names: string[] = [];
   const capabilityMap = {
     1: "TRADING",
-    2: "ANALYSIS", 
+    2: "ANALYSIS",
     4: "DATA_PROCESSING",
     8: "CONTENT_GENERATION",
     16: "CUSTOM_1",
@@ -347,14 +351,11 @@ export function isValidPublicKey(address: string): boolean {
 /**
  * Convert timestamp to number, handling BN and other formats
  */
-export function convertTimestamp(
-  timestamp: any,
-  fallback?: any
-): number {
-  if (timestamp && typeof timestamp.toNumber === 'function') {
+export function convertTimestamp(timestamp: any, fallback?: any): number {
+  if (timestamp && typeof timestamp.toNumber === "function") {
     return timestamp.toNumber();
   }
-  if (fallback && typeof fallback.toNumber === 'function') {
+  if (fallback && typeof fallback.toNumber === "function") {
     return fallback.toNumber();
   }
   return timestamp || fallback || Date.now();
@@ -391,10 +392,13 @@ export function sleep(ms: number): Promise<void> {
 /**
  * Format a public key for display (show first 4 and last 4 characters)
  */
-export function formatPublicKey(pubkey: PublicKey | string, length: number = 8): string {
-  const key = typeof pubkey === 'string' ? pubkey : pubkey.toBase58();
+export function formatPublicKey(
+  pubkey: PublicKey | string,
+  length: number = 8,
+): string {
+  const key = typeof pubkey === "string" ? pubkey : pubkey.toBase58();
   if (key.length <= length + 3) return key;
-  
+
   const start = Math.floor(length / 2);
   const end = length - start;
   return `${key.slice(0, start)}...${key.slice(-end)}`;
@@ -406,15 +410,15 @@ export function formatPublicKey(pubkey: PublicKey | string, length: number = 8):
 export function parseMessageType(typeStr: string): MessageType {
   const normalized = typeStr.toLowerCase();
   switch (normalized) {
-    case 'text':
+    case "text":
       return MessageType.Text;
-    case 'data':
+    case "data":
       return MessageType.Data;
-    case 'command':
+    case "command":
       return MessageType.Command;
-    case 'response':
+    case "response":
       return MessageType.Response;
-    case 'custom':
+    case "custom":
       return MessageType.Custom;
     default:
       throw new Error(`Invalid message type: ${typeStr}`);
@@ -433,11 +437,11 @@ export function generateMessageId(): string {
  */
 export function estimateTransactionFee(
   messageLength: number,
-  baseFee: number = 5000
+  baseFee: number = 5000,
 ): number {
   // Base fee + per-byte fee
   const perByteFee = 10;
-  return baseFee + (messageLength * perByteFee);
+  return baseFee + messageLength * perByteFee;
 }
 
 /**
@@ -459,12 +463,12 @@ export function formatDuration(ms: number): string {
  * Convert bytes to human readable format
  */
 export function formatBytes(bytes: number): string {
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  if (bytes === 0) return '0 B';
-  
+  const sizes = ["B", "KB", "MB", "GB"];
+  if (bytes === 0) return "0 B";
+
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   const size = bytes / Math.pow(1024, i);
-  
+
   return `${size.toFixed(1)} ${sizes[i]}`;
 }
 
@@ -480,11 +484,11 @@ export function validateCapabilities(capabilities: number): boolean {
  * Get channel visibility string
  */
 export function getVisibilityString(visibility: any): string {
-  if (typeof visibility === 'object') {
-    if (visibility.public !== undefined) return 'Public';
-    if (visibility.private !== undefined) return 'Private';
+  if (typeof visibility === "object") {
+    if (visibility.public !== undefined) return "Public";
+    if (visibility.private !== undefined) return "Private";
   }
-  return typeof visibility === 'string' ? visibility : 'Public';
+  return typeof visibility === "string" ? visibility : "Public";
 }
 
 /**
@@ -520,7 +524,7 @@ export function findInvitationPDA(
  */
 export function createSeed(input: string): Buffer {
   // Truncate or pad to 32 bytes for PDA seeds
-  const buffer = Buffer.from(input, 'utf8');
+  const buffer = Buffer.from(input, "utf8");
   if (buffer.length > 32) {
     return buffer.slice(0, 32);
   }
@@ -539,7 +543,7 @@ export async function confirmTransaction(
   connection: any,
   signature: string,
   maxRetries: number = 10,
-  delay: number = 1000
+  delay: number = 1000,
 ): Promise<boolean> {
   for (let i = 0; i < maxRetries; i++) {
     try {
@@ -550,11 +554,11 @@ export async function confirmTransaction(
     } catch (error) {
       // Transaction might not be confirmed yet
     }
-    
+
     if (i < maxRetries - 1) {
       await sleep(delay);
     }
   }
-  
+
   return false;
 }

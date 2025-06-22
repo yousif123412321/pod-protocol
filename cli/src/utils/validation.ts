@@ -78,7 +78,7 @@ export function validateCapabilities(capabilities: string | number): number {
  */
 export function validateUri(uri: string, fieldName: string = "URI"): string {
   // Ensure uri is a string
-  if (typeof uri !== 'string') {
+  if (typeof uri !== "string") {
     throw new ValidationError(`${fieldName} must be a string`);
   }
 
@@ -103,7 +103,7 @@ export function validateUri(uri: string, fieldName: string = "URI"): string {
  */
 export function validateChannelName(name: string): string {
   // Ensure name is a string
-  if (typeof name !== 'string') {
+  if (typeof name !== "string") {
     throw new ValidationError("Channel name must be a string");
   }
 
@@ -129,7 +129,7 @@ export function validateChannelName(name: string): string {
  */
 export function validateMessage(content: string): string {
   // Ensure content is a string
-  if (typeof content !== 'string') {
+  if (typeof content !== "string") {
     throw new ValidationError("Message content must be a string");
   }
 
@@ -167,7 +167,7 @@ export function validateFilePath(
   fieldName: string = "file",
 ): string {
   // Ensure filePath is a string
-  if (typeof filePath !== 'string') {
+  if (typeof filePath !== "string") {
     throw new ValidationError(`${fieldName} path must be a string`);
   }
 

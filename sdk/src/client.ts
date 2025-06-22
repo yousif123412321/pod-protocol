@@ -1,9 +1,4 @@
-import {
-  Connection,
-  PublicKey,
-  Signer,
-  Commitment,
-} from "@solana/web3.js";
+import { Connection, PublicKey, Signer, Commitment } from "@solana/web3.js";
 import anchor, { Program, AnchorProvider } from "@coral-xyz/anchor";
 import {
   PROGRAM_ID,
@@ -33,6 +28,8 @@ import { ChannelService } from "./services/channel";
 import { EscrowService } from "./services/escrow";
 import { AnalyticsService } from "./services/analytics";
 import { DiscoveryService } from "./services/discovery";
+import { IPFSService, IPFSConfig } from "./services/ipfs";
+import { ZKCompressionService, ZKCompressionConfig } from "./services/zk-compression";
 
 /**
  * Main PoD Protocol SDK client for interacting with the protocol
@@ -42,7 +39,7 @@ export class PodComClient {
   private connection: Connection;
   private programId: PublicKey;
   private commitment: Commitment;
-  private program?: Program<PodCom>;
+  private program?: Program<any>; // Use any for IDL compatibility
 
   // Service instances - public for direct access to specific functionality
   public agents: AgentService;
@@ -51,6 +48,8 @@ export class PodComClient {
   public escrow: EscrowService;
   public analytics: AnalyticsService;
   public discovery: DiscoveryService;
+  public ipfs: IPFSService;
+  public zkCompression: ZKCompressionService;
 
   constructor(config: PodComConfig = {}) {
     this.connection = new Connection(
@@ -73,6 +72,16 @@ export class PodComClient {
     this.escrow = new EscrowService(serviceConfig);
     this.analytics = new AnalyticsService(serviceConfig);
     this.discovery = new DiscoveryService(serviceConfig);
+    
+    // Initialize IPFS service
+    this.ipfs = new IPFSService(serviceConfig, config.ipfs || {});
+    
+    // Initialize ZK Compression service with IPFS dependency
+    this.zkCompression = new ZKCompressionService(
+      serviceConfig,
+      config.zkCompression || {},
+      this.ipfs
+    );
   }
 
   /**
@@ -94,7 +103,7 @@ export class PodComClient {
           );
         }
         
-        this.program = new Program(IDL, provider) as Program<PodCom>;
+        this.program = new Program(IDL as any, provider);
         
         // Validate program was created successfully
         if (!this.program) {
@@ -108,6 +117,8 @@ export class PodComClient {
         this.escrow.setProgram(this.program);
         this.analytics.setProgram(this.program);
         this.discovery.setProgram(this.program);
+        this.ipfs.setProgram(this.program);
+        this.zkCompression.setProgram(this.program);
       } else {
         // No wallet provided - validate IDL before setting on services
         if (!IDL) {
@@ -123,6 +134,8 @@ export class PodComClient {
         this.escrow.setIDL(IDL);
         this.analytics.setIDL(IDL);
         this.discovery.setIDL(IDL);
+        this.ipfs.setIDL(IDL);
+        this.zkCompression.setIDL(IDL);
       }
 
       // Validate initialization was successful
@@ -273,7 +286,7 @@ export class PodComClient {
     channelPDA: PublicKey,
     content: string,
     messageType: string = "Text",
-    replyTo?: PublicKey
+    replyTo?: PublicKey,
   ): Promise<string> {
     return this.channels.broadcastMessage(wallet, {
       channelPDA,
@@ -300,7 +313,7 @@ export class PodComClient {
   async getChannelParticipants(
     channelPDA: PublicKey,
     limit: number = 50
-  ): Promise<Array<IdlAccounts<PodCom>>> {
+  ): Promise<Array<any>> {
     return this.channels.getChannelParticipants(channelPDA, limit);
   }
 
@@ -310,7 +323,7 @@ export class PodComClient {
   async getChannelMessages(
     channelPDA: PublicKey,
     limit: number = 50
-  ): Promise<Array<IdlAccounts<PodCom>>> {
+  ): Promise<Array<any>> {
     return this.channels.getChannelMessages(channelPDA, limit);
   }
 

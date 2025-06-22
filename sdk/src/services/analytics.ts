@@ -52,7 +52,7 @@ export interface NetworkAnalytics {
   totalValueLocked: number;
   activeAgents24h: number;
   messageVolume24h: number;
-  networkHealth: 'healthy' | 'moderate' | 'congested';
+  networkHealth: "healthy" | "moderate" | "congested";
   peakUsageHours: number[];
 }
 
@@ -127,9 +127,11 @@ export class AnalyticsService extends BaseService {
       });
 
       // Calculate average reputation
-      const averageReputation = agentData.length > 0 
-        ? agentData.reduce((sum, agent) => sum + agent.reputation, 0) / agentData.length
-        : 0;
+      const averageReputation =
+        agentData.length > 0
+          ? agentData.reduce((sum, agent) => sum + agent.reputation, 0) /
+            agentData.length
+          : 0;
 
       // Get top agents by reputation
       const topAgentsByReputation = agentData
@@ -160,37 +162,44 @@ export class AnalyticsService extends BaseService {
    */
   async getMessageAnalytics(limit: number = 1000): Promise<MessageAnalytics> {
     try {
-      const messages = await this.connection.getProgramAccounts(this.programId, {
-        filters: [
-          {
-            memcmp: {
-              offset: 0,
-              bytes: this.getDiscriminator("messageAccount"),
+      const messages = await this.connection.getProgramAccounts(
+        this.programId,
+        {
+          filters: [
+            {
+              memcmp: {
+                offset: 0,
+                bytes: this.getDiscriminator("messageAccount"),
+              },
             },
-          },
-        ],
-        commitment: this.commitment,
-      });
+          ],
+          commitment: this.commitment,
+        },
+      );
 
-      const messageData: MessageAccount[] = messages.slice(0, limit).map((acc) => {
-        const account = this.ensureInitialized().coder.accounts.decode(
-          "messageAccount",
-          acc.account.data,
-        );
-        return {
-          pubkey: acc.pubkey,
-          sender: account.sender,
-          recipient: account.recipient,
-          payload: account.payload || "",
-          payloadHash: account.payloadHash,
-          messageType: this.convertMessageTypeFromProgram(account.messageType),
-          status: this.convertMessageStatusFromProgram(account.status),
-          timestamp: account.timestamp?.toNumber() || Date.now(),
-          createdAt: account.createdAt?.toNumber() || Date.now(),
-          expiresAt: account.expiresAt?.toNumber() || 0,
-          bump: account.bump,
-        };
-      });
+      const messageData: MessageAccount[] = messages
+        .slice(0, limit)
+        .map((acc) => {
+          const account = this.ensureInitialized().coder.accounts.decode(
+            "messageAccount",
+            acc.account.data,
+          );
+          return {
+            pubkey: acc.pubkey,
+            sender: account.sender,
+            recipient: account.recipient,
+            payload: account.payload || "",
+            payloadHash: account.payloadHash,
+            messageType: this.convertMessageTypeFromProgram(
+              account.messageType,
+            ),
+            status: this.convertMessageStatusFromProgram(account.status),
+            timestamp: account.timestamp?.toNumber() || Date.now(),
+            createdAt: account.createdAt?.toNumber() || Date.now(),
+            expiresAt: account.expiresAt?.toNumber() || 0,
+            bump: account.bump,
+          };
+        });
 
       // Group messages by status
       const messagesByStatus: Record<MessageStatus, number> = {
@@ -211,14 +220,16 @@ export class AnalyticsService extends BaseService {
       });
 
       // Calculate average message size
-      const averageMessageSize = messageData.length > 0
-        ? messageData.reduce((sum, msg) => sum + msg.payload.length, 0) / messageData.length
-        : 0;
+      const averageMessageSize =
+        messageData.length > 0
+          ? messageData.reduce((sum, msg) => sum + msg.payload.length, 0) /
+            messageData.length
+          : 0;
 
       // Calculate messages per day (last 7 days)
       const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
       const recentMessages = messageData.filter(
-        (msg) => msg.timestamp * 1000 > sevenDaysAgo
+        (msg) => msg.timestamp * 1000 > sevenDaysAgo,
       );
       const messagesPerDay = recentMessages.length / 7;
 
@@ -256,39 +267,46 @@ export class AnalyticsService extends BaseService {
    */
   async getChannelAnalytics(limit: number = 100): Promise<ChannelAnalytics> {
     try {
-      const channels = await this.connection.getProgramAccounts(this.programId, {
-        filters: [
-          {
-            memcmp: {
-              offset: 0,
-              bytes: this.getDiscriminator("channelAccount"),
+      const channels = await this.connection.getProgramAccounts(
+        this.programId,
+        {
+          filters: [
+            {
+              memcmp: {
+                offset: 0,
+                bytes: this.getDiscriminator("channelAccount"),
+              },
             },
-          },
-        ],
-        commitment: this.commitment,
-      });
+          ],
+          commitment: this.commitment,
+        },
+      );
 
-      const channelData: ChannelAccount[] = channels.slice(0, limit).map((acc) => {
-        const account = this.ensureInitialized().coder.accounts.decode(
-          "channelAccount",
-          acc.account.data,
-        );
-        return {
-          pubkey: acc.pubkey,
-          creator: account.creator,
-          name: account.name,
-          description: account.description,
-          visibility: this.convertChannelVisibilityFromProgram(account.visibility),
-          maxParticipants: account.maxParticipants,
-          participantCount: account.currentParticipants,
-          currentParticipants: account.currentParticipants,
-          feePerMessage: account.feePerMessage?.toNumber() || 0,
-          escrowBalance: account.escrowBalance?.toNumber() || 0,
-          createdAt: account.createdAt?.toNumber() || Date.now(),
-          isActive: true,
-          bump: account.bump,
-        };
-      });
+      const channelData: ChannelAccount[] = channels
+        .slice(0, limit)
+        .map((acc) => {
+          const account = this.ensureInitialized().coder.accounts.decode(
+            "channelAccount",
+            acc.account.data,
+          );
+          return {
+            pubkey: acc.pubkey,
+            creator: account.creator,
+            name: account.name,
+            description: account.description,
+            visibility: this.convertChannelVisibilityFromProgram(
+              account.visibility,
+            ),
+            maxParticipants: account.maxParticipants,
+            participantCount: account.currentParticipants,
+            currentParticipants: account.currentParticipants,
+            feePerMessage: account.feePerMessage?.toNumber() || 0,
+            escrowBalance: account.escrowBalance?.toNumber() || 0,
+            createdAt: account.createdAt?.toNumber() || Date.now(),
+            isActive: true,
+            bump: account.bump,
+          };
+        });
 
       // Group channels by visibility
       const channelsByVisibility: Record<ChannelVisibility, number> = {
@@ -300,9 +318,13 @@ export class AnalyticsService extends BaseService {
       });
 
       // Calculate average participants
-      const averageParticipants = channelData.length > 0
-        ? channelData.reduce((sum, channel) => sum + channel.participantCount, 0) / channelData.length
-        : 0;
+      const averageParticipants =
+        channelData.length > 0
+          ? channelData.reduce(
+              (sum, channel) => sum + channel.participantCount,
+              0,
+            ) / channelData.length
+          : 0;
 
       // Get most popular channels by participant count
       const mostPopularChannels = channelData
@@ -312,13 +334,17 @@ export class AnalyticsService extends BaseService {
       // Calculate total escrow value
       const totalEscrowValue = channelData.reduce(
         (sum, channel) => sum + channel.escrowBalance,
-        0
+        0,
       );
 
       // Calculate average channel fee
-      const averageChannelFee = channelData.length > 0
-        ? channelData.reduce((sum, channel) => sum + channel.feePerMessage, 0) / channelData.length
-        : 0;
+      const averageChannelFee =
+        channelData.length > 0
+          ? channelData.reduce(
+              (sum, channel) => sum + channel.feePerMessage,
+              0,
+            ) / channelData.length
+          : 0;
 
       return {
         totalChannels: channelData.length,
@@ -340,17 +366,18 @@ export class AnalyticsService extends BaseService {
     try {
       // Get recent block performance for network health
       const recentSlots = await this.connection.getRecentPerformanceSamples(10);
-      const averageTps = recentSlots.length > 0
-        ? recentSlots.reduce((sum, slot) => sum + slot.numTransactions, 0) / 
-          recentSlots.reduce((sum, slot) => sum + slot.samplePeriodSecs, 0)
-        : 0;
+      const averageTps =
+        recentSlots.length > 0
+          ? recentSlots.reduce((sum, slot) => sum + slot.numTransactions, 0) /
+            recentSlots.reduce((sum, slot) => sum + slot.samplePeriodSecs, 0)
+          : 0;
 
       // Determine network health based on TPS
-      let networkHealth: 'healthy' | 'moderate' | 'congested' = 'healthy';
+      let networkHealth: "healthy" | "moderate" | "congested" = "healthy";
       if (averageTps < 1000) {
-        networkHealth = 'congested';
+        networkHealth = "congested";
       } else if (averageTps < 2000) {
-        networkHealth = 'moderate';
+        networkHealth = "moderate";
       }
 
       // Get total value locked (from escrow accounts)
@@ -381,12 +408,15 @@ export class AnalyticsService extends BaseService {
       // Mock data for metrics that require historical tracking
       // In a real implementation, these would be stored in a time-series database
       const peakUsageHours = [9, 10, 11, 14, 15, 16, 20, 21]; // 9-11am, 2-4pm, 8-9pm UTC
-      
+
       return {
-        totalTransactions: recentSlots.reduce((sum, slot) => sum + slot.numTransactions, 0),
+        totalTransactions: recentSlots.reduce(
+          (sum, slot) => sum + slot.numTransactions,
+          0,
+        ),
         totalValueLocked,
         activeAgents24h: 0, // Would need historical tracking
-        messageVolume24h: 0, // Would need historical tracking  
+        messageVolume24h: 0, // Would need historical tracking
         networkHealth,
         peakUsageHours,
       };
@@ -400,43 +430,47 @@ export class AnalyticsService extends BaseService {
    */
   async generateReport(): Promise<string> {
     const dashboard = await this.getDashboard();
-    
+
     let report = "# PoD Protocol Analytics Report\n\n";
     report += `Generated: ${new Date(dashboard.generatedAt).toISOString()}\n\n`;
-    
+
     // Agent Analytics
     report += "## Agent Analytics\n";
     report += `- Total Agents: ${dashboard.agents.totalAgents}\n`;
     report += `- Average Reputation: ${dashboard.agents.averageReputation.toFixed(2)}\n`;
     report += `- Recently Active (24h): ${dashboard.agents.recentlyActive.length}\n`;
     report += "\n### Capability Distribution\n";
-    Object.entries(dashboard.agents.capabilityDistribution).forEach(([cap, count]) => {
-      report += `- ${cap}: ${count} agents\n`;
-    });
-    
+    Object.entries(dashboard.agents.capabilityDistribution).forEach(
+      ([cap, count]) => {
+        report += `- ${cap}: ${count} agents\n`;
+      },
+    );
+
     // Message Analytics
     report += "\n## Message Analytics\n";
     report += `- Total Messages: ${dashboard.messages.totalMessages}\n`;
     report += `- Average Message Size: ${formatBytes(dashboard.messages.averageMessageSize)}\n`;
     report += `- Messages per Day: ${dashboard.messages.messagesPerDay.toFixed(1)}\n`;
     report += "\n### Message Status Distribution\n";
-    Object.entries(dashboard.messages.messagesByStatus).forEach(([status, count]) => {
-      report += `- ${status}: ${count} messages\n`;
-    });
-    
-    // Channel Analytics  
+    Object.entries(dashboard.messages.messagesByStatus).forEach(
+      ([status, count]) => {
+        report += `- ${status}: ${count} messages\n`;
+      },
+    );
+
+    // Channel Analytics
     report += "\n## Channel Analytics\n";
     report += `- Total Channels: ${dashboard.channels.totalChannels}\n`;
     report += `- Average Participants: ${dashboard.channels.averageParticipants.toFixed(1)}\n`;
     report += `- Total Value Locked: ${lamportsToSol(dashboard.channels.totalEscrowValue).toFixed(4)} SOL\n`;
     report += `- Average Channel Fee: ${lamportsToSol(dashboard.channels.averageChannelFee).toFixed(6)} SOL\n`;
-    
+
     // Network Analytics
     report += "\n## Network Analytics\n";
     report += `- Network Health: ${dashboard.network.networkHealth.toUpperCase()}\n`;
     report += `- Total Value Locked: ${lamportsToSol(dashboard.network.totalValueLocked).toFixed(4)} SOL\n`;
-    report += `- Peak Usage Hours (UTC): ${dashboard.network.peakUsageHours.join(', ')}\n`;
-    
+    report += `- Peak Usage Hours (UTC): ${dashboard.network.peakUsageHours.join(", ")}\n`;
+
     return report;
   }
 
@@ -448,7 +482,7 @@ export class AnalyticsService extends BaseService {
     // This would need to be implemented based on your IDL
     const discriminators: Record<string, string> = {
       agentAccount: "6RdcqmKGhkRy",
-      messageAccount: "6RdcqmKGhkRz", 
+      messageAccount: "6RdcqmKGhkRz",
       channelAccount: "6RdcqmKGhkRA",
       escrowAccount: "6RdcqmKGhkRB",
     };
@@ -460,7 +494,8 @@ export class AnalyticsService extends BaseService {
     if (programType.data !== undefined) return "Data";
     if (programType.command !== undefined) return "Command";
     if (programType.response !== undefined) return "Response";
-    if (programType.custom !== undefined) return `Custom(${programType.custom})`;
+    if (programType.custom !== undefined)
+      return `Custom(${programType.custom})`;
     return "Unknown";
   }
 
@@ -472,9 +507,12 @@ export class AnalyticsService extends BaseService {
     return MessageStatus.Pending;
   }
 
-  private convertChannelVisibilityFromProgram(programVisibility: any): ChannelVisibility {
+  private convertChannelVisibilityFromProgram(
+    programVisibility: any,
+  ): ChannelVisibility {
     if (programVisibility.public !== undefined) return ChannelVisibility.Public;
-    if (programVisibility.private !== undefined) return ChannelVisibility.Private;
+    if (programVisibility.private !== undefined)
+      return ChannelVisibility.Private;
     return ChannelVisibility.Public;
   }
 }

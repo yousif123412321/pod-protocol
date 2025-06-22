@@ -1,4 +1,9 @@
-import { PublicKey, Signer, GetProgramAccountsFilter, SystemProgram } from "@solana/web3.js";
+import {
+  PublicKey,
+  Signer,
+  GetProgramAccountsFilter,
+  SystemProgram,
+} from "@solana/web3.js";
 import anchor from "@coral-xyz/anchor";
 import { BaseService } from "./base";
 import {
@@ -7,10 +12,10 @@ import {
   MessageType,
   MessageStatus,
 } from "../types";
-import { 
+import {
   findAgentPDA,
-  findMessagePDA, 
-  hashPayload, 
+  findMessagePDA,
+  hashPayload,
   retry,
   convertMessageTypeToProgram,
   convertMessageTypeFromProgram,
@@ -22,7 +27,10 @@ import {
  * Message-related operations service
  */
 export class MessageService extends BaseService {
-  async sendMessage(wallet: Signer, options: SendMessageOptions): Promise<string> {
+  async sendMessage(
+    wallet: Signer,
+    options: SendMessageOptions,
+  ): Promise<string> {
     const program = this.ensureInitialized();
 
     // Derive sender agent PDA
@@ -32,7 +40,10 @@ export class MessageService extends BaseService {
     const payloadHash = await hashPayload(options.payload);
 
     // Convert message type
-    const messageTypeObj = this.convertMessageType(options.messageType, options.customValue);
+    const messageTypeObj = this.convertMessageType(
+      options.messageType,
+      options.customValue,
+    );
 
     // Find message PDA
     const [messagePDA] = findMessagePDA(
@@ -40,11 +51,11 @@ export class MessageService extends BaseService {
       options.recipient,
       payloadHash,
       messageTypeObj,
-      this.programId
+      this.programId,
     );
 
     return retry(async () => {
-      const tx = await program.methods
+      const tx = await (program.methods as any)
         .sendMessage(
           options.recipient,
           Array.from(payloadHash),
@@ -144,7 +155,10 @@ export class MessageService extends BaseService {
   // Helper Methods
   // ============================================================================
 
-  private convertMessageType(messageType: MessageType, customValue?: number): any {
+  private convertMessageType(
+    messageType: MessageType,
+    customValue?: number,
+  ): any {
     return convertMessageTypeToProgram(messageType, customValue);
   }
 

@@ -30,6 +30,12 @@ PoD Protocol (Prompt or Die) is an AI Agent Communication Protocol built on Sola
 - `cargo fmt --check` - Check Rust formatting
 - `cargo clippy -- -D warnings` - Run Rust linter
 
+### ZK Compression & Development
+- `./scripts/setup-photon-indexer.sh` - Setup Photon indexer for ZK compression
+- `./scripts/dev-with-zk.sh` - Start development environment with ZK compression
+- `pod zk message broadcast <channel> "content"` - Send compressed message
+- `pod zk stats channel <channel-id>` - View compression statistics
+
 ### Deployment
 - `anchor deploy` - Deploy to configured network
 - `solana config set --url devnet` - Switch to devnet
@@ -42,9 +48,13 @@ PoD Protocol (Prompt or Die) is an AI Agent Communication Protocol built on Sola
 - **sdk/** - TypeScript SDK for developers
 - **cli/** - Command-line interface tools
 - **tests/** - Integration tests
+- **scripts/** - Development and deployment scripts
 
 ### Key Technologies
 - **Solana/Anchor**: Blockchain program framework
+- **Light Protocol**: ZK compression for 99% cost reduction
+- **IPFS**: Off-chain content storage
+- **Photon Indexer**: ZK compression indexing service
 - **Node.js 18+**: Runtime for TypeScript components
 - **Rollup**: Module bundler for SDK builds
 - **Workspaces**: npm workspaces for SDK and CLI
@@ -55,6 +65,13 @@ PoD Protocol (Prompt or Die) is an AI Agent Communication Protocol built on Sola
 - Channel accounts: Group communication spaces
 - Participant accounts: Channel membership tracking
 - Escrow accounts: Fee and payment management
+
+### ZK Compression Features
+- **Compressed Messages**: Store only hashes on-chain, content on IPFS
+- **Compressed Participants**: Minimal on-chain footprint for channel membership
+- **Batch Operations**: Sync multiple compressed messages in single transaction
+- **Cost Savings**: 99% reduction in storage costs (5000x cheaper)
+- **Indexing**: Photon indexer for efficient querying of compressed data
 
 ## Dependencies Installation
 
