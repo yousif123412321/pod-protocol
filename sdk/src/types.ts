@@ -195,6 +195,12 @@ export interface PodComConfig {
     enableBatching?: boolean;
     /** Batch timeout in milliseconds */
     batchTimeout?: number;
+    /** Light system program public key */
+    lightSystemProgram?: PublicKey;
+    /** Nullifier queue public key */
+    nullifierQueuePubkey?: PublicKey;
+    /** CPI authority PDA */
+    cpiAuthorityPda?: PublicKey;
   };
 }
 

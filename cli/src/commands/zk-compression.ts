@@ -51,10 +51,11 @@ export function createZKCompressionCommand(): Command {
         const result = await client.zkCompression.broadcastCompressedMessage(
           channel,
           content,
+          wallet,
           options.type,
-          replyTo,
           attachments,
-          metadata
+          metadata,
+          replyTo
         );
 
         const output = {
@@ -177,8 +178,9 @@ export function createZKCompressionCommand(): Command {
         
         let verified = false;
         if (options.verifyHash) {
-          // Access static method through the IPFS service class
-          const computedHash = (client.ipfs.constructor as any).createContentHash(content.content);
+          // Use proper static method access
+          const { IPFSService } = await import('@pod-protocol/sdk');
+          const computedHash = IPFSService.createContentHash(content.content);
           verified = computedHash === options.verifyHash;
         }
 
@@ -294,6 +296,7 @@ export function createZKCompressionCommand(): Command {
         const result = await client.zkCompression.batchSyncMessages(
           channel,
           messageHashes,
+          wallet,
           timestamp
         );
 

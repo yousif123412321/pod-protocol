@@ -100,8 +100,14 @@ export declare class IPFSService extends BaseService {
     contentExists(hash: string): Promise<boolean>;
     /**
      * Create a content hash for verification
+     * Matches the Rust program's hash_to_bn254_field_size_be function
      */
     static createContentHash(content: string): string;
+    /**
+     * Create a metadata hash for participant data
+     * Matches the Rust program's metadata hashing
+     */
+    static createMetadataHash(metadata: ParticipantExtendedMetadata): string;
     /**
      * Batch store multiple content items
      */

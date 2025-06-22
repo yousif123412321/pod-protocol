@@ -5,12 +5,9 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::pubkey::Pubkey;
 
 // Light Protocol ZK Compression imports
-use light_compressed_token::cpi::{compress_account, CompressAccount};
 use light_compressed_token::program::LightCompressedToken;
-use light_hasher::errors::HasherError;
-use light_hasher::{DataHasher, Hasher, Poseidon};
 use light_system_program::program::LightSystemProgram;
-use light_utils::hash_to_bn254_field_size_be;
+use light_hasher::LightHasher;
 
 declare_id!("HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps");
 
@@ -299,10 +296,11 @@ pub struct MessageAccount {
 // =============================================================================
 
 // Compressed Channel Message - stores only essential data on-chain, content via IPFS
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, LightHasher)]
 pub struct CompressedChannelMessage {
     pub channel: Pubkey,           // 32 bytes
     pub sender: Pubkey,            // 32 bytes
+    #[hash]
     pub content_hash: [u8; 32],    // 32 bytes - SHA256 hash of IPFS content
     pub ipfs_hash: String,         // 4 + 64 bytes - IPFS content identifier
     pub message_type: MessageType, // 1 byte
@@ -311,27 +309,16 @@ pub struct CompressedChannelMessage {
     pub reply_to: Option<Pubkey>,  // 33 bytes
 }
 
-impl light_hasher::DataHasher for CompressedChannelMessage {
-    fn to_array_of_bytes(&self) -> Vec<u8> {
-        borsh::to_vec(self).unwrap()
-    }
-}
-
 // Compressed Channel Participant - minimal on-chain footprint
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, LightHasher)]
 pub struct CompressedChannelParticipant {
     pub channel: Pubkey,         // 32 bytes
     pub participant: Pubkey,     // 32 bytes
     pub joined_at: i64,          // 8 bytes
     pub messages_sent: u64,      // 8 bytes
     pub last_message_at: i64,    // 8 bytes
+    #[hash]
     pub metadata_hash: [u8; 32], // 32 bytes - Hash of extended metadata in IPFS
-}
-
-impl light_hasher::DataHasher for CompressedChannelParticipant {
-    fn to_array_of_bytes(&self) -> Vec<u8> {
-        borsh::to_vec(self).unwrap()
-    }
 }
 
 // IPFS Content structures for off-chain storage

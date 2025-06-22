@@ -19,7 +19,6 @@ cache.dir = "~/.bun/install/cache"
 
 [test]
 # Test configuration
-preload = []
 timeout = 10000
 
 [run]

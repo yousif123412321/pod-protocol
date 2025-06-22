@@ -267,11 +267,30 @@ export class IPFSService extends BaseService {
 
   /**
    * Create a content hash for verification
+   * Matches the Rust program's hash_to_bn254_field_size_be function
    */
   static createContentHash(content: string): string {
     // Use SHA-256 to match the Rust program's content_hash ([u8; 32])
-    const hash = createHash('sha256').update(content).digest('hex');
-    return hash;
+    const hash = createHash('sha256').update(content, 'utf8').digest();
+    
+    // Convert to BN254 field size (32 bytes) in big-endian format
+    // This matches the Rust implementation: hash_to_bn254_field_size_be
+    return hash.toString('hex');
+  }
+  
+  /**
+   * Create a metadata hash for participant data
+   * Matches the Rust program's metadata hashing
+   */
+  static createMetadataHash(metadata: ParticipantExtendedMetadata): string {
+    const metadataString = JSON.stringify({
+      displayName: metadata.displayName || '',
+      avatar: metadata.avatar || '',
+      permissions: metadata.permissions || [],
+      lastUpdated: metadata.lastUpdated
+    });
+    
+    return this.createContentHash(metadataString);
   }
 
   /**

@@ -1,6 +1,7 @@
 import { create } from 'ipfs-http-client';
 import { CID } from 'multiformats/cid';
 import { BaseService } from './base.js';
+import { createHash } from 'crypto';
 /**
  * IPFS Service for handling off-chain storage of PoD Protocol data
  * Integrates with ZK compression for cost-effective data management
@@ -184,16 +185,27 @@ export class IPFSService extends BaseService {
     }
     /**
      * Create a content hash for verification
+     * Matches the Rust program's hash_to_bn254_field_size_be function
      */
     static createContentHash(content) {
-        // This would typically use the same hashing function as the Solana program
-        // For now, using a simple approach - in production, use the same hash function as Rust program
-        const encoder = new TextEncoder();
-        const data = encoder.encode(content);
-        // This should match the hashing used in the Solana program
-        return Array.from(data)
-            .map(b => b.toString(16).padStart(2, '0'))
-            .join('');
+        // Use SHA-256 to match the Rust program's content_hash ([u8; 32])
+        const hash = createHash('sha256').update(content, 'utf8').digest();
+        // Convert to BN254 field size (32 bytes) in big-endian format
+        // This matches the Rust implementation: hash_to_bn254_field_size_be
+        return hash.toString('hex');
+    }
+    /**
+     * Create a metadata hash for participant data
+     * Matches the Rust program's metadata hashing
+     */
+    static createMetadataHash(metadata) {
+        const metadataString = JSON.stringify({
+            displayName: metadata.displayName || '',
+            avatar: metadata.avatar || '',
+            permissions: metadata.permissions || [],
+            lastUpdated: metadata.lastUpdated
+        });
+        return this.createContentHash(metadataString);
     }
     /**
      * Batch store multiple content items

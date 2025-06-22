@@ -100,13 +100,6 @@ export class DiscoveryService extends BaseService {
         },
       ];
 
-      // Add capability filters (bitmask matching)
-      if (filters.capabilities && filters.capabilities.length > 0) {
-        agents = agents.filter(agent =>
-          filters.capabilities!.every(cap => (agent.capabilities & cap) === cap),
-        );
-      }
-
       const accounts = await this.connection.getProgramAccounts(
         this.programId,
         {
@@ -129,6 +122,13 @@ export class DiscoveryService extends BaseService {
           bump: account.bump,
         };
       });
+
+      // Add capability filters (bitmask matching)
+      if (filters.capabilities && filters.capabilities.length > 0) {
+        agents = agents.filter(agent =>
+          filters.capabilities!.every(cap => (agent.capabilities & cap) === cap),
+        );
+      }
 
       // Apply in-memory filters
       agents = this.applyAgentFilters(agents, filters);

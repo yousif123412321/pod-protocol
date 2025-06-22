@@ -118,27 +118,15 @@ export class AgentService extends BaseService {
         // Program was pre-initialized, use it
         program = this.program;
       } else {
-        // For read operations, create a temporary program with a dummy wallet
-        const dummyWallet = {
-          publicKey: anchor.web3.PublicKey.default,
-          signTransaction: async () => {
-            throw new Error("Read-only");
-          },
-          signAllTransactions: async () => {
-            throw new Error("Read-only");
-          },
-        };
-
-        const provider = new anchor.AnchorProvider(
+        // For read operations, use a read-only provider without wallet
+        const readOnlyProvider = new anchor.AnchorProvider(
           this.connection,
-          dummyWallet,
-          {
-            commitment: this.commitment,
-          },
+          new anchor.Wallet(anchor.web3.Keypair.generate()), // Temporary keypair for read-only operations
+          { commitment: 'confirmed' }
         );
 
         const idl = this.ensureIDL();
-        program = new anchor.Program(idl, provider);
+        program = new anchor.Program(idl, readOnlyProvider);
       }
 
       const agentAccount = this.getAccount("agentAccount");
@@ -161,23 +149,15 @@ export class AgentService extends BaseService {
 
   async getAllAgents(limit: number = 100): Promise<AgentAccount[]> {
     try {
-      // For read operations, create a temporary program with a dummy wallet
-      const dummyWallet = {
-        publicKey: anchor.web3.PublicKey.default,
-        signTransaction: async () => {
-          throw new Error("Read-only");
-        },
-        signAllTransactions: async () => {
-          throw new Error("Read-only");
-        },
-      };
+      // For read operations, use a read-only provider without wallet
+      const readOnlyProvider = new anchor.AnchorProvider(
+         this.connection,
+         {} as any, // No wallet needed for read operations
+         { commitment: 'confirmed' }
+       );
 
-      const provider = new anchor.AnchorProvider(this.connection, dummyWallet, {
-        commitment: this.commitment,
-      });
-
-      const idl = this.ensureIDL();
-      const program = new anchor.Program(idl, provider);
+       const idl = this.ensureIDL();
+       const program = new anchor.Program(idl, readOnlyProvider);
 
       const agentAccount = this.getAccount("agentAccount");
       const accounts = await agentAccount.all();

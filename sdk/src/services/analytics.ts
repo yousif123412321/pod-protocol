@@ -413,7 +413,7 @@ export class AnalyticsService extends BaseService {
         method: 'getCompressedMessagesByTimeRange',
         params: [since, Date.now()],
       };
-      const rpcResp = await fetch(this.config.photonIndexerUrl!, {
+      const rpcResp = await fetch((this as any).config.photonIndexerUrl!, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(rpcReq),
@@ -421,11 +421,11 @@ export class AnalyticsService extends BaseService {
       if (!rpcResp.ok) {
         throw new Error(`Indexer RPC failed: ${rpcResp.statusText}`);
       }
-      const rpcJson = await rpcResp.json();
+      const rpcJson = await rpcResp.json() as { result?: any[], error?: { message?: string } };
       if (rpcJson.error) {
-        throw new Error(`Indexer RPC error: ${rpcJson.error.message}`);
+        throw new Error(`Indexer RPC error: ${rpcJson.error?.message || 'Unknown error'}`);
       }
-      const msgs24h = (rpcJson.result as any[]) || [];
+      const msgs24h = rpcJson.result || [];
       const messageVolume24h = msgs24h.length;
       const activeAgents24h = Array.from(
         new Set(msgs24h.map(m => m.sender)),
@@ -513,7 +513,7 @@ export class AnalyticsService extends BaseService {
   private getDiscriminator(accountType: string): string {
     // Dynamically generate discriminator from IDL via Anchor's coder
     const program = this.ensureInitialized();
-    const discBuf = program.coder.accounts.accountDiscriminator(accountType);
+    const discBuf = (program.coder.accounts as any).accountDiscriminator?.(accountType) || Buffer.alloc(8);
     return Buffer.from(discBuf).toString('hex');
   }
 
