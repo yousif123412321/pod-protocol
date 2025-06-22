@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
+import { WalletProvider } from "../components/providers/WalletProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -96,7 +97,9 @@ export default function RootLayout({
           
           {/* Main content */}
           <div className="relative z-10">
-            {children}
+            <WalletProvider>
+              {children}
+            </WalletProvider>
           </div>
         </div>
         

@@ -100,10 +100,11 @@ export class DiscoveryService extends BaseService {
         },
       ];
 
-      // Add capability filters
+      // Add capability filters (bitmask matching)
       if (filters.capabilities && filters.capabilities.length > 0) {
-        // This would need to be implemented based on how capabilities are stored
-        // For now, we'll filter in memory after fetching
+        agents = agents.filter(agent =>
+          filters.capabilities!.every(cap => (agent.capabilities & cap) === cap),
+        );
       }
 
       const accounts = await this.connection.getProgramAccounts(

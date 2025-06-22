@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Skull, Target, Rocket, Gem, Trophy, Star, Heart } from 'lucide-react';
+import { Zap, Skull, Rocket, Gem, Trophy, Star, Heart } from 'lucide-react';
 
 interface EasterEggProps {
   trigger: string;
@@ -15,7 +15,7 @@ const EasterEggs: React.FC<EasterEggProps> = ({ trigger, onActivate }) => {
   const [clickCount, setClickCount] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
 
-  const easterEggs = {
+  const easterEggs = useMemo(() => ({
     'prompt-or-die': {
       title: '💀 PROMPT OR DIE! 💀',
       message: 'You discovered the ultimate truth of AI communication!',
@@ -41,7 +41,7 @@ const EasterEggs: React.FC<EasterEggProps> = ({ trigger, onActivate }) => {
       sound: '🔴'
     },
     'hodl': {
-      title: '💎 DIAMOND HANDS DETECTED! 💎',
+        title: '💎 COMMITMENT DETECTED! 💎',
       message: 'True crypto believer! Your PoD tokens are safe!',
       animation: 'diamond',
       color: 'from-yellow-400 to-orange-500',
@@ -58,7 +58,7 @@ const EasterEggs: React.FC<EasterEggProps> = ({ trigger, onActivate }) => {
     },
     'wagmi': {
       title: '🚀 WE ARE ALL GONNA MAKE IT! 🚀',
-      message: 'Bullish on PoD Protocol! To the moon!',
+      message: 'Faithful to PoD Protocol! Ascending together!',
       animation: 'rocket',
       color: 'from-purple-500 to-pink-500',
       icon: Rocket,
@@ -80,14 +80,25 @@ const EasterEggs: React.FC<EasterEggProps> = ({ trigger, onActivate }) => {
       icon: Heart,
       sound: '❤️'
     }
-  };
+  }), []);
 
   const confettiEmojis = ['🎉', '🎊', '✨', '🌟', '💫', '🎯', '💀', '⚡', '🚀', '💎'];
 
+  const activateEasterEgg = useCallback((eggType: string) => {
+    setActiveEgg(eggType);
+    setShowConfetti(true);
+    onActivate?.();
+
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      setActiveEgg(null);
+      setShowConfetti(false);
+    }, 5000);
+  }, [onActivate]);
+
   useEffect(() => {
     const handleKeySequence = (e: KeyboardEvent) => {
-      // Konami Code: ↑↑↓↓←→←→BA
-      const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'KeyB', 'KeyA'];
+      // Konami Code: ↑↑↓↓←→←→BA (Ctrl+Shift+K for simplicity)
       // Simple implementation - just check for specific key combinations
       if (e.ctrlKey && e.shiftKey && e.key === 'K') {
         activateEasterEgg('konami');
@@ -115,98 +126,20 @@ const EasterEggs: React.FC<EasterEggProps> = ({ trigger, onActivate }) => {
       document.removeEventListener('keydown', handleKeySequence);
       document.removeEventListener('click', handleClick);
     };
-  }, [clickCount, lastClickTime]);
+  }, [clickCount, lastClickTime, activateEasterEgg]);
 
   useEffect(() => {
     if (trigger && easterEggs[trigger as keyof typeof easterEggs]) {
       activateEasterEgg(trigger);
     }
-  }, [trigger]);
+  }, [trigger, easterEggs, activateEasterEgg]);
 
-  const activateEasterEgg = (eggType: string) => {
-    setActiveEgg(eggType);
-    setShowConfetti(true);
-    onActivate?.();
 
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-      setActiveEgg(null);
-      setShowConfetti(false);
-    }, 5000);
-  };
-
-  const getAnimationVariants = (animationType: string) => {
-    switch (animationType) {
-      case 'skull':
-        return {
-          initial: { scale: 0, rotate: -180 },
-          animate: { 
-            scale: [0, 1.2, 1], 
-            rotate: [0, 360, 0],
-            transition: { duration: 1, ease: "easeOut" }
-          }
-        };
-      case 'matrix':
-        return {
-          initial: { opacity: 0, y: -100 },
-          animate: { 
-            opacity: [0, 1, 0.8], 
-            y: 0,
-            transition: { duration: 1.5, ease: "easeOut" }
-          }
-        };
-      case 'diamond':
-        return {
-          initial: { scale: 0, rotate: 0 },
-          animate: { 
-            scale: [0, 1.3, 1], 
-            rotate: [0, 180, 360],
-            transition: { duration: 2, ease: "easeInOut" }
-          }
-        };
-      case 'rocket':
-        return {
-          initial: { y: 100, scale: 0 },
-          animate: { 
-            y: [-20, 0, -10, 0], 
-            scale: [0, 1.2, 1],
-            transition: { duration: 2, ease: "easeOut" }
-          }
-        };
-      case 'lightning':
-        return {
-          initial: { scale: 0, opacity: 0 },
-          animate: { 
-            scale: [0, 1.5, 1], 
-            opacity: [0, 1, 0.9],
-            transition: { duration: 0.5, ease: "easeOut" }
-          }
-        };
-      case 'heart':
-        return {
-          initial: { scale: 0 },
-          animate: { 
-            scale: [0, 1.4, 1.2, 1], 
-            transition: { duration: 1.5, ease: "easeOut" }
-          }
-        };
-      default:
-        return {
-          initial: { scale: 0, opacity: 0 },
-          animate: { 
-            scale: 1, 
-            opacity: 1,
-            transition: { duration: 1, ease: "easeOut" }
-          }
-        };
-    }
-  };
 
   if (!activeEgg) return null;
 
   const egg = easterEggs[activeEgg as keyof typeof easterEggs];
   const IconComponent = egg.icon;
-  const animationVariants = getAnimationVariants(egg.animation);
 
   return (
     <>
@@ -255,19 +188,6 @@ const EasterEggs: React.FC<EasterEggProps> = ({ trigger, onActivate }) => {
             setShowConfetti(false);
           }}
         >
-          <motion.div
-            {...animationVariants}
-            className={`relative bg-gradient-to-br ${egg.color} p-8 rounded-2xl shadow-2xl max-w-md mx-4 text-center`}
-            style={{
-              boxShadow: '0 0 100px rgba(147, 51, 234, 0.5), inset 0 0 50px rgba(255, 255, 255, 0.1)'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Animated Background Pattern */}
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 animate-pulse" />
-            </div>
-
             {/* Icon */}
             <motion.div
               animate={{
@@ -356,8 +276,7 @@ const EasterEggs: React.FC<EasterEggProps> = ({ trigger, onActivate }) => {
               />
             ))}
           </motion.div>
-        </motion.div>
-      </AnimatePresence>
+        </AnimatePresence>
     </>
   );
 };
@@ -378,8 +297,8 @@ export const useEasterEggs = () => {
       triggerEasterEgg('prompt-or-die');
     } else if (lowerText.includes('matrix')) {
       triggerEasterEgg('matrix');
-    } else if (lowerText.includes('hodl') || lowerText.includes('diamond hands')) {
-      triggerEasterEgg('hodl');
+    } else if (lowerText.includes('hodl') || lowerText.includes('diamond hands') || lowerText.includes('commit')) {
+        triggerEasterEgg('hodl');
     } else if (lowerText.includes('gm ') || lowerText === 'gm') {
       triggerEasterEgg('gm');
     } else if (lowerText.includes('wagmi')) {

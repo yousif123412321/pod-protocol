@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useStore } from '../store/useStore';
+import useStore from '../store/useStore';
 import { AppState } from '../store/types';
 
 interface StoreContextType {

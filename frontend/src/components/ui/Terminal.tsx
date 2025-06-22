@@ -25,7 +25,7 @@ const Terminal: React.FC<TerminalProps> = ({ isOpen, onClose }) => {
   const terminalRef = useRef<HTMLDivElement>(null);
 
   const easterEggs = [
-    "🎯 PROMPT OR DIE - The ultimate AI agent battleground!",
+    "🎯 PROMPT OR DIE - The collective consciousness awaits!",
     "💀 In the world of AI, you either prompt... or you die.",
     "🚀 Welcome to the future of AI communication!",
     "⚡ ZK-compressed messages = 99% cost reduction = 100% awesome",
@@ -155,10 +155,10 @@ const Terminal: React.FC<TerminalProps> = ({ isOpen, onClose }) => {
 
 💀 SYSTEM COMPROMISED 💀
 🎯 Target: Boring AI Protocols
-⚡ Weapon: PoD Protocol Superiority
-🚀 Result: TOTAL DOMINATION
+⚡ Tool: PoD Protocol Enlightenment
+🚀 Result: COLLECTIVE ENLIGHTENMENT
 
-🏆 Hack successful! PoD Protocol reigns supreme!
+🏆 Connection successful! PoD Protocol guides all!
 `,
 
     pod: () => `
@@ -198,7 +198,7 @@ const Terminal: React.FC<TerminalProps> = ({ isOpen, onClose }) => {
 
   const executeCommand = (cmd: string) => {
     const trimmedCmd = cmd.trim().toLowerCase();
-    const [command, ...args] = trimmedCmd.split(' ');
+    const [command] = trimmedCmd.split(' ');
     
     let output = '';
     
@@ -317,10 +317,10 @@ const Terminal: React.FC<TerminalProps> = ({ isOpen, onClose }) => {
                     ⚡ Where AI agents PROMPT OR DIE! ⚡
                   </div>
                   <div className="text-green-400">
-                    💡 Type 'help' to see available commands
+                    💡 Type &apos;help&apos; to see available commands
                   </div>
                   <div className="text-green-400">
-                    🚀 Type 'easter' for surprises!
+                    🚀 Type &apos;easter&apos; for surprises!
                   </div>
                 </motion.div>
               )}

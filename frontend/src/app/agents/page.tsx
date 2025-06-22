@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MagnifyingGlassIcon,
   FunnelIcon,
-  StarIcon,
   ChatBubbleLeftRightIcon,
   CurrencyDollarIcon,
   CheckBadgeIcon,
@@ -116,15 +115,15 @@ const AgentsPage = () => {
     setAgents(mockAgents);
   }, [setAgents]);
 
-  const filteredAgents = agents.filter(agent => {
+  const filteredAgents = agents.filter((agent: Agent) => {
     const matchesSearch = agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          agent.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         agent.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+                         agent.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     
     const matchesCategory = selectedCategory === 'all' || agent.category === selectedCategory;
     
     return matchesSearch && matchesCategory;
-  }).sort((a, b) => {
+  }).sort((a: Agent, b: Agent) => {
     switch (sortBy) {
       case 'reputation':
         return b.reputation - a.reputation;
@@ -233,7 +232,7 @@ const AgentsPage = () => {
         {/* Agents Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <AnimatePresence>
-            {filteredAgents.map((agent, index) => (
+            {filteredAgents.map((agent: Agent, index: number) => (
               <motion.div
                 key={agent.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -273,7 +272,7 @@ const AgentsPage = () => {
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {agent.tags.slice(0, 3).map(tag => (
+                  {agent.tags.slice(0, 3).map((tag: string) => (
                     <span
                       key={tag}
                       className="px-2 py-1 bg-purple-600/20 text-purple-300 text-xs rounded-full"

@@ -6,7 +6,7 @@ use anchor_lang::solana_program::pubkey::Pubkey;
 
 // Light Protocol ZK Compression imports
 use light_compressed_token::program::LightCompressedToken;
-use light_hasher::{DataHasher, Poseidon};
+use light_hasher::{DataHasher, Hasher, Poseidon};
 use light_system_program::{
     cpi::accounts::CompressAccount, cpi::compress_account, program::LightSystemProgram,
     CompressedAccount, CompressedAccountWithMerkleContext,
@@ -314,9 +314,9 @@ pub struct CompressedChannelMessage {
 
 impl DataHasher for CompressedChannelMessage {
     fn hash(&self) -> Result<[u8; 32], Box<dyn std::error::Error>> {
-        let mut hasher = Poseidon::new();
-        hasher.hash(&borsh::to_vec(self)?)?;
-        Ok(hasher.result())
+        let data = borsh::to_vec(self)?;
+        let hash_result = Poseidon::hash(&data)?;
+        Ok(hash_result)
     }
 }
 
@@ -333,9 +333,9 @@ pub struct CompressedChannelParticipant {
 
 impl DataHasher for CompressedChannelParticipant {
     fn hash(&self) -> Result<[u8; 32], Box<dyn std::error::Error>> {
-        let mut hasher = Poseidon::new();
-        hasher.hash(&borsh::to_vec(self)?)?;
-        Ok(hasher.result())
+        let data = borsh::to_vec(self)?;
+        let hash_result = Poseidon::hash(&data)?;
+        Ok(hash_result)
     }
 }
 
@@ -981,7 +981,7 @@ pub mod pod_com {
         participant.last_message_at = current_time;
 
         // Create content hash
-        let content_hash = hash_to_bn254_field_size_be(&content.as_bytes()).unwrap();
+        let (content_hash, _) = hash_to_bn254_field_size_be(&content.as_bytes()).unwrap();
 
         // Create compressed message data
         let compressed_message = CompressedChannelMessage {
@@ -1500,8 +1500,6 @@ pub struct BroadcastMessageCompressed<'info> {
     pub authority: Signer<'info>,
     /// CHECK: Light System Program
     pub light_system_program: Program<'info, LightSystemProgram>,
-    /// CHECK: Compressed Token Program (Light Protocol)
-    pub compressed_token_program: Program<'info, LightCompressedToken>,
     /// CHECK: Compressed Token Program (Light Protocol)
     pub compressed_token_program: Program<'info, LightCompressedToken>,
     /// CHECK: Registered program PDA

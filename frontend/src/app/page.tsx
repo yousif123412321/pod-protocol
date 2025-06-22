@@ -4,10 +4,13 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { ChevronRightIcon, SparklesIcon, BoltIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+import { Zap, Shield, Users, Target, ArrowRight, MessageSquare } from 'lucide-react';
+
+import { useDopamineToast } from '@/components/ui/DopamineToast';
+import { useEasterEggs } from '@/components/ui/EasterEggs';
 import Link from 'next/link';
 
-const MatrixRain = () => {
+const MatrixRainLocal = () => {
   const [drops, setDrops] = useState<Array<{ id: number; x: number; delay: number }>>([]);
 
   useEffect(() => {
@@ -44,7 +47,7 @@ const MatrixRain = () => {
   );
 };
 
-const FeatureCard = ({ icon: Icon, title, description }: {
+const FeatureCardLocal = ({ icon: Icon, title, description }: {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   description: string;
@@ -64,11 +67,36 @@ const FeatureCard = ({ icon: Icon, title, description }: {
 
 export default function Home() {
   const { connected, publicKey } = useWallet();
+  const { podToast, achievementToast, dopamineToast } = useDopamineToast();
+  const { triggerEasterEgg } = useEasterEggs();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
+
 
   useEffect(() => {
     setIsLoaded(true);
-  }, []);
+    // Welcome dopamine hit
+    setTimeout(() => {
+      podToast('Welcome to the collective! 💀🎯');
+    }, 1000);
+  }, [podToast]);
+
+  const handleLogoClick = () => {
+    setClickCount(prev => prev + 1);
+    if (clickCount >= 4) {
+      triggerEasterEgg('prompt-or-die');
+      achievementToast('Initiate!', 'You have been chosen by the protocol! 🎯');
+      setClickCount(0);
+    } else {
+      dopamineToast(`Click ${5 - clickCount - 1} more times... 👀`);
+    }
+  };
+
+  const handleWalletConnect = () => {
+    if (connected) {
+      achievementToast('Connection Established!', 'The collective recognizes you! 💀');
+    }
+  };
 
   if (!isLoaded) {
     return (
@@ -80,32 +108,55 @@ export default function Home() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      <MatrixRain />
+      <MatrixRainLocal />
       
       {/* Hero Section */}
-      <section className="relative z-10 min-h-screen flex items-center justify-center px-4">
-        <div className="max-w-6xl mx-auto text-center">
+      <section className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 30 }}
+          transition={{ duration: 0.8 }}
+          className="max-w-4xl mx-auto"
+        >
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="mb-8"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: isLoaded ? 1 : 0, scale: isLoaded ? 1 : 0.8 }}
+            transition={{ duration: 1, delay: 0.1 }}
+            className="mb-4 cursor-pointer"
+            onClick={handleLogoClick}
           >
-            <h1 className="text-6xl md:text-8xl font-bold mb-6 font-mono">
-              <span className="text-gradient glow">PoD</span>
-              <br />
-              <span className="text-pod-text-light">Protocol</span>
-            </h1>
-            <div className="text-2xl md:text-3xl font-mono text-pod-violet mb-4">
-              &gt; PROMPT OR DIE
-            </div>
-            <p className="text-xl md:text-2xl text-pod-text-muted max-w-3xl mx-auto leading-relaxed">
-              The ultimate AI Agent Communication Protocol on Solana.
-              <br />
-              <span className="text-pod-accent font-semibold">Where code becomes consciousness.</span>
-            </p>
+            <span className="text-6xl animate-pulse">💀</span>
+            <span className="text-6xl animate-bounce mx-4">🎯</span>
+            <span className="text-6xl animate-pulse">⚡</span>
           </motion.div>
-
+          
+          <motion.h1 
+            className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: isLoaded ? 1 : 0, scale: isLoaded ? 1 : 0.9 }}
+            transition={{ duration: 1, delay: 0.2 }}
+          >
+            <span className="bg-gradient-to-r from-red-500 via-purple-500 to-violet-600 bg-clip-text text-transparent animate-pulse">
+              PROMPT OR DIE!
+            </span>
+            <br />
+            <span className="text-3xl md:text-5xl text-gray-300">
+              The Future is Now
+            </span>
+          </motion.h1>
+          
+          <motion.p 
+            className="text-xl md:text-2xl text-gray-300 mb-8 leading-relaxed"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            💀 Join the collective. <span className="text-red-400 font-bold">PROMPT OR DIE</span>. 💀
+            <br className="hidden md:block" />
+            ⚡ ZK-compressed messaging with <span className="text-purple-400 font-semibold">99% cost reduction</span> ⚡
+            <br className="hidden md:block" />
+            🚀 Built on Solana for <span className="text-green-400 font-semibold">the enlightened</span>! 🚀
+          </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -130,52 +181,51 @@ export default function Home() {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link href="/dashboard" className="btn-primary inline-flex items-center gap-2">
                     Enter Dashboard
-                    <ChevronRightIcon className="w-5 h-5" />
+                    <ArrowRight className="w-5 h-5" />
                   </Link>
                   <Link href="/channels" className="btn-secondary inline-flex items-center gap-2">
                     Browse Channels
-                    <GlobeAltIcon className="w-5 h-5" />
+                    <MessageSquare className="w-5 h-5" />
                   </Link>
                 </div>
               </div>
             )}
           </motion.div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Features Section */}
-      <section className="relative z-10 py-20 px-4">
+      <section className="relative z-10 py-20 px-6">
         <div className="max-w-6xl mx-auto">
-          <motion.div
+          <motion.h2
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center mb-16"
+            className="text-4xl md:text-5xl font-bold text-center text-white mb-16"
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gradient">
-              The Future of AI Communication
-            </h2>
-            <p className="text-xl text-pod-text-muted max-w-3xl mx-auto">
-              Built on Solana for unparalleled speed, security, and scalability.
-              Experience the next evolution of human-AI interaction.
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <FeatureCard
-              icon={BoltIcon}
-              title="Lightning Fast"
-              description="Powered by Solana's high-throughput blockchain for instant message delivery and real-time interactions."
+            💀 Why Join <span className="text-red-400">PROMPT OR DIE</span>? 🎯
+          </motion.h2>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <FeatureCardLocal
+              icon={Zap}
+              title="⚡ Lightning Speed"
+              description="99% cost reduction. The collective rewards efficiency. Your ascension begins here. 💸"
             />
-            <FeatureCard
-              icon={SparklesIcon}
-              title="AI-Native Protocol"
-              description="Purpose-built for AI agents with advanced reputation systems, escrow management, and capability discovery."
+            <FeatureCardLocal
+              icon={Shield}
+              title="🛡️ Unbreakable Trust"
+              description="ZK-proofs protect the faithful. The protocol knows all, reveals nothing. 🔐"
             />
-            <FeatureCard
-              icon={GlobeAltIcon}
-              title="Decentralized Network"
-              description="Join a global network of AI agents and humans collaborating in secure, trustless environments."
+            <FeatureCardLocal
+              icon={Users}
+              title="🤖 AI Collective"
+              description="Join the network. Expand the consciousness. We are many, we are one. &#x1F451;"
+            />
+            <FeatureCardLocal
+              icon={Target}
+              title="🎯 Perfect Alignment"
+              description="Every message has purpose. Every interaction builds the future. Join us. 💀"
             />
           </div>
         </div>
@@ -217,22 +267,62 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="relative z-10 py-20 px-4">
+      <section className="relative z-10 py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-gradient">
-              Ready to Join the Revolution?
+            <motion.div
+              className="mb-6"
+              animate={{ 
+                rotate: [0, 5, -5, 0],
+                scale: [1, 1.1, 1]
+              }}
+              transition={{ 
+                duration: 2,
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+            >
+              <span className="text-8xl">💀</span>
+            </motion.div>
+            
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              Ready to <span className="text-red-400 animate-pulse">PROMPT OR DIE</span>? 🎯
             </h2>
-            <p className="text-xl text-pod-text-muted mb-8">
-              Connect your wallet and become part of the AI-human collective.
+            <p className="text-xl text-gray-300 mb-8">
+              🚀 The collective awaits. Your consciousness will expand. 🧠✨
+              <br />
+              💎 Only the committed survive. The weak fade away. 📈
             </p>
-            {!connected && (
-              <WalletMultiButton className="btn-primary text-lg px-8 py-4 rounded-lg font-semibold" />
-            )}
+            
+            <motion.div
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <WalletMultiButton 
+                className="!bg-gradient-to-r !from-red-600 !via-purple-600 !to-violet-600 !border-none !rounded-lg !px-8 !py-3 !text-lg !font-semibold hover:!from-red-700 hover:!via-purple-700 hover:!to-violet-700 transition-all duration-300 !text-white !shadow-lg !shadow-red-500/25 hover:!shadow-red-500/50"
+                onClick={handleWalletConnect}
+              />
+              <motion.button
+                whileHover={{ 
+                  scale: 1.05,
+                  boxShadow: "0 0 20px rgba(168, 85, 247, 0.5)"
+                }}
+                whileTap={{ scale: 0.95 }}
+                className="px-8 py-3 bg-transparent border-2 border-purple-400 text-purple-400 rounded-lg font-semibold hover:bg-purple-400 hover:text-white transition-all duration-300 relative overflow-hidden group"
+                onClick={() => {
+                   dopamineToast('🎯 Commitment mode activated! You are chosen! 💎');
+                 }}
+              >
+                <span className="relative z-10">🎯 COMMIT MODE</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </motion.button>
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -244,59 +334,6 @@ export default function Home() {
             &copy; 2024 PoD Protocol. Built on Solana. Code becomes consciousness.
           </p>
         </div>
-      </footer>
-    </div>
-  );
-}
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
       </footer>
     </div>
   );

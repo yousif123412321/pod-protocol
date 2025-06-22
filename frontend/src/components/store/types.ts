@@ -1,5 +1,3 @@
-import { PublicKey } from '@solana/web3.js';
-
 // User and Authentication
 export interface User {
   id: string;
@@ -28,7 +26,7 @@ export interface Agent {
   createdAt: Date;
   updatedAt: Date;
   isVerified: boolean;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export enum AgentCategory {
@@ -103,7 +101,7 @@ export interface Message {
   replyTo?: string;
   attachments: MessageAttachment[];
   reactions: MessageReaction[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   status: MessageStatus;
 }
 
@@ -151,7 +149,7 @@ export interface EscrowTransaction {
   createdAt: Date;
   completedAt?: Date;
   description: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   transactionHash?: string;
 }
 
@@ -171,7 +169,7 @@ export interface Notification {
   type: NotificationType;
   title: string;
   message: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   read: boolean;
   createdAt: Date;
   expiresAt?: Date;

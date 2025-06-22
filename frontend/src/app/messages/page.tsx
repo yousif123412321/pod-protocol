@@ -1,36 +1,62 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Search, MoreVertical, Phone, Video, Info, Paperclip, Smile } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { useStore } from '@/components/store/useStore';
-import { Message, Agent } from '@/components/store/types';
+import useStore from '@/components/store/useStore';
+import { Message, Agent, MessageType, MessageStatus } from '@/components/store/types';
 
 export default function MessagesPage() {
-  const { messages, agents, user, sendMessage, markMessageAsRead } = useStore();
+  const { messages, agents, user, addMessage } = useStore();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [newMessage, setNewMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Mock conversations data
-  const conversations = agents.slice(0, 5).map(agent => ({
-    agent,
-    lastMessage: messages.find(m => m.senderId === agent.id || m.recipientId === agent.id),
-    unreadCount: Math.floor(Math.random() * 5)
-  }));
+  const conversations = agents.slice(0, 5).map(agent => {
+    // Find last message for this agent across all channels
+    let lastMessage = null;
+    for (const channelMessages of Object.values(messages)) {
+      const agentMessages = channelMessages.filter(m => 
+        m.senderId === agent.id || (m.senderType === 'user' && user && m.senderId === user.id)
+      );
+      if (agentMessages.length > 0) {
+        const latest = agentMessages[agentMessages.length - 1];
+        if (!lastMessage || latest.timestamp > lastMessage.timestamp) {
+          lastMessage = latest;
+        }
+      }
+    }
+    
+    return {
+      agent,
+      lastMessage,
+      unreadCount: Math.floor(Math.random() * 5)
+    };
+  });
 
   const filteredConversations = conversations.filter(conv =>
     conv.agent.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const currentMessages = selectedAgent
-    ? messages.filter(m => 
-        (m.senderId === selectedAgent.id && m.recipientId === user?.id) ||
-        (m.senderId === user?.id && m.recipientId === selectedAgent.id)
-      )
-    : [];
+  const currentMessages = useMemo(() => {
+    if (!selectedAgent || !user) return [];
+    
+    // Find messages for this agent across all channels
+    const allMessages = [];
+    for (const channelMessages of Object.values(messages)) {
+      const agentMessages = channelMessages.filter(m => 
+        m.senderId === selectedAgent.id || 
+        (m.senderType === 'user' && m.senderId === user.id)
+      );
+      allMessages.push(...agentMessages);
+    }
+    
+    // Sort by timestamp
+    return allMessages.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  }, [selectedAgent, messages, user]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -43,16 +69,21 @@ export default function MessagesPage() {
   const handleSendMessage = () => {
     if (!newMessage.trim() || !selectedAgent || !user) return;
 
-    const message: Omit<Message, 'id'> = {
+    const channelId = `${user.id}-${selectedAgent.id}`;
+    const message: Message = {
+      id: Date.now().toString(),
+      channelId,
       senderId: user.id,
-      recipientId: selectedAgent.id,
+      senderType: 'user',
       content: newMessage,
+      type: MessageType.TEXT,
       timestamp: new Date(),
-      type: 'text',
-      status: 'sent'
+      attachments: [],
+      reactions: [],
+      status: MessageStatus.SENT
     };
 
-    sendMessage(message);
+    addMessage(channelId, message);
     setNewMessage('');
   };
 

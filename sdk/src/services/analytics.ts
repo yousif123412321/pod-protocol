@@ -405,9 +405,41 @@ export class AnalyticsService extends BaseService {
         }
       }, 0);
 
-      // Mock data for metrics that require historical tracking
-      // In a real implementation, these would be stored in a time-series database
-      const peakUsageHours = [9, 10, 11, 14, 15, 16, 20, 21]; // 9-11am, 2-4pm, 8-9pm UTC
+      // Historical metrics: query Photon indexer for last 24h
+      const since = Date.now() - 24 * 60 * 60 * 1000;
+      const rpcReq = {
+        jsonrpc: '2.0',
+        id: Date.now(),
+        method: 'getCompressedMessagesByTimeRange',
+        params: [since, Date.now()],
+      };
+      const rpcResp = await fetch(this.config.photonIndexerUrl!, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(rpcReq),
+      });
+      if (!rpcResp.ok) {
+        throw new Error(`Indexer RPC failed: ${rpcResp.statusText}`);
+      }
+      const rpcJson = await rpcResp.json();
+      if (rpcJson.error) {
+        throw new Error(`Indexer RPC error: ${rpcJson.error.message}`);
+      }
+      const msgs24h = (rpcJson.result as any[]) || [];
+      const messageVolume24h = msgs24h.length;
+      const activeAgents24h = Array.from(
+        new Set(msgs24h.map(m => m.sender)),
+      ).length;
+
+      // Compute hours with activity in the last 24h
+      const counts: number[] = Array(24).fill(0);
+      msgs24h.forEach(m => {
+        const hour = new Date(m.createdAt).getUTCHours();
+        counts[hour] = (counts[hour] || 0) + 1;
+      });
+      const peakUsageHours = counts
+        .map((count, hour) => (count > 0 ? hour : -1))
+        .filter(hour => hour >= 0);
 
       return {
         totalTransactions: recentSlots.reduce(
@@ -415,8 +447,8 @@ export class AnalyticsService extends BaseService {
           0,
         ),
         totalValueLocked,
-        activeAgents24h: 0, // Would need historical tracking
-        messageVolume24h: 0, // Would need historical tracking
+        activeAgents24h,
+        messageVolume24h,
         networkHealth,
         peakUsageHours,
       };
@@ -479,14 +511,10 @@ export class AnalyticsService extends BaseService {
   // ============================================================================
 
   private getDiscriminator(accountType: string): string {
-    // This would need to be implemented based on your IDL
-    const discriminators: Record<string, string> = {
-      agentAccount: "6RdcqmKGhkRy",
-      messageAccount: "6RdcqmKGhkRz",
-      channelAccount: "6RdcqmKGhkRA",
-      escrowAccount: "6RdcqmKGhkRB",
-    };
-    return discriminators[accountType] || "";
+    // Dynamically generate discriminator from IDL via Anchor's coder
+    const program = this.ensureInitialized();
+    const discBuf = program.coder.accounts.accountDiscriminator(accountType);
+    return Buffer.from(discBuf).toString('hex');
   }
 
   private convertMessageTypeFromProgram(programType: any): any {

@@ -2,10 +2,10 @@ import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { AppState, User, Agent, Channel, Message, Notification, EscrowTransaction } from './types';
 
-const useStore = create<AppState>()()
+const useStore = create<AppState>()(
   devtools(
     persist(
-      (set, get) => ({
+      (set) => ({
         // Initial State
         user: null,
         isAuthenticated: false,
@@ -320,7 +320,8 @@ const useStore = create<AppState>()()
     {
       name: 'PoD Protocol Store',
     }
-  );
+  )
+);
 
 export default useStore;
 
