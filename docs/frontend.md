@@ -132,7 +132,7 @@ src/
 2. **Testing**
    ```bash
    bun run lint
-   bun test          # Runs SDK and CLI tests; frontend uses Jest & React Testing Library
+   bun test          # Runs frontend tests with Jest & React Testing Library
    ```
 3. **Production Build**
    ```bash
