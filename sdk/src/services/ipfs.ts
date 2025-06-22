@@ -120,18 +120,17 @@ export class IPFSService extends BaseService {
     try {
       const jsonString = JSON.stringify(data, null, 2);
       const result = await this.client.add(
-        Buffer.from(jsonString, 'utf-8'),
+        JSON.stringify(data),
         {
-          pin: true,
           cidVersion: 1,
           hashAlg: 'sha2-256',
         }
-      );
+      ) as any;
 
       return {
         hash: result.cid.toString(),
         cid: result.cid,
-        size: result.size,
+        size: result.size || 0,
         url: `https://ipfs.io/ipfs/${result.cid.toString()}`,
       };
     } catch (error) {
@@ -158,12 +157,12 @@ export class IPFSService extends BaseService {
         options.path = filename;
       }
 
-      const result = await this.client.add(data, options);
+      const result = await this.client.add(data, options) as any;
 
       return {
         hash: result.cid.toString(),
-        cid: result.cid,
-        size: result.size,
+        cid: CID.parse(result.cid.toString()),
+        size: result.size || 0,
         url: `https://ipfs.io/ipfs/${result.cid.toString()}`,
       };
     } catch (error) {
@@ -258,8 +257,8 @@ export class IPFSService extends BaseService {
    */
   async contentExists(hash: string): Promise<boolean> {
     try {
-      const stats = await this.client.object.stat(hash);
-      return stats.Hash === hash;
+      const stats = await this.client.object.stat(CID.parse(hash));
+      return stats.Hash.toString() === hash;
     } catch (error) {
       return false;
     }

@@ -355,6 +355,36 @@ export class OutputFormatter {
   }
 
   /**
+   * Display success message with optional data
+   */
+  public success(message: string, data?: any): void {
+    if (this.quiet) return;
+    
+    console.log(`${ICONS.success} ${BRAND_COLORS.success(message)}`);
+    
+    if (data && this.verbose) {
+      console.log(BRAND_COLORS.dim(JSON.stringify(data, null, 2)));
+    }
+    
+    console.log();
+  }
+
+  /**
+   * Display info message with optional data
+   */
+  public info(message: string, data?: any): void {
+    if (this.quiet) return;
+    
+    console.log(`${ICONS.info} ${BRAND_COLORS.info(message)}`);
+    
+    if (data && this.verbose) {
+      console.log(BRAND_COLORS.dim(JSON.stringify(data, null, 2)));
+    }
+    
+    console.log();
+  }
+
+  /**
    * Display command help with examples
    */
   public displayCommandHelp(

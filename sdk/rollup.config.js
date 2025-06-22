@@ -37,6 +37,8 @@ export default {
         composite: false,
         incremental: false,
         skipLibCheck: true,
+        target: "ES2020",
+        module: "ESNext",
       },
     }),
   ],
@@ -44,5 +46,7 @@ export default {
     "@solana/web3.js",
     "@coral-xyz/anchor",
     "@solana/wallet-adapter-base",
+    "ipfs-http-client",
+    "multiformats",
   ],
 };

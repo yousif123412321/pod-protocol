@@ -173,7 +173,8 @@ export function createZKCompressionCommand(): Command {
         
         let verified = false;
         if (options.verifyHash) {
-          const computedHash = client.ipfs.constructor.createContentHash(content.content);
+          // Access static method through the IPFS service class
+          const computedHash = (client.ipfs.constructor as any).createContentHash(content.content);
           verified = computedHash === options.verifyHash;
         }
 

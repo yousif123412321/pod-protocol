@@ -7,9 +7,9 @@
  */
 
 // Constants to eliminate duplicate values
-const AGENT_SEED = [97, 103, 101, 110, 116];
-const ESCROW_SEED = [101, 115, 99, 114, 111, 119];
-const CHANNEL_SEED = [99, 104, 97, 110, 110, 101, 108];
+const AGENT_SEED = [97, 103, 101, 110, 116] as [97, 103, 101, 110, 116];
+const ESCROW_SEED = [101, 115, 99, 114, 111, 119] as [101, 115, 99, 114, 111, 119];
+const CHANNEL_SEED = [99, 104, 97, 110, 110, 101, 108] as [99, 104, 97, 110, 110, 101, 108];
 const SYSTEM_PROGRAM_ID = "11111111111111111111111111111111";
 
 export type PodCom = {
