@@ -18,7 +18,7 @@ Welcome to the design blueprint for the **Prompt or Die** user interface. This d
 
 | Layer | Technology | Purpose |
 |------|------------|---------|
-| **Framework** | Next.js / React | Component-driven UI with server-side rendering |
+| **Framework** | Next.js / React (TypeScript) | Component-driven UI with server-side rendering |
 | **State** | Redux Toolkit or Zustand | Predictable client state and caching |
 | **Styling** | Tailwind CSS | Rapid utility classes matching brand colors |
 | **Wallet Connection** | `@solana/wallet-adapter` | Standard wallet integrations (Phantom, Solflare, …) |
