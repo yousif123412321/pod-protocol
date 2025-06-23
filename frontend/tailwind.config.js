@@ -40,6 +40,8 @@ module.exports = {
             light: '#9CA3AF',
           },
           background: '#0F0F23',
+          'bg-dark': '#1A1A2E',
+          'bg-darker': '#0B0B1A',
           surface: {
             DEFAULT: '#1A1A2E',
             light: '#16213E',
@@ -47,7 +49,9 @@ module.exports = {
           text: {
             DEFAULT: '#E2E8F0',
             muted: '#94A3B8',
+            light: '#F8FAFC',
           },
+          accent: '#6B46C1',
           border: {
             DEFAULT: '#334155',
             light: '#475569',
