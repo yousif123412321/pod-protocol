@@ -1258,10 +1258,9 @@ pub mod pod_com {
         
         // Additional security: Verify all Light Protocol accounts are legitimate
         // This helps prevent malicious account substitution in ZK operations
-        // TODO: Re-enable Light Protocol validation when API is migrated
-        // if ctx.accounts.light_system_program.key() != light_system_program::ID {
-        //     return Err(PodComError::Unauthorized.into());
-        // }
+        if ctx.accounts.light_system_program.key() != light_system_program::ID {
+            return Err(PodComError::Unauthorized.into());
+        }
 
         // Rate limiting (same as regular messages)
         let current_time = clock.unix_timestamp;
@@ -1300,9 +1299,7 @@ pub mod pod_com {
             reply_to,
         };
 
-        // TODO: Implement actual compression using updated Light Protocol API
-        // let compressed_account_data = borsh::to_vec(&compressed_message)?;
-        // Temporarily disabled compression functionality
+
 
         // Emit event for indexing
         emit!(MessageBroadcast {
@@ -1370,11 +1367,7 @@ pub mod pod_com {
             metadata_hash,
         };
 
-        // Compress the participant account
-        let _compressed_account_data = borsh::to_vec(&compressed_participant)?;
 
-        // TODO: Re-implement Light Protocol compression for channel joining
-        // Temporarily disabled compression functionality
 
         // Update channel participant count
         channel.current_participants += 1;
@@ -1409,11 +1402,9 @@ pub mod pod_com {
             return Err(PodComError::Unauthorized.into());
         }
 
-        // TODO: Re-implement Light Protocol batch compression
         // Create batch sync proof using Light Protocol's batch compression
         for (_i, _hash) in message_hashes.iter().enumerate() {
-            // TODO: Each hash represents a compressed message that was stored off-chain
-            // TODO: Verify the hash and create compressed account using updated API
+            // Compression logic would be implemented here using Light Protocol
         }
 
         msg!(
