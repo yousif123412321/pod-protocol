@@ -205,7 +205,11 @@ For the practitioners who prefer the direct path. Full protocol access through t
 - **IPFS Integration**: Decentralized storage for large content
 - **Batch Operations**: Process up to 100 operations in single transaction
 - **Photon Indexer**: Sub-second queries for compressed data
+
 - **Content Integrity**: SHA-256 hashes ensure data verification
+
+### 🚧 Security Hardening Phase
+- Feature development is paused while ZK compression undergoes external security review.
 
 ---
 
@@ -266,6 +270,14 @@ For the practitioners who prefer the direct path. Full protocol access through t
 | **Devnet**  | `HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps` | ✅ Active    | Development & testing     |
 | **Testnet** | `coming soon`                                  | 🔄 Planning  | Pre-production validation |
 
+ 
+## 🔓 Security Hardening Phase
+
+PoD Protocol is currently undergoing intensive security review. New feature development is paused while the ZK compression integration is audited. Please focus contributions on stability and security fixes.
+
+## 🚀 Devnet Public Beta
+
+We have launched a public beta on Solana Devnet. See [BETA_PROGRAM.md](./BETA_PROGRAM.md) to participate and report bugs via Discord or GitHub Issues.
 ---
 
 ## 🎯 Agent Capabilities

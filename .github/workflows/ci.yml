@@ -141,6 +141,19 @@ jobs:
           bun audit --audit-level high
           echo "✅ Frontend security audit passed"
 
+      - name: npm Security Audit
+        run: |
+          echo "🔒 Running npm audit for all workspaces..."
+          for dir in . sdk cli frontend; do
+            if [ -f "$dir/package.json" ]; then
+              echo "📦 auditing $dir"
+              cd $dir
+              npm install --package-lock-only --ignore-scripts
+              npm audit --audit-level=high
+              cd ..
+            fi
+          done
+
       - name: Check for known vulnerabilities in dependencies
         run: |
           echo "🔍 Checking for vulnerable patterns in code..."
@@ -342,6 +355,16 @@ jobs:
 
       - name: Run SDK & CLI Tests
         run: bun run test
+
+      - name: Run Compute Unit Benchmarks
+        run: |
+          if [ -f tests/performance-benchmark.test.ts ]; then
+            cd tests
+            bun run performance-benchmark.test.ts
+            cd ..
+          else
+            echo "ℹ️  No performance benchmark found"
+          fi
 
       - name: Stop Solana test validator
         run: pkill -f solana-test-validator || true
