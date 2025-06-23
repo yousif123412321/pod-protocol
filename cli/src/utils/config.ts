@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync, statSync } from "fs";
 import { homedir } from "os";
 import { join } from "path";
 import { Keypair } from "@solana/web3.js";
@@ -79,7 +79,7 @@ export function loadKeypair(keypairPath?: string): Keypair {
 
   try {
     // SECURITY: Read file with size limit to prevent DoS
-    const fileStats = require("fs").statSync(expandedPath);
+    const fileStats = statSync(expandedPath);
     if (fileStats.size > 10000) { // Max 10KB for keypair file
       console.error(chalk.red("Error: Keypair file too large (potential security issue)"));
       process.exit(1);

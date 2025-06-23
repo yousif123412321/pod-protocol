@@ -1,5 +1,6 @@
 import anchor from '@coral-xyz/anchor';
 const { AnchorProvider } = anchor;
+import type { AnchorProvider as AnchorProviderType } from '@coral-xyz/anchor';
 import { BaseService, BaseServiceConfig } from './base.js';
 import { IPFSService, IPFSStorageResult } from './ipfs.js';
 import { Transaction, TransactionInstruction, PublicKey, Connection } from '@solana/web3.js';
@@ -408,7 +409,7 @@ export class ZKCompressionService extends BaseService {
         })
         .transaction();
 
-      const provider = program.provider as AnchorProvider;
+      const provider = program.provider as AnchorProviderType;
       let signature: string;
       try {
         signature = await provider.sendAndConfirm(tx);
@@ -467,7 +468,7 @@ export class ZKCompressionService extends BaseService {
         })
         .transaction();
 
-      const provider = program.provider as AnchorProvider;
+      const provider = program.provider as AnchorProviderType;
       let signature: string;
       try {
         signature = await provider.sendAndConfirm(tx);
@@ -674,7 +675,7 @@ export class ZKCompressionService extends BaseService {
         })
         .transaction();
 
-      const provider = program.provider as AnchorProvider;
+      const provider = program.provider as AnchorProviderType;
       let signature: string;
       try {
         signature = await provider.sendAndConfirm(tx);

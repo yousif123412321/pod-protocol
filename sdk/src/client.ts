@@ -1,6 +1,7 @@
 import { Connection, PublicKey, Signer, Commitment } from "@solana/web3.js";
 import anchor from "@coral-xyz/anchor";
 const { Program, AnchorProvider } = anchor;
+import type { Program as ProgramType } from "@coral-xyz/anchor";
 import {
   PROGRAM_ID,
   PodComConfig,
@@ -40,7 +41,7 @@ export class PodComClient {
   private connection: Connection;
   private programId: PublicKey;
   private commitment: Commitment;
-  private program?: Program<any>; // Use any for IDL compatibility
+  private program?: ProgramType<any>; // Use any for IDL compatibility
 
   // Service instances - public for direct access to specific functionality
   public agents: AgentService;
