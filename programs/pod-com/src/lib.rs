@@ -9,7 +9,70 @@ use light_compressed_token::program::LightCompressedToken;
 use light_system_program::program::LightSystemProgram;
 use light_hasher::{DataHasher, Hasher, Poseidon};
 
+// Secure memory handling for cryptographic operations
+use memsec::{memzero, memeq};
+
 declare_id!("HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps");
+
+// =============================================================================
+// SECURE MEMORY UTILITIES
+// =============================================================================
+
+/// Secure memory wrapper for sensitive cryptographic operations
+pub struct SecureBuffer {
+    data: Vec<u8>,
+}
+
+impl SecureBuffer {
+    /// Allocate secure memory for sensitive data
+    pub fn new(size: usize) -> Result<Self> {
+        Ok(SecureBuffer {
+            data: vec![0u8; size],
+        })
+    }
+    
+    /// Get mutable slice to secure memory
+    pub fn as_mut_slice(&mut self) -> &mut [u8] {
+        &mut self.data
+    }
+    
+    /// Get immutable slice to secure memory
+    pub fn as_slice(&self) -> &[u8] {
+        &self.data
+    }
+    
+    /// Securely compare two buffers in constant time
+    pub fn secure_compare(&self, other: &[u8]) -> bool {
+        if self.data.len() != other.len() {
+            return false;
+        }
+        unsafe {
+            memeq(self.data.as_ptr(), other.as_ptr(), self.data.len())
+        }
+    }
+}
+
+impl Drop for SecureBuffer {
+    fn drop(&mut self) {
+        unsafe {
+            // Securely zero the memory before deallocation
+            memzero(self.data.as_mut_ptr(), self.data.len());
+        }
+    }
+}
+
+/// Secure hash computation wrapper
+pub fn secure_hash_data(data: &[u8]) -> Result<[u8; 32]> {
+    // Use secure buffer for intermediate hash computations
+    let mut secure_buf = SecureBuffer::new(data.len())?;
+    
+    // Copy data to secure memory
+    let secure_slice = secure_buf.as_mut_slice();
+    secure_slice.copy_from_slice(data);
+    
+    // Perform hash computation
+    Poseidon::hash(secure_slice).map_err(|_| PodComError::HashingFailed.into())
+}
 
 /*
  * PoD Protocol (Prompt or Die): AI Agent Communication Protocol v1.0.0
@@ -114,6 +177,8 @@ pub enum PodComError {
     PrivateChannelRequiresInvitation,
     #[msg("Hashing operation failed")]
     HashingFailed,
+    #[msg("Secure memory allocation failed")]
+    SecureMemoryAllocationFailed,
 }
 
 // Message types
@@ -323,14 +388,32 @@ pub struct CompressedChannelMessage {
     pub reply_to: Option<Pubkey>,  // 33 bytes
 }
 
-// Implement DataHasher for Light Protocol v0.6.0 compatibility
+// Implement DataHasher for Light Protocol v0.6.0 compatibility with secure memory
 impl DataHasher for CompressedChannelMessage {
     fn hash<H: Hasher>(&self) -> std::result::Result<[u8; 32], light_hasher::errors::HasherError> {
-        let mut data = Vec::new();
-        data.extend_from_slice(&self.channel.to_bytes());
-        data.extend_from_slice(&self.sender.to_bytes());
-        data.extend_from_slice(&self.content_hash);
-        data.extend_from_slice(self.ipfs_hash.as_bytes());
+        // Calculate required buffer size
+        let mut size = 32 + 32 + 32 + self.ipfs_hash.len() + 1 + 8; // base fields
+        if self.edited_at.is_some() { size += 8; }
+        if self.reply_to.is_some() { size += 32; }
+        
+        // Use secure memory for sensitive hash computation
+        let mut secure_buf = SecureBuffer::new(size).unwrap();
+        
+        let data = secure_buf.as_mut_slice();
+        let mut offset = 0;
+        
+        // Pack data into secure buffer
+        data[offset..offset+32].copy_from_slice(&self.channel.to_bytes());
+        offset += 32;
+        data[offset..offset+32].copy_from_slice(&self.sender.to_bytes());
+        offset += 32;
+        data[offset..offset+32].copy_from_slice(&self.content_hash);
+        offset += 32;
+        
+        let ipfs_bytes = self.ipfs_hash.as_bytes();
+        data[offset..offset+ipfs_bytes.len()].copy_from_slice(ipfs_bytes);
+        offset += ipfs_bytes.len();
+        
         // Convert MessageType to u8 manually
         let msg_type_byte = match self.message_type {
             MessageType::Text => 0u8,
@@ -339,15 +422,22 @@ impl DataHasher for CompressedChannelMessage {
             MessageType::Response => 3u8,
             MessageType::Custom(val) => val,
         };
-        data.extend_from_slice(&msg_type_byte.to_le_bytes());
-        data.extend_from_slice(&self.created_at.to_le_bytes());
+        data[offset] = msg_type_byte;
+        offset += 1;
+        
+        data[offset..offset+8].copy_from_slice(&self.created_at.to_le_bytes());
+        offset += 8;
+        
         if let Some(edited) = self.edited_at {
-            data.extend_from_slice(&edited.to_le_bytes());
+            data[offset..offset+8].copy_from_slice(&edited.to_le_bytes());
+            offset += 8;
         }
         if let Some(reply_to) = self.reply_to {
-            data.extend_from_slice(&reply_to.to_bytes());
+            data[offset..offset+32].copy_from_slice(&reply_to.to_bytes());
         }
-        H::hash(&data)
+        
+        // Perform hash computation on secure data
+        H::hash(&data[..offset])
     }
 }
 
@@ -362,17 +452,33 @@ pub struct CompressedChannelParticipant {
     pub metadata_hash: [u8; 32], // 32 bytes - Hash of extended metadata in IPFS
 }
 
-// Implement DataHasher for Light Protocol v0.6.0 compatibility
+// Implement DataHasher for Light Protocol v0.6.0 compatibility with secure memory
 impl DataHasher for CompressedChannelParticipant {
     fn hash<H: Hasher>(&self) -> std::result::Result<[u8; 32], light_hasher::errors::HasherError> {
-        let mut data = Vec::new();
-        data.extend_from_slice(&self.channel.to_bytes());
-        data.extend_from_slice(&self.participant.to_bytes());
-        data.extend_from_slice(&self.joined_at.to_le_bytes());
-        data.extend_from_slice(&self.messages_sent.to_le_bytes());
-        data.extend_from_slice(&self.last_message_at.to_le_bytes());
-        data.extend_from_slice(&self.metadata_hash);
-        H::hash(&data)
+        // Fixed size buffer for participant data: 32+32+8+8+8+32 = 120 bytes
+        const BUFFER_SIZE: usize = 120;
+        
+        // Use secure memory for sensitive hash computation
+        let mut secure_buf = SecureBuffer::new(BUFFER_SIZE).unwrap();
+        
+        let data = secure_buf.as_mut_slice();
+        let mut offset = 0;
+        
+        // Pack data into secure buffer
+        data[offset..offset+32].copy_from_slice(&self.channel.to_bytes());
+        offset += 32;
+        data[offset..offset+32].copy_from_slice(&self.participant.to_bytes());
+        offset += 32;
+        data[offset..offset+8].copy_from_slice(&self.joined_at.to_le_bytes());
+        offset += 8;
+        data[offset..offset+8].copy_from_slice(&self.messages_sent.to_le_bytes());
+        offset += 8;
+        data[offset..offset+8].copy_from_slice(&self.last_message_at.to_le_bytes());
+        offset += 8;
+        data[offset..offset+32].copy_from_slice(&self.metadata_hash);
+        
+        // Perform hash computation on secure data
+        H::hash(data)
     }
 }
 
@@ -1179,8 +1285,8 @@ pub mod pod_com {
         }
         participant.last_message_at = current_time;
 
-        // Create content hash using Light Protocol's Poseidon hasher
-        let content_hash = Poseidon::hash(content.as_bytes()).map_err(|_| PodComError::HashingFailed)?;
+        // Create content hash using secure memory and Light Protocol's Poseidon hasher
+        let content_hash = secure_hash_data(content.as_bytes())?;
 
         // Create compressed message data (temporarily stored as regular account data)
         let _compressed_message = CompressedChannelMessage {

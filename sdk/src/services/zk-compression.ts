@@ -5,6 +5,7 @@ import { BaseService, BaseServiceConfig } from './base.js';
 import { IPFSService, IPFSStorageResult } from './ipfs.js';
 import { Transaction, TransactionInstruction, PublicKey, Connection } from '@solana/web3.js';
 import { createHash } from 'crypto';
+import { SecureHasher, SecureKeyManager } from '../utils/secure-memory.js';
 
 import { createRpc, LightSystemProgram, Rpc } from '@lightprotocol/stateless.js';
 import { createMint, mintTo, transfer, CompressedTokenProgram } from '@lightprotocol/compressed-token';
@@ -729,7 +730,7 @@ export class ZKCompressionService extends BaseService {
       }
 
       const hashes = batch.map((m) => Buffer.from(m.contentHash, 'hex'));
-      const { root, proofs } = this.buildMerkleTree(hashes);
+      const { root, proofs } = await this.buildMerkleTree(hashes);
 
       const result = {
         signature,
@@ -790,7 +791,7 @@ export class ZKCompressionService extends BaseService {
   /**
    * Private: Compute Merkle root and proofs for a list of hashes
    */
-  private buildMerkleTree(hashes: Buffer[]): { root: string; proofs: string[][] } {
+  private async buildMerkleTree(hashes: Buffer[]): Promise<{ root: string; proofs: string[][] }> {
     if (hashes.length === 0) {
       return { root: '', proofs: [] };
     }
@@ -803,9 +804,10 @@ export class ZKCompressionService extends BaseService {
       for (let i = 0; i < prev.length; i += 2) {
         const left = prev[i];
         const right = prev[i + 1] || left;
-        const hash = createHash('sha256')
-          .update(Buffer.concat([left, right]))
-          .digest();
+        // Use secure memory for hash computation
+        const combinedData = Buffer.concat([left, right]);
+        const hashArray = await SecureHasher.hashSensitiveData(combinedData);
+        const hash = Buffer.from(hashArray);
         next.push(hash);
       }
       levels.push(next);
