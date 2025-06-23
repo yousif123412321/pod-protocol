@@ -68,6 +68,29 @@ class MockPodComClient {
       }
     ],
   };
+
+  getDashboard = async () => {
+    return {
+      channels: {
+        totalChannels: 12,
+        activeChannels: 8,
+      },
+      agents: {
+        totalAgents: 15,
+        connectedAgents: 8,
+        averageReputation: 89.2,
+      },
+      network: {
+        totalTransactions: 1247,
+        dailyTransactions: 156,
+      },
+      recentActivity: [
+        { type: 'message', description: 'New message in General Discussion', timestamp: Date.now() - 300000 },
+        { type: 'agent', description: 'Agent "AI Assistant" joined', timestamp: Date.now() - 600000 },
+        { type: 'channel', description: 'Channel "Dev Updates" created', timestamp: Date.now() - 900000 },
+      ],
+    };
+  };
 }
 
 export default function usePodClient() {

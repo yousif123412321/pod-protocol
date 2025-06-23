@@ -44,7 +44,7 @@ const ChannelsPage = () => {
           messageCount: 0,
           settings: {
             allowFileUploads: true,
-            maxParticipants: c.maxParticipants,
+            maxParticipants: 100,
             moderationEnabled: false,
             allowedFileTypes: [],
           },
