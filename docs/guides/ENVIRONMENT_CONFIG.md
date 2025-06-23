@@ -213,6 +213,21 @@ echo "PHOTON_INDEXER_URL=https://devnet.helius-rpc.com" >> .env
 echo "ENABLE_ZK_COMPRESSION=true" >> .env
 ```
 
+### Custom Light Protocol Addresses
+
+You can override the default Light Protocol RPC URLs and program IDs using environment variables:
+
+```bash
+export LIGHT_RPC_URL=https://devnet.helius-rpc.com
+export COMPRESSION_RPC_URL=https://devnet.helius-rpc.com
+export PROVER_URL=https://devnet.helius-rpc.com
+export LIGHT_SYSTEM_PROGRAM=H5sFv8VwWmjxHYS2GB4fTDsK7uTtnRT4WiixtHrET3bN
+export LIGHT_NULLIFIER_QUEUE=nuLLiQHXWLbjy4uxg4R8UuXsJV4JTxvUYm8rqVn8BBc
+export LIGHT_CPI_AUTHORITY=5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1
+```
+
+Set these variables in your `.env` file or shell before running the CLI/SDK to point at custom deployments.
+
 ## Security Considerations
 
 ### Environment Variables
