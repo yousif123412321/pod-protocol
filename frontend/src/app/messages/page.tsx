@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
@@ -140,24 +141,49 @@ export default function MessagesPage() {
     scrollToBottom();
   }, [currentMessages]);
 
-  const handleSendMessage = () => {
-    if (!newMessage.trim() || !selectedAgent || !user) return;
+  const wallet = useAnchorWallet();
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedAgent || !user || !wallet) return;
 
     const channelId = `${user.id}-${selectedAgent.id}`;
-    const message: Message = {
+    const baseMessage = {
       id: Date.now().toString(),
       channelId,
       senderId: user.id,
-      senderType: "user",
+      senderType: "user" as const,
       content: newMessage,
       type: MessageType.TEXT,
       timestamp: new Date(),
-      attachments: [],
-      reactions: [],
-      status: MessageStatus.SENT,
+      attachments: [] as Message["attachments"],
+      reactions: [] as Message["reactions"],
     };
 
-    addMessage(channelId, message);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+      console.error("Message sending timed out");
+      addMessage(channelId, { ...baseMessage, status: MessageStatus.FAILED });
+    }, 10000); // 10 second timeout
+
+    try {
+      await client.messages.sendMessage(wallet, {
+        recipient: new PublicKey(selectedAgent.id),
+        payload: newMessage,
+        messageType: MessageType.TEXT,
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+      addMessage(channelId, { ...baseMessage, status: MessageStatus.SENT });
+    } catch (err) {
+      clearTimeout(timeoutId);
+      console.error("Failed to send message", err);
+      if (!controller.signal.aborted) {
+        addMessage(channelId, { ...baseMessage, status: MessageStatus.FAILED });
+      }
+    }
+
     setNewMessage("");
   };
 
