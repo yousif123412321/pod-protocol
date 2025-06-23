@@ -1,75 +1,76 @@
-name: Claude Code Review
+name: Claude Code PR Review
 
 on:
   pull_request:
-    types: [opened, synchronize]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+    types: [opened, synchronize, reopened]
 
 jobs:
-  claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
-    
+  claude-code-review:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: read
-      issues: read
-      id-token: write
-    
     steps:
-      - name: Checkout repository
+      - name: Checkout PR code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
 
-      - name: Run Claude Code Review
-        id: claude-review
-        uses: anthropics/claude-code-action@beta
+      - name: Fetch base branch
+        run: |
+          git fetch origin ${{ github.base_ref }}
+
+      - name: Generate PR diff
+        run: |
+          git diff origin/${{ github.base_ref }}...${{ github.head_ref }} > pr.diff
+
+      - name: Call Claude Code for review
+        id: claude
+        shell: bash
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+        run: |
+          prompt="You’re an elite code reviewer. Analyze this diff and produce GitHub suggestion comments that fix bugs, improve style, and complete missing pieces. Format each suggestion like:\n\nfile:path/to/file.ext:line:start-end\nsuggestion: Your code or comment here\n---\n\nDiff:\n$(sed 's/"/\\"/g' pr.diff)"
+          
+          response=$(curl -s https://api.anthropic.com/v1/complete \
+            -H "Content-Type: application/json" \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -d '{
+              "model": "claude-code-2",
+              "prompt": "'"$prompt"'",
+              "max_tokens_to_sample": 1000,
+              "temperature": 0
+            }')
+
+          # Export for next step
+          {
+            echo "response<<EOF"
+            echo "$response"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Post suggestions as PR comments
+        uses: actions/github-script@v6
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          
-          # Optional: Specify model (defaults to Claude Sonnet 4, uncomment for Claude Opus 4)
-          # model: "claude-opus-4-20250514"
-          
-          # Direct prompt for automated review (no @claude mention needed)
-          direct_prompt: |
-            Please review this pull request and provide feedback on:
-            - Code quality and best practices
-            - Potential bugs or issues
-            - Performance considerations
-            - Security concerns
-            - Test coverage
-            
-            Be constructive and helpful in your feedback.
-          
-          # Optional: Customize review based on file types
-          # direct_prompt: |
-          #   Review this PR focusing on:
-          #   - For TypeScript files: Type safety and proper interface usage
-          #   - For API endpoints: Security, input validation, and error handling
-          #   - For React components: Performance, accessibility, and best practices
-          #   - For tests: Coverage, edge cases, and test quality
-          
-          # Optional: Different prompts for different authors
-          # direct_prompt: |
-          #   ${{ github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' && 
-          #   'Welcome! Please review this PR from a first-time contributor. Be encouraging and provide detailed explanations for any suggestions.' ||
-          #   'Please provide a thorough code review focusing on our coding standards and best practices.' }}
-          
-          # Optional: Add specific tools for running tests or linting
-          # allowed_tools: "Bash(npm run test),Bash(npm run lint),Bash(npm run typecheck)"
-          
-          # Optional: Skip review for certain conditions
-          # if: |
-          #   !contains(github.event.pull_request.title, '[skip-review]') &&
-          #   !contains(github.event.pull_request.title, '[WIP]')
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const raw = `\${{ steps.claude.outputs.response }}`.trim();
+            const blocks = raw.split('---');
+            for (let block of blocks) {
+              const [meta, body] = block.split('suggestion:');
+              if (!body) continue;
+              const fileLine = meta.trim().split('\n')[0]; 
+              // meta looks like "file:path/to/file.ext:123:10-15"
+              const parts = fileLine.replace(/^file:/, '').split(':');
+              const path = parts[0];
+              const lineStart = parseInt(parts[2], 10);
+              const lineEnd = parseInt(parts[3], 10);
 
+              await github.rest.pulls.createReviewComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.issue.number,
+                path,
+                line: lineEnd,
+                side: 'RIGHT',
+                body: body.trim()
+              });
+            }
