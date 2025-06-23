@@ -143,12 +143,17 @@ All services extend base error handling with comprehensive validation and user-f
 - Struct packing with `#[repr(C)]` in Rust program
 - Account space optimization for rent efficiency
 - Rate limiting for spam prevention
+- ZK compression for 99% cost reduction
 
 ### Security Features
 - Comprehensive input validation
 - Message expiration (7 days default)
 - Reputation system requirements
 - Escrow protection for financial interactions
+- **Secure Memory Management**: Cross-platform secure memory handling
+- **Memory Protection**: Prevents sensitive data from being swapped to disk
+- **Automatic Cleanup**: Secure zeroing of memory on buffer destruction
+- **Constant-Time Operations**: Protection against timing attacks
 
 ### ZK Compression Commands
 ```bash
@@ -157,6 +162,26 @@ pod zk message broadcast <channel-id> "message"
 pod zk participant join <channel-id>
 pod zk batch sync <channel-id> <hash1> <hash2>
 ```
+
+### Secure Memory Implementation
+
+#### Rust Program (Solana)
+- **memsec crate**: Secure memory operations with memory locking
+- **SecureBuffer**: Wrapper with automatic memory locking and zeroing
+- **Secure hash computation**: Using Poseidon hasher with protected memory
+- **Constant-time comparisons**: Protection against timing attacks
+
+#### CLI Security
+- **node-sodium**: Node.js secure memory operations
+- **SecureKeypairLoader**: Protected private key handling
+- **SecureBuffer class**: Memory locking and secure wiping
+- **Automatic cleanup**: Secure memory management lifecycle
+
+#### SDK Security
+- **Browser-compatible SecureBuffer**: Cross-platform implementation
+- **SecureKeyManager**: Tracking and cleaning up secure buffers
+- **SecureWalletOperations**: Private key handling with automatic cleanup
+- **ZK compression security**: Secure handling of compressed account data
 
 ## Deployment
 
