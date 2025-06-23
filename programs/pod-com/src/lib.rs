@@ -7,7 +7,7 @@ use anchor_lang::solana_program::pubkey::Pubkey;
 // Light Protocol ZK Compression imports
 use light_compressed_token::program::LightCompressedToken;
 use light_system_program::program::LightSystemProgram;
-use light_hasher::LightHasher;
+use light_hasher::{hash_to_bn254_field_size_be, LightHasher};
 
 declare_id!("HEpGLgYsE1kP8aoYKyLFc3JVVrofS7T4zEA6fWBJsZps");
 

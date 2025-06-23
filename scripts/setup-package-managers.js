@@ -38,6 +38,15 @@ function checkPackageManager(manager) {
   }
 }
 
+function checkNodePackage(pkg) {
+  try {
+    require.resolve(pkg);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function main() {
   console.log('🔧 Setting up package managers for PoD Protocol...');
   
@@ -54,12 +63,20 @@ async function main() {
   
   console.log('📦 Installing dependencies with Yarn (for Anchor compatibility)...');
   runCommand('yarn install', { exitOnError: false });
-  
+
+  if (!checkNodePackage('@coral-xyz/anchor')) {
+    console.log('📦 Installing @coral-xyz/anchor...');
+    runCommand('yarn add -D @coral-xyz/anchor', { exitOnError: false });
+  }
+
   // Install workspace dependencies with Bun for faster builds
   if (hasBun) {
     console.log('📦 Installing workspace dependencies with Bun...');
     runCommand('cd sdk && bun install', { exitOnError: false });
     runCommand('cd cli && bun install', { exitOnError: false });
+    if (!checkNodePackage('@coral-xyz/anchor')) {
+      runCommand('bun add -D @coral-xyz/anchor', { exitOnError: false });
+    }
   }
   
   console.log('✅ Package manager setup complete!');
