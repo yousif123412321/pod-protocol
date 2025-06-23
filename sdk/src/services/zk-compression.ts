@@ -438,17 +438,44 @@ export class ZKCompressionService extends BaseService {
     syncTimestamp?: number
   ): Promise<BatchCompressionResult> {
     try {
+      // Validate inputs
+      if (!channelId || !PublicKey.isOnCurve(channelId.toBytes())) {
+        throw new Error('Invalid channel ID provided');
+      }
+      
+      if (!messageHashes || messageHashes.length === 0) {
+        throw new Error('At least one message hash is required');
+      }
+      
       if (messageHashes.length > 100) {
         throw new Error('Batch size too large. Maximum 100 messages per batch.');
       }
 
+      // Validate message hashes format
+      for (const hash of messageHashes) {
+        if (!hash || typeof hash !== 'string' || !/^[0-9a-fA-F]{64}$/.test(hash)) {
+          throw new Error(`Invalid message hash format: ${hash}. Expected 64-character hex string.`);
+        }
+      }
+
       const program = this.ensureInitialized();
       const timestamp = syncTimestamp || Date.now();
+      
+      // Validate timestamp is reasonable (within 1 hour)
+      const currentTime = Date.now();
+      const timeDiff = Math.abs(currentTime - timestamp);
+      if (timeDiff > 3600000) { // 1 hour in milliseconds
+        throw new Error('Sync timestamp must be within 1 hour of current time');
+      }
 
-      // Convert string hashes to byte arrays
-      const hashBytes = messageHashes.map(hash => 
-        Array.from(Buffer.from(hash, 'hex'))
-      );
+      // Convert string hashes to byte arrays with validation
+      const hashBytes = messageHashes.map(hash => {
+        const buffer = Buffer.from(hash, 'hex');
+        if (buffer.length !== 32) {
+          throw new Error(`Invalid hash length: ${hash}. Expected 32 bytes.`);
+        }
+        return Array.from(buffer);
+      });
 
       // Implement Light Protocol integration
       const tx = await (program as any).methods

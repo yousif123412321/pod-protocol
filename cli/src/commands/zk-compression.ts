@@ -289,7 +289,7 @@ export function createZKCompressionCommand(): Command {
         const client = await createClient(undefined, wallet);
         
         if (!validatePublicKey(channelId)) {
-          throw new Error('Invalid channel ID');
+          throw new Error('Invalid channel ID format. Expected base58 encoded public key.');
         }
 
         if (messageHashes.length === 0) {
@@ -298,6 +298,26 @@ export function createZKCompressionCommand(): Command {
 
         if (messageHashes.length > 100) {
           throw new Error('Maximum 100 message hashes per batch');
+        }
+
+        // Validate message hash formats
+        for (const hash of messageHashes) {
+          if (!/^[0-9a-fA-F]{64}$/.test(hash)) {
+            throw new Error(`Invalid message hash format: ${hash}. Expected 64-character hex string.`);
+          }
+        }
+
+        // Validate timestamp if provided
+        if (options.timestamp) {
+          const timestamp = parseInt(options.timestamp);
+          if (isNaN(timestamp)) {
+            throw new Error('Invalid timestamp format. Expected Unix timestamp in milliseconds.');
+          }
+          const currentTime = Date.now();
+          const timeDiff = Math.abs(currentTime - timestamp);
+          if (timeDiff > 3600000) {
+            throw new Error('Timestamp must be within 1 hour of current time.');
+          }
         }
 
         const channel = new PublicKey(channelId);
