@@ -1,5 +1,5 @@
 import { PodComClient } from "@pod-protocol/sdk";
-import { PublicKey, Keypair } from "@solana/web3.js";
+import { Keypair } from "@solana/web3.js";
 import { EnhancedErrorHandler } from "./enhanced-error-handler.js";
 import { OutputFormatter } from "./output-formatter.js";
 import { showBanner, showMiniHeader } from "./branding.js";

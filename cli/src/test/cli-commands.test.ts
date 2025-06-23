@@ -1,18 +1,16 @@
-import { spawn } from "bun";
-import { describe, it, expect } from "bun:test";
+import { spawn } from "child_process";
+import { describe, it, expect } from "@jest/globals";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
-const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const cliPath = join(__dirname, "..", "index.ts");
 const cwd = join(__dirname, "..", "..");
 
 async function runCli(args: string[], timeoutMs = 10000) {
-  const proc = spawn(["bun", cliPath, "--no-banner", ...args], {
+  const proc = spawn("bun", [cliPath, "--no-banner", ...args], {
     cwd,
-    stdout: "pipe",
-    stderr: "pipe",
+    stdio: ["pipe", "pipe", "pipe"]
   });
   try {
     const controller = new AbortController();
@@ -24,9 +22,14 @@ async function runCli(args: string[], timeoutMs = 10000) {
 
     try {
       const [stdout, stderr, exitCode] = await Promise.all([
-        new Response(proc.stdout, { signal: controller.signal }).text(),
-        new Response(proc.stderr, { signal: controller.signal }).text(),
-        proc.exited,
+        new Response(proc.stdout).text(),
+        new Response(proc.stderr).text().then(text => {
+          if (controller.signal.aborted) {
+            throw new Error('Aborted');
+          }
+          return text;
+        }),
+        new Promise<number>((resolve) => proc.on('exit', resolve)),
       ]);
       clearTimeout(timeoutId);
       return { stdout, stderr, exitCode };

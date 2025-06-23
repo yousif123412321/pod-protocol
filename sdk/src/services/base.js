@@ -56,3 +56,4 @@ export class BaseService {
         return this.idl;
     }
 }
+//# sourceMappingURL=base.js.map

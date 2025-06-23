@@ -1,9 +1,9 @@
 {
   "name": "@pod-protocol/sdk",
-  "version": "1.2.0",
+  "version": "1.4.3",
   "description": "TypeScript SDK for PoD Protocol (Prompt or Die) AI Agent Communication Protocol",
   "type": "module",
-  "main": "dist/index.esm.js",
+  "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -65,12 +65,19 @@
   "license": "MIT",
   "dependencies": {
     "@coral-xyz/anchor": "0.31.1",
+    "@helia/json": "^4.0.6",
+    "@helia/unixfs": "^3.0.7",
     "@lightprotocol/compressed-token": "0.22.0",
     "@lightprotocol/stateless.js": "0.22.0",
-    "@solana/web3.js": "1.98.2",
+    "@pod-protocol/sdk": "^1.2.0",
+    "@solana/spl-token": "^0.4.13",
     "@solana/wallet-adapter-base": "0.9.27",
-    "ipfs-http-client": "60.0.1",
-    "multiformats": "13.3.7"
+    "@solana/web3.js": "^1.98.2",
+    "helia": "^4.2.6",
+    "keccak": "3.0.4",
+    "multiformats": "13.3.7",
+    "node-domexception": "2.0.2",
+    "react-syntax-highlighter": "5.8.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "28.0.6",

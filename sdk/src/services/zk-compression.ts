@@ -68,6 +68,8 @@ export interface ZKCompressionConfig {
   accountCompressionAuthority?: PublicKey;
   /** Account Compression program */
   accountCompressionProgram?: PublicKey;
+  /** Compressed token mint address */
+  compressedTokenMint?: PublicKey;
 }
 
 /**
