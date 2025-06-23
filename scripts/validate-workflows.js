@@ -7,7 +7,7 @@
 
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
-import { parse } from 'yaml';
+import { parse as yamlParse } from 'yaml';
 
 const COLORS = {
   reset: '\x1b[0m',
@@ -34,7 +34,7 @@ function validateWorkflowFile(filePath) {
 
   try {
     const content = readFileSync(filePath, 'utf8');
-    const workflow = parse(content);
+    const workflow = yamlParse(content);
     
     // Basic structure validation
     if (!workflow.name) {
@@ -286,7 +286,7 @@ async function main() {
 }
 
 // Handle YAML parsing (simple implementation)
-function parse(yamlString) {
+function simpleParse(yamlString) {
   // This is a very basic YAML parser for validation purposes
   // In production, you'd want to use a proper YAML library
   try {
