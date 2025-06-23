@@ -9,6 +9,12 @@ export async function createClient(
   const client = new PodComClient({
     endpoint: getNetworkEndpoint(network),
     commitment: "confirmed",
+    // Disable IPFS in CLI environments to avoid native module issues
+    ipfs: {
+      disabled: true,
+      timeout: 30000,
+      gatewayUrl: 'https://gateway.pinata.cloud/ipfs/'
+    },
     zkCompression: {
       lightRpcUrl: process.env.LIGHT_RPC_URL,
       compressionRpcUrl: process.env.COMPRESSION_RPC_URL,

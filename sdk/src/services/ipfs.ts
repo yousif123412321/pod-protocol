@@ -1,18 +1,37 @@
-import { createHelia } from 'helia';
-import { unixfs } from '@helia/unixfs';
-import { json } from '@helia/json';
+// Dynamic imports to avoid native module issues
+// import { createHelia } from 'helia';
+// import { unixfs } from '@helia/unixfs';
+// import { json } from '@helia/json';
 import { CID } from 'multiformats/cid';
 import { BaseService, BaseServiceConfig } from './base.js';
 import keccak from 'keccak';
-import type { JSON as HeliaJSON } from '@helia/json';
+// import type { JSON as HeliaJSON } from '@helia/json';
 
-// Type for the actual Helia instance returned by createHelia (includes libp2p)
-type HeliaInstance = Awaited<ReturnType<typeof createHelia>>;
+/**
+ * Create a Node.js-compatible libp2p configuration without WebRTC
+ */
+function createNodeLibp2pConfig() {
+  return {
+    // Disable WebRTC to avoid native module dependencies
+    transports: [],
+    connectionEncryption: [],
+    streamMuxers: [],
+    // Minimal configuration for Node.js environments
+    start: false
+  };
+}
+
+// Type for the actual Helia instance (we'll define this as any for now)
+type HeliaInstance = any;
+type HeliaJSON = any;
+type UnixFS = any;
 
 /**
  * IPFS configuration options
  */
 export interface IPFSConfig {
+  /** Disable IPFS functionality completely */
+  disabled?: boolean;
   /** Custom Helia node configuration */
   heliaConfig?: any;
   /** Timeout for IPFS operations in milliseconds */
@@ -60,7 +79,7 @@ export interface IPFSStorageResult {
  */
 export class IPFSService extends BaseService {
   private helia: HeliaInstance | null = null;
-  private fs: ReturnType<typeof unixfs> | null = null;
+  private fs: UnixFS | null = null;
   private jsonStore: HeliaJSON | null = null;
   private config: IPFSConfig;
   private initPromise: Promise<void> | null = null;
@@ -85,9 +104,30 @@ export class IPFSService extends BaseService {
 
     this.initPromise = (async () => {
       try {
-        this.helia = await createHelia(this.config.heliaConfig);
-        this.fs = unixfs(this.helia);
-        this.jsonStore = json(this.helia);
+        // Check if IPFS is disabled
+        if (this.config.disabled) {
+          console.warn('IPFS functionality is disabled');
+          return; // Skip initialization
+        }
+
+        // Create Helia with minimal configuration for Node.js CLI environments
+        const config = this.config.heliaConfig || {};
+        
+        // Try to create Helia with fallback error handling
+        try {
+          // Dynamic imports to avoid immediate native module loading
+          const { createHelia } = await import('helia');
+          const { unixfs } = await import('@helia/unixfs');
+          const { json } = await import('@helia/json');
+          
+          this.helia = await createHelia(config);
+          this.fs = unixfs(this.helia);
+          this.jsonStore = json(this.helia);
+        } catch (nativeModuleError) {
+          // If native modules fail, throw a more specific error
+          console.warn('Warning: Native IPFS modules unavailable, IPFS features will be disabled');
+          throw new Error(`IPFS functionality requires native modules: ${nativeModuleError.message}`);
+        }
       } catch (error) {
         throw new Error(`Failed to initialize Helia: ${error}`);
       }
@@ -98,7 +138,13 @@ export class IPFSService extends BaseService {
 
   /**
    * Ensure Helia is initialized
-   
+   */
+  private async ensureIPFSInitialized(): Promise<void> {
+    if (this.config.disabled) {
+      throw new Error('IPFS functionality is disabled');
+    }
+    await this.init();
+  }
 
   /**
    * Store channel message content on IPFS
@@ -144,7 +190,7 @@ export class IPFSService extends BaseService {
    */
   async storeJSON(data: any): Promise<IPFSStorageResult> {
     try {
-      await this.ensureInitialized();
+      await this.ensureIPFSInitialized();
       
       const cid = await this.jsonStore!.add(data);
       
@@ -171,7 +217,7 @@ export class IPFSService extends BaseService {
     filename?: string
   ): Promise<IPFSStorageResult> {
     try {
-      await this.ensureInitialized();
+      await this.ensureIPFSInitialized();
       
       const cid = await this.fs!.addBytes(data);
 
@@ -191,7 +237,7 @@ export class IPFSService extends BaseService {
    */
   async retrieveJSON<T = any>(hash: string): Promise<T> {
     try {
-      await this.ensureInitialized();
+      await this.ensureIPFSInitialized();
       
       const cid = CID.parse(hash);
       const data = await this.jsonStore!.get(cid);
@@ -221,7 +267,7 @@ export class IPFSService extends BaseService {
    */
   async retrieveFile(hash: string): Promise<Buffer> {
     try {
-      await this.ensureInitialized();
+      await this.ensureIPFSInitialized();
       
       const cid = CID.parse(hash);
       const data = await this.fs!.cat(cid);
@@ -242,7 +288,7 @@ export class IPFSService extends BaseService {
    */
   async pinContent(hash: string): Promise<void> {
     try {
-      await this.ensureInitialized();
+      await this.ensureIPFSInitialized();
       const cid = CID.parse(hash);
       await this.helia!.pins.add(cid);
     } catch (error) {
@@ -255,7 +301,7 @@ export class IPFSService extends BaseService {
    */
   async unpinContent(hash: string): Promise<void> {
     try {
-      await this.ensureInitialized();
+      await this.ensureIPFSInitialized();
       const cid = CID.parse(hash);
       await this.helia!.pins.rm(cid);
     } catch (error) {
@@ -268,7 +314,7 @@ export class IPFSService extends BaseService {
    */
   async getNodeInfo(): Promise<any> {
     try {
-      await this.ensureInitialized();
+      await this.ensureIPFSInitialized();
       return {
         id: this.helia!.libp2p.peerId.toString(),
         agentVersion: 'helia',
@@ -284,7 +330,7 @@ export class IPFSService extends BaseService {
    */
   async contentExists(hash: string): Promise<boolean> {
     try {
-      await this.ensureInitialized();
+      await this.ensureIPFSInitialized();
       const cid = CID.parse(hash);
       await this.fs!.stat(cid);
       return true;

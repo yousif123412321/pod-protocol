@@ -174,6 +174,8 @@ export interface PodComConfig {
   commitment?: "processed" | "confirmed" | "finalized";
   /** IPFS configuration for off-chain storage */
   ipfs?: {
+    /** Disable IPFS functionality completely */
+    disabled?: boolean;
     /** IPFS node URL - defaults to Infura public gateway */
     url?: string;
     /** IPFS API endpoint - defaults to /api/v0 */
@@ -182,6 +184,8 @@ export interface PodComConfig {
     headers?: Record<string, string>;
     /** Timeout for IPFS operations in milliseconds */
     timeout?: number;
+    /** Gateway URL for retrieving content */
+    gatewayUrl?: string;
   };
   /** ZK Compression configuration for Light Protocol integration */
   zkCompression?: {
