@@ -16,7 +16,7 @@
   "dependencies": {
     "@headlessui/react": "^2.2.4",
     "@heroicons/react": "^2.2.0",
-    "@pod-protocol/sdk": "1.2.0",
+    "@pod-protocol/sdk": "1.5.0",
     "@reduxjs/toolkit": "^2.8.2",
     "@solana/wallet-adapter-base": "^0.9.27",
     "@solana/wallet-adapter-react": "^0.15.39",
@@ -35,7 +35,9 @@
     "react-syntax-highlighter": "^15.6.1",
     "tailwind-merge": "^2.6.0",
     "ws": "^8.18.2",
-    "zustand": "^4.5.7"
+    "zustand": "^4.5.7",
+    "buffer": "^6.0.3",
+    "pino-pretty": "^11.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",

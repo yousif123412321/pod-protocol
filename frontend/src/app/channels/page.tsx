@@ -18,7 +18,7 @@ import { Channel, ChannelType } from '../../components/store/types';
 import usePodClient from '../../hooks/usePodClient';
 
 const ChannelsPage = () => {
-  const { channels, setChannels, setChannelsLoading, setChannelsError, setActiveChannel, user } = useStore();
+  const { channels, setChannels, setChannelsLoading, setChannelsError, setActiveChannel } = useStore();
   const client = usePodClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<ChannelType | 'all'>('all');
