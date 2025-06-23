@@ -284,7 +284,6 @@ export class IPFSService extends BaseService {
     const fieldSizedHash = Buffer.from(keccakHash);
     fieldSizedHash[0] = 0;
     return fieldSizedHash.toString('hex');
-    return keccakHash.toString('hex');
   }
   
   /**
