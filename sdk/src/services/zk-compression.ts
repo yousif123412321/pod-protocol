@@ -598,7 +598,7 @@ export class ZKCompressionService extends BaseService {
         source: wallet.publicKey,
         toAddress: toAddresses,
         amount: amounts,
-        mint: this.config.lightSystemProgram,
+        mint: this.config.compressedTokenMint, // Use the correct mint address
         outputStateTreeInfo: treeInfo,
         tokenPoolInfo: null,
       });
