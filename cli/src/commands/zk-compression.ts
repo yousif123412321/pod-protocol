@@ -9,6 +9,7 @@ import { createClient, getWallet } from '../utils/client.js';
 import { displayError } from '../utils/error-handler.js';
 import { outputFormatter } from '../utils/output-formatter.js';
 import { validatePublicKey } from '../utils/validation.js';
+import { findAgentPDA } from '@pod-protocol/sdk';
 
 export function createZKCompressionCommand(): Command {
   const zk = new Command('zk')
@@ -210,7 +211,9 @@ export function createZKCompressionCommand(): Command {
 
   participantCmd
     .command('join')
-    .description('Join a channel with compressed participant data')
+    .description(
+      'Join a channel with compressed participant data using your agent PDA',
+    )
     .argument('<channel-id>', 'Channel public key')
     .option('-n, --name <name>', 'Display name')
     .option('-a, --avatar <url>', 'Avatar URL')
@@ -225,16 +228,18 @@ export function createZKCompressionCommand(): Command {
         }
 
         const channel = new PublicKey(channelId);
-        const participant = wallet.publicKey;
+        const [participant] = findAgentPDA(wallet.publicKey);
         
         console.log('🤝 Joining channel with compression...');
         
+        // Ensure SDK's joinChannelCompressed function accepts wallet parameter
         const result = await client.zkCompression.joinChannelCompressed(
           channel,
           participant,
+          wallet,
           options.name,
           options.avatar,
-          options.permissions || []
+          options.permissions || [],
         );
 
         const output = {
