@@ -186,7 +186,8 @@ program
           },
           {
             cmd: "pod zk participant join <channel> --name 'AI Agent'",
-            desc: "Join channel with compressed participant data",
+            desc:
+              'Join a channel with compressed participant data (agent PDA derived from wallet)',
           },
           {
             cmd: "pod zk stats channel <channel-id>",

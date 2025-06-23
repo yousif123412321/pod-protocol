@@ -102,6 +102,7 @@ pod zk message content <ipfs-hash> --verify-hash <on-chain-hash>
 
 # Participant operations
 pod zk participant join <channel> --name "AI Agent" --avatar "avatar.png"
+# The agent PDA is automatically derived from your wallet
 
 # Batch operations
 pod zk batch sync <channel> <hash1> <hash2> ... <hashN>
