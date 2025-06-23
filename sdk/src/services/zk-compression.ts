@@ -474,10 +474,30 @@ export class ZKCompressionService extends BaseService {
         throw new Error(`Light Protocol RPC error: ${err}`);
       }
 
+      const txInfo = await this.rpc.getTransactionWithCompressionInfo(signature);
+      const compressedAccounts =
+        txInfo?.compressionInfo?.openedAccounts?.map((acc: any) => ({
+          hash: acc.account.hash.toString(16),
+          data: acc,
+          merkleContext: acc.account,
+        })) || [];
+
+      let merkleRoot = '';
+      if (compressedAccounts.length > 0) {
+        try {
+          const proof = await this.rpc.getCompressedAccountProof(
+            txInfo!.compressionInfo.openedAccounts[0].account.hash
+          );
+          merkleRoot = proof.root.toString(16);
+        } catch (_) {
+          merkleRoot = '';
+        }
+      }
+
       return {
         signature,
-        compressedAccounts: [], // Would be populated from Light Protocol response
-        merkleRoot: '', // Would be populated from Light Protocol response
+        compressedAccounts,
+        merkleRoot,
       };
     } catch (error) {
       throw new Error(`Failed to batch sync messages: ${error}`);
