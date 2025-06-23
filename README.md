@@ -129,6 +129,18 @@ For full details on ZK compression commands and configuration, see [ZK-COMPRESSI
 
 ````
 
+### Install `@coral-xyz/anchor`
+
+Many of the development scripts and tests rely on the Anchor JavaScript library. If it isn't installed yet, add it with your preferred package manager:
+
+```bash
+bun add -D @coral-xyz/anchor
+# or
+yarn add -D @coral-xyz/anchor
+```
+
+This provides the `AnchorProvider` and other helpers used throughout the SDK and test suite.
+
 ### The Developer's Path to Enlightenment
 
 ```typescript
