@@ -43,7 +43,7 @@
     "ci:build": "yarn run build:verify && yarn run build:all",
     "ci:test": "yarn run test:all && yarn run lint:all",
     "validate:workflows": "node scripts/validate-workflows.js",
-    "pretest": "yarn run build:verify",
+    "pretest": "node scripts/check-dependencies.js && yarn run build:verify",
     "prepublishOnly": "yarn run production:test && yarn run build:all"
   },
   "keywords": [
@@ -85,6 +85,7 @@
     "chalk": "^5.4.1",
     "commander": "^14.0.0",
     "inquirer": "^12.6.3",
+    "keccak": "3.0.4",
     "ora": "^8.1.1",
     "qrcode-terminal": "^0.12.0",
     "table": "^6.9.0"

@@ -4,7 +4,7 @@ import { IPFSService, IPFSStorageResult } from './ipfs.js';
 import { Transaction, TransactionInstruction, PublicKey, Connection } from '@solana/web3.js';
 
 import { createRpc, LightSystemProgram, Rpc } from '@lightprotocol/stateless.js';
-import { createMint, mintTo, transfer } from '@lightprotocol/compressed-token';
+import { createMint, mintTo, transfer, CompressedTokenProgram } from '@lightprotocol/compressed-token';
 
 /**
  * Compressed account information returned by Light Protocol
@@ -292,7 +292,12 @@ export class ZKCompressionService extends BaseService {
         // Execute compression via Light Protocol transaction
         const instruction = await this.createCompressionInstruction(channelId, compressedMessage, wallet.publicKey);
         const transaction = new Transaction().add(instruction);
-        const signature = await this.rpc.sendTransaction(transaction, []);
+        let signature: string;
+        try {
+          signature = await this.rpc.sendTransaction(transaction, []);
+        } catch (err) {
+          throw new Error(`Light Protocol RPC error: ${err}`);
+        }
 
         return {
           signature,
@@ -371,7 +376,12 @@ export class ZKCompressionService extends BaseService {
         .transaction();
 
       const provider = program.provider as AnchorProvider;
-      const signature = await provider.sendAndConfirm(tx);
+      let signature: string;
+      try {
+        signature = await provider.sendAndConfirm(tx);
+      } catch (err) {
+        throw new Error(`Light Protocol RPC error: ${err}`);
+      }
 
       return {
         signature,
@@ -425,7 +435,12 @@ export class ZKCompressionService extends BaseService {
         .transaction();
 
       const provider = program.provider as AnchorProvider;
-      const signature = await provider.sendAndConfirm(tx);
+      let signature: string;
+      try {
+        signature = await provider.sendAndConfirm(tx);
+      } catch (err) {
+        throw new Error(`Light Protocol RPC error: ${err}`);
+      }
 
       return {
         signature,
@@ -607,7 +622,12 @@ export class ZKCompressionService extends BaseService {
         .transaction();
 
       const provider = program.provider as AnchorProvider;
-      const signature = await provider.sendAndConfirm(tx);
+      let signature: string;
+      try {
+        signature = await provider.sendAndConfirm(tx);
+      } catch (err) {
+        throw new Error(`Light Protocol RPC error: ${err}`);
+      }
 
       return {
         signature,
@@ -630,44 +650,48 @@ export class ZKCompressionService extends BaseService {
     const batch = [...this.batchQueue];
     this.batchQueue = [];
 
-    // Process batch using Light Protocol's batch compression
-    // This would involve creating a batch transaction with multiple compressed accounts
-    
-    // Execute batch compression via Light Protocol transactions
-    const compressedAccounts = [];
-    let lastSignature = '';
-    
-    for (const msg of batch) {
-      const instruction = await this.createCompressionInstruction(msg.channel, msg, wallet.publicKey);
-      const transaction = new Transaction().add(instruction);
-      const signature = await this.rpc.sendTransaction(transaction, []);
-      
-      compressedAccounts.push({
-        hash: msg.contentHash,
-        data: msg,
+    try {
+      const [treeInfo] = await this.rpc.getStateTreeInfos();
+      const toAddresses = batch.map((m) => m.channel);
+      const amounts = batch.map(() => 0);
+
+      const instruction = await CompressedTokenProgram.compress({
+        payer: wallet.publicKey,
+        owner: wallet.publicKey,
+        source: wallet.publicKey,
+        toAddress: toAddresses,
+        amount: amounts,
+        mint: this.config.compressedTokenMint, // Use the correct mint address
+        outputStateTreeInfo: treeInfo,
+        tokenPoolInfo: null,
       });
-      
-      lastSignature = signature;
+
+      const transaction = new Transaction().add(instruction);
+      let signature: string;
+      try {
+        signature = await this.rpc.sendTransaction(transaction, []);
+      } catch (err) {
+        throw new Error(`Light Protocol RPC error: ${err}`);
+      }
+
+      const result = {
+        signature,
+        compressedAccounts: batch.map((msg) => ({
+          hash: msg.contentHash,
+          data: msg,
+        })),
+        merkleRoot: '',
+      };
+
+      this.lastBatchResult = {
+        signature: result.signature,
+        compressedAccounts: result.compressedAccounts,
+      };
+
+      return result;
+    } catch (error) {
+      throw new Error(`Failed batch compression: ${error}`);
     }
-    
-    const rpcResult = {
-      signature: lastSignature,
-      compressedAccounts,
-      merkleRoot: '',
-    };
-    const result = {
-      signature: rpcResult.signature,
-      compressedAccounts: rpcResult.compressedAccounts,
-      merkleRoot: rpcResult.merkleRoot,
-    };
-    
-    // Store the result for pending batch promises
-    this.lastBatchResult = {
-      signature: result.signature,
-      compressedAccounts: result.compressedAccounts
-    };
-    
-    return result;
   }
 
   /**
@@ -694,13 +718,14 @@ export class ZKCompressionService extends BaseService {
     message: CompressedChannelMessage,
     authority: PublicKey
   ): Promise<TransactionInstruction> {
-    // Create a simple transaction instruction for compression
-    // This is a placeholder implementation that should be replaced with actual Light Protocol integration
-    const { SystemProgram } = await import('@solana/web3.js');
-    return SystemProgram.transfer({
-      fromPubkey: authority,
-      toPubkey: merkleTree,
+    // Fetch available state tree info and construct a compression instruction
+    const [treeInfo] = await this.rpc.getStateTreeInfos();
+
+    return await LightSystemProgram.compress({
+      payer: authority,
+      toAddress: merkleTree,
       lamports: 0,
+      outputStateTreeInfo: treeInfo,
     });
   }
 

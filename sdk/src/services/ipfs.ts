@@ -2,6 +2,7 @@ import { create, IPFSHTTPClient } from 'ipfs-http-client';
 import { CID } from 'multiformats/cid';
 import { BaseService, BaseServiceConfig } from './base.js';
 import { createHash } from 'crypto';
+import keccak from 'keccak';
 
 /**
  * IPFS configuration options
@@ -270,12 +271,20 @@ export class IPFSService extends BaseService {
    * Matches the Rust program's hash_to_bn254_field_size_be function
    */
   static createContentHash(content: string): string {
-    // Use SHA-256 to match the Rust program's content_hash ([u8; 32])
-    const hash = createHash('sha256').update(content, 'utf8').digest();
-    
-    // Convert to BN254 field size (32 bytes) in big-endian format
-    // This matches the Rust implementation: hash_to_bn254_field_size_be
-    return hash.toString('hex');
+    // Use SHA-256 to match the Rust program's initial hashing step
+    const sha256Hash = createHash('sha256').update(content, 'utf8').digest();
+
+    // Emulate hash_to_bn254_field_size_be by hashing the SHA-256 digest with
+    // Keccak256 and forcing the result into the BN254 field
+    const keccakHash = keccak('keccak256')
+      .update(Buffer.concat([sha256Hash, Buffer.from([0xff])]))
+      .digest();
+
+    // Create a copy and zero out the first byte to ensure the value fits within the BN254 field size
+    const fieldSizedHash = Buffer.from(keccakHash);
+    fieldSizedHash[0] = 0;
+    return fieldSizedHash.toString('hex');
+    return keccakHash.toString('hex');
   }
   
   /**
