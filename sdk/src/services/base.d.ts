@@ -25,6 +25,10 @@ export declare abstract class BaseService {
     protected getProgramMethods(): any;
     setProgram(program: AnchorProgram): void;
     /**
+     * Remove the program reference to avoid using stale credentials
+     */
+    clearProgram(): void;
+    /**
      * Set the IDL for read-only operations
      */
     setIDL(idl: any): void;
