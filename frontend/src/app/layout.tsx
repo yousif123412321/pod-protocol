@@ -1,20 +1,11 @@
-import { Inter, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { WalletProvider } from "../components/providers/WalletProvider";
+import { PerformanceProvider } from "../components/performance/PerformanceProvider";
+import { SecurityProvider } from "../components/security/SecurityProvider";
+import { BetaTestingProvider } from "../components/testing/BetaTestingProvider";
 import { Metadata } from "next";
+import { inter, jetbrainsMono, orbitron } from "../lib/fonts";
 import "./globals.css";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "PoD Protocol - Prompt or Die",
@@ -81,7 +72,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
       </head>
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} antialiased min-h-screen bg-gradient-to-br from-pod-bg-darker to-pod-bg-dark text-pod-text-light`}
+        className={`${inter.variable} ${jetbrainsMono.variable} ${orbitron.variable} antialiased min-h-screen bg-gradient-to-br from-pod-bg-darker to-pod-bg-dark text-pod-text-light`}
       >
         <div className="relative min-h-screen">
           {/* Matrix background effect */}
@@ -97,9 +88,15 @@ export default function RootLayout({
           
           {/* Main content */}
           <div className="relative z-10">
-            <WalletProvider>
-              {children}
-            </WalletProvider>
+            <SecurityProvider>
+              <PerformanceProvider>
+                <BetaTestingProvider enableFeedbackWidget={true}>
+                  <WalletProvider>
+                    {children}
+                  </WalletProvider>
+                </BetaTestingProvider>
+              </PerformanceProvider>
+            </SecurityProvider>
           </div>
         </div>
         
