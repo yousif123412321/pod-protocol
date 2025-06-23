@@ -20,8 +20,14 @@ describe("ZKCompressionService", () => {
 
   const service = new ZKCompressionService(baseConfig, {}, ipfs);
   (service as any).rpc = new MockRpc();
-  // Stub batch compress to avoid heavy logic
-  (CompressedTokenProgram as any).compress = async () => new TransactionInstruction({});
+  // Use jest.spyOn or similar approach to mock without modifying the original
+  const compressSpy = jest.spyOn(CompressedTokenProgram, 'compress')
+    .mockImplementation(async () => new TransactionInstruction({}));
+
+  // Remember to restore after tests
+  afterAll(() => {
+    compressSpy.mockRestore();
+  });
 
   const sampleMsg: CompressedChannelMessage = {
     channel: Keypair.generate().publicKey,
