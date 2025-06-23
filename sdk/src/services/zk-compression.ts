@@ -129,7 +129,7 @@ export class ZKCompressionService extends BaseService {
       lightRpcUrl:
         zkConfig.lightRpcUrl ||
         process.env.LIGHT_RPC_URL ||
-        "https://devnet.helius-rpc.com/?api-key=<your-api-key>",
+        "https://api.devnet.solana.com",
       compressionRpcUrl:
         zkConfig.compressionRpcUrl ||
         process.env.COMPRESSION_RPC_URL ||
