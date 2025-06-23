@@ -693,10 +693,12 @@ export class AgentService extends BaseService {
       // Send transaction
       const signature = await this.sendTransaction(instruction, wallet);
       
-      return {
-        signature,
-        agentAddress: this.deriveAgentAddress(wallet.publicKey),
-      };
+        const [agentAddress] = findAgentPDA(wallet.publicKey);
+
+        return {
+          signature,
+          agentAddress,
+        };
     } catch (error) {
       throw new SDKError('Failed to register agent', error);
     }
