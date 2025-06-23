@@ -210,6 +210,12 @@ DISCORD_WEBHOOK=your_discord_webhook_url  # For release notifications
 ./scripts/deploy-frontend.sh --help
 ```
 
+Before running the script, export your Vercel authentication token:
+
+```bash
+export VERCEL_TOKEN=your_vercel_token
+```
+
 ### Using Package Scripts
 
 ```bash
