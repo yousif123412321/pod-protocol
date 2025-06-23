@@ -627,6 +627,25 @@ pub mod pod_com {
             return Err(PodComError::ChannelFull.into());
         }
 
+        // SECURITY FIX: For premium channels with fees, verify payment atomically
+        if channel.fee_per_message > 0 {
+            // Verify escrow account exists and has sufficient balance
+            if let Some(escrow) = &ctx.accounts.escrow_account {
+                if escrow.depositor != ctx.accounts.user.key() {
+                    return Err(PodComError::Unauthorized.into());
+                }
+                if escrow.amount < channel.fee_per_message {
+                    return Err(PodComError::InsufficientFunds.into());
+                }
+                // Deduct fee atomically with channel join
+                let escrow_mut = &mut ctx.accounts.escrow_account.as_mut().unwrap();
+                escrow_mut.amount = escrow_mut.amount.checked_sub(channel.fee_per_message)
+                    .ok_or(PodComError::InsufficientFunds)?;
+            } else {
+                return Err(PodComError::InsufficientFunds.into());
+            }
+        }
+
         // For private channels, check if there's a valid invitation
         if channel.visibility == ChannelVisibility::Private {
             if let Some(invitation) = &ctx.accounts.invitation_account {
@@ -1030,6 +1049,11 @@ pub mod pod_com {
         let agent = &ctx.accounts.agent_account;
         let clock = Clock::get()?;
 
+        // SECURITY FIX: Verify agent account belongs to the authority
+        if agent.pubkey != ctx.accounts.authority.key() {
+            return Err(PodComError::Unauthorized.into());
+        }
+
         // Check channel capacity
         if channel.current_participants >= channel.max_participants {
             return Err(PodComError::ChannelFull.into());
@@ -1320,6 +1344,12 @@ pub struct JoinChannel<'info> {
         bump
     )]
     pub invitation_account: Option<Account<'info, ChannelInvitation>>,
+    #[account(
+        mut,
+        seeds = [b"escrow", channel_account.key().as_ref(), user.key().as_ref()],
+        bump
+    )]
+    pub escrow_account: Option<Account<'info, EscrowAccount>>,
     #[account(mut)]
     pub user: Signer<'info>,
     pub system_program: Program<'info, System>,
