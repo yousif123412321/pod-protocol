@@ -7,7 +7,7 @@ import { BaseServiceConfig } from "../sdk/src/services/base";
 const baseConfig: BaseServiceConfig = {
   connection: new Connection("http://localhost:8899"),
   programId: new PublicKey("11111111111111111111111111111111"),
-  commitment: "confirmed" as any,
+  commitment: "confirmed" as Commitment,
 };
 
 const ipfs = new IPFSService(baseConfig);
