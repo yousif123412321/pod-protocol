@@ -20,6 +20,7 @@ export default function usePodClient() {
   
     return () => {
       mounted = false;
+      client.secureCleanup();
     };
   }, [client, wallet]);
 
