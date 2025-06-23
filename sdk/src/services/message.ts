@@ -4,7 +4,7 @@ import {
   GetProgramAccountsFilter,
   SystemProgram,
 } from "@solana/web3.js";
-import anchor from "@coral-xyz/anchor";
+// Removed unused anchor import
 import { BaseService } from "./base";
 import {
   MessageAccount,

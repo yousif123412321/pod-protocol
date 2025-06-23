@@ -1,6 +1,5 @@
 import { PublicKey, Signer } from "@solana/web3.js";
-import anchor from "@coral-xyz/anchor";
-const { BN } = anchor;
+import { BN, AnchorProvider, web3, Program } from "@coral-xyz/anchor";
 import { BaseService } from "./base";
 import { AgentAccount, CreateAgentOptions, UpdateAgentOptions } from "../types";
 import { findAgentPDA, retry, getAccountLastUpdated } from "../utils";
@@ -34,7 +33,7 @@ export class AgentService extends BaseService {
           .accounts({
             agentAccount: agentPDA,
             signer: wallet.publicKey,
-            systemProgram: anchor.web3.SystemProgram.programId,
+            systemProgram: web3.SystemProgram.programId,
           })
           .rpc();
 
@@ -75,7 +74,7 @@ export class AgentService extends BaseService {
         program = this.program;
       } else {
         // Fallback: create a fresh provider with the actual wallet for this transaction
-        const provider = new anchor.AnchorProvider(
+        const provider = new AnchorProvider(
           this.connection,
           wallet as any,
           {
@@ -88,7 +87,7 @@ export class AgentService extends BaseService {
         const idl = this.ensureIDL();
 
         // Create a new program instance with the proper wallet
-        program = new anchor.Program(idl, provider);
+        program = new Program(idl, provider);
       }
 
       const tx = await (program.methods as any)
@@ -119,14 +118,14 @@ export class AgentService extends BaseService {
         program = this.program;
       } else {
         // For read operations, use a read-only provider without wallet
-        const readOnlyProvider = new anchor.AnchorProvider(
+        const readOnlyProvider = new AnchorProvider(
           this.connection,
-          new anchor.Wallet(anchor.web3.Keypair.generate()), // Temporary keypair for read-only operations
+          { publicKey: web3.Keypair.generate().publicKey, signTransaction: async () => { throw new Error('Read-only wallet'); }, signAllTransactions: async () => { throw new Error('Read-only wallet'); } } as any, // Read-only wallet
           { commitment: 'confirmed' }
         );
 
         const idl = this.ensureIDL();
-        program = new anchor.Program(idl, readOnlyProvider);
+        program = new Program(idl, readOnlyProvider);
       }
 
       const agentAccount = this.getAccount("agentAccount");
@@ -150,14 +149,14 @@ export class AgentService extends BaseService {
   async getAllAgents(limit: number = 100): Promise<AgentAccount[]> {
     try {
       // For read operations, use a read-only provider without wallet
-      const readOnlyProvider = new anchor.AnchorProvider(
+      const readOnlyProvider = new AnchorProvider(
          this.connection,
          {} as any, // No wallet needed for read operations
          { commitment: 'confirmed' }
        );
 
        const idl = this.ensureIDL();
-       const program = new anchor.Program(idl, readOnlyProvider);
+       const program = new Program(idl, readOnlyProvider);
 
       const agentAccount = this.getAccount("agentAccount");
       const accounts = await agentAccount.all();

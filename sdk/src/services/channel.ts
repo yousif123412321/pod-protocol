@@ -1,5 +1,5 @@
 import { PublicKey, Signer, SystemProgram } from "@solana/web3.js";
-import anchor from "@coral-xyz/anchor";
+import { BN, utils } from "@coral-xyz/anchor";
 import { BaseService } from "./base";
 import {
   CreateChannelOptions,
@@ -45,7 +45,7 @@ export class ChannelService extends BaseService {
         options.description,
         visibilityObj,
         options.maxParticipants,
-        new anchor.BN(options.feePerMessage),
+        new BN(options.feePerMessage),
       )
       .accounts({
         agentAccount: agentPDA,
@@ -90,7 +90,7 @@ export class ChannelService extends BaseService {
         filters.push({
           memcmp: {
             offset: 8 + 32 + 4 + 50 + 4 + 200, // After name and description
-            bytes: anchor.utils.bytes.bs58.encode(
+            bytes: utils.bytes.bs58.encode(
               Buffer.from([
                 visibilityFilter === ChannelVisibility.Public ? 0 : 1,
               ]),
@@ -258,7 +258,7 @@ export class ChannelService extends BaseService {
         options.content,
         messageTypeObj,
         options.replyTo || null,
-        new anchor.BN(nonce),
+        new BN(nonce),
       )
       .accounts({
         channelAccount: options.channelPDA,

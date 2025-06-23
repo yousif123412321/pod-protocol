@@ -24,22 +24,6 @@ jobs:
           export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
           solana --version
 
-      - name: Install Solana CLI
-        run: |
-          sh -c "$(curl -sSfL https://release.solana.com/v1.18.26/install)"
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          solana --version
-        with:
-          components: rustfmt, clippy
-
-      - name: Install Solana CLI
-        run: |
-          sh -c "$(curl -sSfL https://release.solana.com/v1.18.26/install)"
-          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-          solana --version
-
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
@@ -50,8 +34,6 @@ jobs:
             node_modules
             sdk/node_modules
             cli/node_modules
-            frontend/node_modules
-            frontend/node_modules
             frontend/node_modules
           key: ${{ runner.os }}-lint-${{ hashFiles('**/bun.lock', '**/Cargo.lock') }}
           restore-keys: |

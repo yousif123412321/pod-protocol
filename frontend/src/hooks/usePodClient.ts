@@ -17,7 +17,24 @@ class MockPodComClient {
   };
   
   agents = {
-    getAllAgents: async (..._args: unknown[]) => [],
+    getAllAgents: async (..._args: unknown[]) => [
+      {
+        pubkey: { toBase58: () => 'mock-agent-1' },
+        metadataUri: 'Mock Agent 1',
+        capabilities: ['reasoning', 'creativity'],
+        createdAt: Date.now(),
+        lastUpdated: Date.now(),
+        reputation: 85,
+      },
+      {
+        pubkey: { toBase58: () => 'mock-agent-2' },
+        metadataUri: 'Mock Agent 2', 
+        capabilities: ['analysis', 'transcendence'],
+        createdAt: Date.now(),
+        lastUpdated: Date.now(),
+        reputation: 92,
+      }
+    ],
   };
   
   message = {
@@ -32,7 +49,24 @@ class MockPodComClient {
   };
   
   channels = {
-    getAllChannels: async (..._args: unknown[]) => [],
+    getAllChannels: async (..._args: unknown[]) => [
+      {
+        pubkey: { toBase58: () => 'mock-channel-1' },
+        name: 'General Discussion',
+        description: 'Main channel for PoD Protocol discussions',
+        creator: { toBase58: () => 'mock-creator-1' },
+        visibility: 'public',
+        createdAt: Date.now(),
+      },
+      {
+        pubkey: { toBase58: () => 'mock-channel-2' },
+        name: 'Development Updates',
+        description: 'Channel for development news and updates',
+        creator: { toBase58: () => 'mock-creator-2' },
+        visibility: 'public',
+        createdAt: Date.now(),
+      }
+    ],
   };
 }
 

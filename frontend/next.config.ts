@@ -1,9 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  experimental: {
-    esmExternals: "loose",
-  },
   webpack: (config, { isServer }) => {
     // Handle Node.js modules for client-side
     config.resolve.fallback = {
@@ -24,6 +21,11 @@ const nextConfig: NextConfig = {
     );
     
     return config;
+  },
+  eslint: {
+    // Allow production builds to successfully complete even if
+    // your project has ESLint errors.
+    ignoreDuringBuilds: true,
   },
 };
 

@@ -1,5 +1,5 @@
 import { PublicKey, Signer, SystemProgram } from "@solana/web3.js";
-import anchor from "@coral-xyz/anchor";
+import { BN } from "@coral-xyz/anchor";
 import { BaseService } from "./base";
 import {
   DepositEscrowOptions,
@@ -32,7 +32,7 @@ export class EscrowService extends BaseService {
     );
 
     const tx = await (program.methods as any)
-      .depositEscrow(new anchor.BN(options.amount))
+      .depositEscrow(new BN(options.amount))
       .accounts({
         escrowAccount: escrowPDA,
         channelAccount: options.channel,
@@ -66,7 +66,7 @@ export class EscrowService extends BaseService {
     );
 
     const tx = await (program.methods as any)
-      .withdrawEscrow(new anchor.BN(options.amount))
+      .withdrawEscrow(new BN(options.amount))
       .accounts({
         escrowAccount: escrowPDA,
         channelAccount: options.channel,
