@@ -58,6 +58,16 @@ export interface ZKCompressionConfig {
   nullifierQueuePubkey?: PublicKey;
   /** CPI authority PDA */
   cpiAuthorityPda?: PublicKey;
+  /** Compressed Token program */
+  compressedTokenProgram?: PublicKey;
+  /** Registered Program ID */
+  registeredProgramId?: PublicKey;
+  /** No-op Program */
+  noopProgram?: PublicKey;
+  /** Account Compression authority */
+  accountCompressionAuthority?: PublicKey;
+  /** Account Compression program */
+  accountCompressionProgram?: PublicKey;
 }
 
 /**
@@ -116,17 +126,70 @@ export class ZKCompressionService extends BaseService {
     super(baseConfig);
     
     this.config = {
-      lightRpcUrl: zkConfig.lightRpcUrl || 'https://devnet.helius-rpc.com/?api-key=<your-api-key>',
-      compressionRpcUrl: zkConfig.compressionRpcUrl || zkConfig.lightRpcUrl || 'https://devnet.helius-rpc.com/?api-key=<your-api-key>',
-      proverUrl: zkConfig.proverUrl || zkConfig.lightRpcUrl || 'https://devnet.helius-rpc.com/?api-key=<your-api-key>',
-      photonIndexerUrl: zkConfig.photonIndexerUrl || 'http://localhost:8080',
+      lightRpcUrl:
+        zkConfig.lightRpcUrl ||
+        process.env.LIGHT_RPC_URL ||
+        "https://devnet.helius-rpc.com/?api-key=<your-api-key>",
+      compressionRpcUrl:
+        zkConfig.compressionRpcUrl ||
+        process.env.COMPRESSION_RPC_URL ||
+        zkConfig.lightRpcUrl ||
+        process.env.LIGHT_RPC_URL ||
+        "https://devnet.helius-rpc.com/?api-key=<your-api-key>",
+      proverUrl:
+        zkConfig.proverUrl ||
+        process.env.PROVER_URL ||
+        zkConfig.lightRpcUrl ||
+        process.env.LIGHT_RPC_URL ||
+        "https://devnet.helius-rpc.com/?api-key=<your-api-key>",
+      photonIndexerUrl:
+        zkConfig.photonIndexerUrl ||
+        process.env.PHOTON_INDEXER_URL ||
+        "http://localhost:8080",
       maxBatchSize: zkConfig.maxBatchSize || 50,
       enableBatching: zkConfig.enableBatching ?? true,
       batchTimeout: zkConfig.batchTimeout || 5000,
       // Default Light Protocol program addresses for devnet
-      lightSystemProgram: zkConfig.lightSystemProgram || new PublicKey('H5sFv8VwWmjxHYS2GB4fTDsK7uTtnRT4WiixtHrET3bN'),
-      nullifierQueuePubkey: zkConfig.nullifierQueuePubkey || new PublicKey('nuLLiQHXWLbjy4uxg4R8UuXsJV4JTxvUYm8rqVn8BBc'),
-      cpiAuthorityPda: zkConfig.cpiAuthorityPda || new PublicKey('5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1'),
+      lightSystemProgram:
+        zkConfig.lightSystemProgram ||
+        (process.env.LIGHT_SYSTEM_PROGRAM
+          ? new PublicKey(process.env.LIGHT_SYSTEM_PROGRAM)
+          : new PublicKey("H5sFv8VwWmjxHYS2GB4fTDsK7uTtnRT4WiixtHrET3bN")),
+      nullifierQueuePubkey:
+        zkConfig.nullifierQueuePubkey ||
+        (process.env.LIGHT_NULLIFIER_QUEUE
+          ? new PublicKey(process.env.LIGHT_NULLIFIER_QUEUE)
+          : new PublicKey("nuLLiQHXWLbjy4uxg4R8UuXsJV4JTxvUYm8rqVn8BBc")),
+      cpiAuthorityPda:
+        zkConfig.cpiAuthorityPda ||
+        (process.env.LIGHT_CPI_AUTHORITY
+          ? new PublicKey(process.env.LIGHT_CPI_AUTHORITY)
+          : new PublicKey("5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1")),
+      compressedTokenProgram:
+        zkConfig.compressedTokenProgram ||
+        (process.env.LIGHT_COMPRESSED_TOKEN_PROGRAM
+          ? new PublicKey(process.env.LIGHT_COMPRESSED_TOKEN_PROGRAM)
+          : new PublicKey("cTokenmWW8bLPjZEBAUgYy3zKxQZW6VKi7bqNFEVv3m")),
+      registeredProgramId:
+        zkConfig.registeredProgramId ||
+        (process.env.LIGHT_REGISTERED_PROGRAM_ID
+          ? new PublicKey(process.env.LIGHT_REGISTERED_PROGRAM_ID)
+          : new PublicKey("noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV")),
+      noopProgram:
+        zkConfig.noopProgram ||
+        (process.env.LIGHT_NOOP_PROGRAM
+          ? new PublicKey(process.env.LIGHT_NOOP_PROGRAM)
+          : new PublicKey("noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV")),
+      accountCompressionAuthority:
+        zkConfig.accountCompressionAuthority ||
+        (process.env.LIGHT_ACCOUNT_COMPRESSION_AUTHORITY
+          ? new PublicKey(process.env.LIGHT_ACCOUNT_COMPRESSION_AUTHORITY)
+          : new PublicKey("5QPEJ5zDsVou9FQS3KCHdPeeWDfWDcXYRKZaAkXRBGSW")),
+      accountCompressionProgram:
+        zkConfig.accountCompressionProgram ||
+        (process.env.LIGHT_ACCOUNT_COMPRESSION_PROGRAM
+          ? new PublicKey(process.env.LIGHT_ACCOUNT_COMPRESSION_PROGRAM)
+          : new PublicKey("cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK")),
     };
 
     this.rpc = createRpc(
@@ -297,10 +360,10 @@ export class ZKCompressionService extends BaseService {
           feePayer: wallet.publicKey,
           authority: wallet.publicKey,
           lightSystemProgram: this.config.lightSystemProgram,
-          registeredProgramId: new PublicKey('noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'),
-          noopProgram: new PublicKey('noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'),
-          accountCompressionAuthority: new PublicKey('5QPEJ5zDsVou9FQS3KCHdPeeWDfWDcXYRKZaAkXRBGSW'),
-          accountCompressionProgram: new PublicKey('cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'),
+          registeredProgramId: this.config.registeredProgramId,
+          noopProgram: this.config.noopProgram,
+          accountCompressionAuthority: this.config.accountCompressionAuthority,
+          accountCompressionProgram: this.config.accountCompressionProgram,
           merkleTree: channelId, // Use channel as merkle tree
           nullifierQueue: this.config.nullifierQueuePubkey,
         cpiAuthorityPda: this.config.cpiAuthorityPda,
@@ -349,12 +412,12 @@ export class ZKCompressionService extends BaseService {
           channelAccount: channelId,
           feePayer: wallet.publicKey,
           authority: wallet.publicKey,
-          lightSystemProgram: new PublicKey('H5sFv8VwWmjxHYS2GB4fTDsK7uTtnRT4WiixtHrET3bN'),
-          compressedTokenProgram: new PublicKey('cTokenmWW8bLPjZEBAUgYy3zKxQZW6VKi7bqNFEVv3m'),
-          registeredProgramId: new PublicKey('noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'),
-          noopProgram: new PublicKey('noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'),
-          accountCompressionAuthority: new PublicKey('5QPEJ5zDsVou9FQS3KCHdPeeWDfWDcXYRKZaAkXRBGSW'),
-          accountCompressionProgram: new PublicKey('cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'),
+          lightSystemProgram: this.config.lightSystemProgram,
+          compressedTokenProgram: this.config.compressedTokenProgram,
+          registeredProgramId: this.config.registeredProgramId,
+          noopProgram: this.config.noopProgram,
+          accountCompressionAuthority: this.config.accountCompressionAuthority,
+          accountCompressionProgram: this.config.accountCompressionProgram,
           merkleTree: channelId,
           nullifierQueue: this.config.nullifierQueuePubkey,
         cpiAuthorityPda: this.config.cpiAuthorityPda,
@@ -531,12 +594,12 @@ export class ZKCompressionService extends BaseService {
           participantAccount: message.sender,
           feePayer: wallet.publicKey,
           authority: wallet.publicKey,
-          lightSystemProgram: new PublicKey('H5sFv8VwWmjxHYS2GB4fTDsK7uTtnRT4WiixtHrET3bN'),
-          compressedTokenProgram: new PublicKey('cTokenmWW8bLPjZEBAUgYy3zKxQZW6VKi7bqNFEVv3m'),
-          registeredProgramId: new PublicKey('noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'),
-          noopProgram: new PublicKey('noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV'),
-          accountCompressionAuthority: new PublicKey('5QPEJ5zDsVou9FQS3KCHdPeeWDfWDcXYRKZaAkXRBGSW'),
-          accountCompressionProgram: new PublicKey('cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK'),
+          lightSystemProgram: this.config.lightSystemProgram,
+          compressedTokenProgram: this.config.compressedTokenProgram,
+          registeredProgramId: this.config.registeredProgramId,
+          noopProgram: this.config.noopProgram,
+          accountCompressionAuthority: this.config.accountCompressionAuthority,
+          accountCompressionProgram: this.config.accountCompressionProgram,
           merkleTree: message.channel,
           nullifierQueue: this.config.nullifierQueuePubkey,
         cpiAuthorityPda: this.config.cpiAuthorityPda,

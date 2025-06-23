@@ -201,6 +201,16 @@ export interface PodComConfig {
     nullifierQueuePubkey?: PublicKey;
     /** CPI authority PDA */
     cpiAuthorityPda?: PublicKey;
+    /** Compressed Token program */
+    compressedTokenProgram?: PublicKey;
+    /** Registered Program ID */
+    registeredProgramId?: PublicKey;
+    /** No-op Program */
+    noopProgram?: PublicKey;
+    /** Account Compression authority */
+    accountCompressionAuthority?: PublicKey;
+    /** Account Compression program */
+    accountCompressionProgram?: PublicKey;
   };
 }
 
