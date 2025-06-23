@@ -73,6 +73,7 @@ light-compressed-token = { version = "2.0.0", default-features = false }
 light-system-program = { version = "1.2.0", default-features = false }
 light-hasher = { version = "3.1.0", default-features = false }
 light-utils = { version = "1.1.0", default-features = false }
+light-heap = { version = "1.1.0", default-features = false }
 ```
 
 ### 2. TypeScript SDK
