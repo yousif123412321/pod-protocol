@@ -232,6 +232,7 @@ export function createZKCompressionCommand(): Command {
         
         console.log('🤝 Joining channel with compression...');
         
+        // Ensure SDK's joinChannelCompressed function accepts wallet parameter
         const result = await client.zkCompression.joinChannelCompressed(
           channel,
           participant,
