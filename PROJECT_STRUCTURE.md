@@ -37,17 +37,26 @@ The documentation has been reorganized into logical categories:
 ### `docs/guides/`
 - `AGENTS.md` - AI agent development guide
 - `ARCHITECTURE.md` - System architecture overview
+- `AUDIT_REPORT.md` - Security audit findings
 - `CLAUDE.md` - Claude AI integration guide
 - `DEVELOPER_GUIDE.md` - Developer onboarding
 - `DEVELOPMENT.md` - Development workflow
+- `ENVIRONMENT_CONFIG.md` - Configuration management
+- `frontend.md` - Frontend development guide
+- `getting-started.md` - Quick start tutorial
+- `GITHUB_DEPLOYMENT_GUIDE.md` - CI/CD setup
 - `MCP_SETUP_README.md` - MCP server configuration
 - `PACKAGE_MANAGERS.md` - Package manager setup
 - `PERFORMANCE.md` - Performance optimization
+- `REPOSITORY_CONFIG.md` - Repository configuration
 - `Rules-Reference.md` - Protocol rules reference
+- `SECRETS.md` - Secrets management
 - `SECURITY.md` - Security guidelines
 - `TERMINAL_README.md` - Terminal interface guide
 - `TESTING.md` - Testing strategies
+- `troubleshooting-guide.md` - Additional troubleshooting
 - `TROUBLESHOOTING.md` - Common issues and solutions
+- `WORKSPACE_CONFIGURATION.md` - Workspace setup
 - `ZK-COMPRESSION-README.md` - ZK compression implementation
 - `frontend.md` - Frontend development guide
 - `getting-started.md` - Quick start guide
