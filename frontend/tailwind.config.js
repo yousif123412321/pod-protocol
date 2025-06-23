@@ -47,10 +47,16 @@ module.exports = {
           text: {
             DEFAULT: '#E2E8F0',
             muted: '#94A3B8',
+            light: '#F8FAFC',
           },
           border: {
             DEFAULT: '#334155',
             light: '#475569',
+          },
+          accent: '#F43F5E',
+          bg: {
+            dark: '#1A1A2E',
+            darker: '#0F0F23',
           },
         },
       },
