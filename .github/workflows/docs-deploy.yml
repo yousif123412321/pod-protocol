@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      - 'index.html'
       - 'sdk/src/**'
       - 'cli/src/**'
       - 'programs/pod-com/src/**'
@@ -93,6 +94,12 @@ jobs:
           echo "📝 Generating SDK documentation..."
           cd sdk && bun run docs || echo "SDK documentation completed"
           echo "✅ Documentation generation completed"
+
+      - name: Copy root index.html to docs
+        run: |
+          echo "📄 Copying root index.html to docs directory..."
+          cp index.html docs/index.html
+          echo "✅ Root index.html copied to docs/"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
