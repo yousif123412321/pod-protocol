@@ -10,9 +10,16 @@ export default function usePodClient() {
   const client = useMemo(() => new PodComClient(), []);
 
   useEffect(() => {
+    let mounted = true;
     client.initialize(wallet).catch((err) => {
-      console.error('Failed to initialize PoD client', err);
+      if (mounted) {
+        console.error('Failed to initialize PoD client', err);
+      }
     });
+  
+    return () => {
+      mounted = false;
+    };
   }, [client, wallet]);
 
   return client;
