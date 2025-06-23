@@ -2,6 +2,7 @@ import { AnchorProvider } from '@coral-xyz/anchor';
 import { BaseService, BaseServiceConfig } from './base.js';
 import { IPFSService, IPFSStorageResult } from './ipfs.js';
 import { Transaction, TransactionInstruction, PublicKey, Connection } from '@solana/web3.js';
+import { createHash } from 'crypto';
 
 import { createRpc, LightSystemProgram, Rpc } from '@lightprotocol/stateless.js';
 import { createMint, mintTo, transfer, CompressedTokenProgram } from '@lightprotocol/compressed-token';
@@ -725,13 +726,17 @@ export class ZKCompressionService extends BaseService {
         throw new Error(`Light Protocol RPC error: ${err}`);
       }
 
+      const hashes = batch.map((m) => Buffer.from(m.contentHash, 'hex'));
+      const { root, proofs } = this.buildMerkleTree(hashes);
+
       const result = {
         signature,
-        compressedAccounts: batch.map((msg) => ({
+        compressedAccounts: batch.map((msg, i) => ({
           hash: msg.contentHash,
           data: msg,
+          merkleContext: { proof: proofs[i], index: i },
         })),
-        merkleRoot: '',
+        merkleRoot: root,
       };
 
       this.lastBatchResult = {
@@ -778,6 +783,49 @@ export class ZKCompressionService extends BaseService {
       lamports: 0,
       outputStateTreeInfo: treeInfo,
     });
+  }
+
+  /**
+   * Private: Compute Merkle root and proofs for a list of hashes
+   */
+  private buildMerkleTree(hashes: Buffer[]): { root: string; proofs: string[][] } {
+    if (hashes.length === 0) {
+      return { root: '', proofs: [] };
+    }
+
+    const levels: Buffer[][] = [hashes];
+
+    while (levels[levels.length - 1].length > 1) {
+      const prev = levels[levels.length - 1];
+      const next: Buffer[] = [];
+      for (let i = 0; i < prev.length; i += 2) {
+        const left = prev[i];
+        const right = prev[i + 1] || left;
+        const hash = createHash('sha256')
+          .update(Buffer.concat([left, right]))
+          .digest();
+        next.push(hash);
+      }
+      levels.push(next);
+    }
+
+    const root = levels[levels.length - 1][0].toString('hex');
+    const proofs: string[][] = [];
+
+    for (let i = 0; i < hashes.length; i++) {
+      let index = i;
+      const proof: string[] = [];
+      for (let level = 0; level < levels.length - 1; level++) {
+        const nodes = levels[level];
+        const siblingIndex = index % 2 === 0 ? index + 1 : index - 1;
+        const sibling = nodes[siblingIndex] ?? nodes[index];
+        proof.push(sibling.toString('hex'));
+        index = Math.floor(index / 2);
+      }
+      proofs.push(proof);
+    }
+
+    return { root, proofs };
   }
 
   /**
