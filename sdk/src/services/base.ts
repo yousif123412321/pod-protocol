@@ -66,6 +66,13 @@ export abstract class BaseService {
   }
 
   /**
+   * Remove the program reference to avoid using stale credentials
+   */
+  clearProgram(): void {
+    this.program = undefined;
+  }
+
+  /**
    * Set the IDL for read-only operations
    */
   setIDL(idl: any): void {

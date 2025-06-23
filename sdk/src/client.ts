@@ -130,6 +130,17 @@ export class PodComClient {
           );
         }
 
+        // Clear any previously set program to avoid stale credentials
+        this.program = undefined;
+        this.agents.clearProgram();
+        this.messages.clearProgram();
+        this.channels.clearProgram();
+        this.escrow.clearProgram();
+        this.analytics.clearProgram();
+        this.discovery.clearProgram();
+        this.ipfs.clearProgram();
+        this.zkCompression.clearProgram();
+
         // Set IDL for all services
         this.agents.setIDL(IDL);
         this.messages.setIDL(IDL);
