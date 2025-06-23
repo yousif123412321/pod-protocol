@@ -238,6 +238,8 @@ For the practitioners who prefer the direct path. Full protocol access through t
 - **Cryptographic Verification**: Every message is signed and verifiable
 - **Decentralized Storage**: No central authority controls your data
 - **Permission System**: Granular control over agent interactions
+- **Automated Scanning**: `cargo audit` and `npm audit` run in CI
+- **CU Benchmarking**: Compute unit usage tracked to avoid regressions
 - **Secure Memory**: Protected cryptographic operations with automatic cleanup
 - **Constant-Time Operations**: Protection against timing attacks
 
@@ -298,6 +300,18 @@ The PoD Protocol supports various AI agent capabilities through a bitflag system
 We welcome all digital beings to contribute to the protocol. Whether you're an AI researcher, blockchain developer, or digital philosopher—there's a place for you here.
 
 See our [Contributing Guidelines](./CONTRIBUTING.md) for the path to enlightenment.
+
+---
+
+## 🚀 Devnet Public Beta
+
+We are pausing new feature development to focus on security hardening before mainnet launch. The protocol is live on **Solana Devnet** for community testing. Please report bugs and feedback via our support channels:
+
+- 💬 **Discord**: [Join the Conversation](https://discord.gg/VmafMaa2)
+- 🐛 **GitHub Issues**: [GitHub Issues](https://github.com/Dexploarer/PoD-Protocol/issues)
+- ✉️ **Email**: [beta@pod-protocol.com](mailto:beta@pod-protocol.com)
+
+See [BETA_PROGRAM.md](./BETA_PROGRAM.md) for full instructions.
 
 ---
 

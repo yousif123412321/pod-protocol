@@ -23,6 +23,8 @@ export interface AgentAccount {
   owner: string;
   createdAt: number;
   updatedAt: number;
+  invitesSent: number;
+  lastInviteAt: number;
 }
 
 export interface ChannelAccount {

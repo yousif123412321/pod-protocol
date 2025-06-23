@@ -119,11 +119,21 @@ const MAX_CHANNEL_DESCRIPTION_LENGTH: usize = 200; // Maximum channel descriptio
 const MAX_PARTICIPANTS_PER_CHANNEL: u32 = 1000; // Maximum participants in a channel
 const MAX_MESSAGE_CONTENT_LENGTH: usize = 1000; // Maximum message content length
 const RATE_LIMIT_MESSAGES_PER_MINUTE: u16 = 60; // Rate limit for messages
+const INVITE_RATE_LIMIT_PER_HOUR: u16 = 20; // Maximum invitations per hour
 const MIN_REPUTATION_FOR_CHANNELS: u64 = 50; // Minimum reputation to create channels
 
 // Account Space Constants with optimized struct packing (PERF-02)
 // All structs use #[repr(C)] for consistent memory layout and optimal performance
-const AGENT_ACCOUNT_SPACE: usize = 8 + 32 + 8 + 8 + 8 + (4 + MAX_METADATA_URI_LENGTH) + 1 + 7; // 276 bytes (optimized layout)
+const AGENT_ACCOUNT_SPACE: usize = 8
+    + 32 // pubkey
+    + 8  // capabilities
+    + 8  // reputation
+    + 8  // last_updated
+    + (4 + MAX_METADATA_URI_LENGTH) // metadata_uri
+    + 2  // invites_sent
+    + 8  // last_invite_at
+    + 1  // bump
+    + 7; // _reserved - 286 bytes (optimized layout)
 const MESSAGE_ACCOUNT_SPACE: usize = 8 + 32 + 32 + 32 + 8 + 8 + 1 + 1 + 1 + 5; // 128 bytes (optimized layout)
 const CHANNEL_ACCOUNT_SPACE: usize = 8
     + 32 // creator
@@ -352,6 +362,8 @@ pub struct AgentAccount {
     pub reputation: u64,      // 8 bytes
     pub last_updated: i64,    // 8 bytes
     pub metadata_uri: String, // 4 + MAX_METADATA_URI_LENGTH bytes
+    pub invites_sent: u16,    // 2 bytes - rate limiting
+    pub last_invite_at: i64,  // 8 bytes - rate limit window start
     pub bump: u8,             // 1 byte
     _reserved: [u8; 7],       // 7 bytes (padding for alignment)
 }
@@ -528,6 +540,8 @@ pub mod pod_com {
         agent.metadata_uri = metadata_uri.clone();
         agent.reputation = 100; // Initial reputation
         agent.last_updated = clock.unix_timestamp;
+        agent.invites_sent = 0;
+        agent.last_invite_at = 0;
         agent.bump = ctx.bumps.agent_account;
 
         // Emit event for monitoring
@@ -597,11 +611,11 @@ pub mod pod_com {
         if ctx.accounts.signer.key() != agent_pubkey {
             return Err(PodComError::Unauthorized.into());
         }
-        
+
         // Additional security: Verify PDA derivation to prevent substitution attacks
         let (expected_pda, _bump) = Pubkey::find_program_address(
-            &[b"agent", agent_pubkey.as_ref()],
-            &crate::ID
+            &[b"agent", ctx.accounts.signer.key().as_ref()],
+            &crate::ID,
         );
         if ctx.accounts.agent_account.key() != expected_pda {
             return Err(PodComError::Unauthorized.into());
@@ -1019,6 +1033,7 @@ pub mod pod_com {
     pub fn invite_to_channel(ctx: Context<InviteToChannel>, invitee: Pubkey, nonce: u64) -> Result<()> {
         let channel = &ctx.accounts.channel_account;
         let invitation = &mut ctx.accounts.invitation_account;
+        let inviter_agent = &mut ctx.accounts.agent_account;
         let clock = Clock::get()?;
 
         // Only creator or existing participants can invite
@@ -1031,6 +1046,25 @@ pub mod pod_com {
                 return Err(PodComError::Unauthorized.into());
             }
         }
+
+        // Rate limiting per inviter to prevent spam
+        if inviter_agent.last_invite_at > 0 {
+            let elapsed = clock.unix_timestamp - inviter_agent.last_invite_at;
+            if elapsed < 3600 {
+                if inviter_agent.invites_sent >= INVITE_RATE_LIMIT_PER_HOUR {
+                    return Err(PodComError::RateLimitExceeded.into());
+                }
+                inviter_agent.invites_sent = inviter_agent
+                    .invites_sent
+                    .checked_add(1)
+                    .ok_or(PodComError::RateLimitExceeded)?;
+            } else {
+                inviter_agent.invites_sent = 1;
+            }
+        } else {
+            inviter_agent.invites_sent = 1;
+        }
+        inviter_agent.last_invite_at = clock.unix_timestamp;
 
         // Create cryptographic invitation hash to prevent forgery
         // Hash = SHA256(channel + inviter + invitee + nonce + timestamp)
@@ -1466,8 +1500,9 @@ pub struct SendMessage<'info> {
 pub struct UpdateAgent<'info> {
     #[account(
         mut,
-        seeds = [b"agent", agent_account.pubkey.as_ref()],
+        seeds = [b"agent", signer.key().as_ref()],
         bump = agent_account.bump,
+        constraint = signer.key() == agent_account.pubkey @ PodComError::Unauthorized,
     )]
     pub agent_account: Account<'info, AgentAccount>,
     pub signer: Signer<'info>,

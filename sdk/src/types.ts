@@ -50,6 +50,10 @@ export interface AgentAccount {
   reputation: number;
   /** Last update timestamp */
   lastUpdated: number;
+  /** Number of invitations sent in current window */
+  invitesSent: number;
+  /** Timestamp of last invitation window */
+  lastInviteAt: number;
   /** PDA bump seed */
   bump: number;
 }
