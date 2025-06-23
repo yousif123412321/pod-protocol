@@ -119,6 +119,8 @@ export class DiscoveryService extends BaseService {
           metadataUri: account.metadataUri,
           reputation: account.reputation?.toNumber() || 0,
           lastUpdated: getAccountLastUpdated(account),
+          invitesSent: account.invitesSent?.toNumber() || 0,
+          lastInviteAt: account.lastInviteAt?.toNumber() || 0,
           bump: account.bump,
         };
       });

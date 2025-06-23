@@ -113,6 +113,8 @@ export class AnalyticsService extends BaseService {
           metadataUri: account.metadataUri,
           reputation: account.reputation?.toNumber() || 0,
           lastUpdated: account.lastUpdated?.toNumber() || Date.now(),
+          invitesSent: account.invitesSent?.toNumber() || 0,
+          lastInviteAt: account.lastInviteAt?.toNumber() || 0,
           bump: account.bump,
         };
       });

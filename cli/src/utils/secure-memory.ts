@@ -3,7 +3,7 @@
  * in the PoD Protocol CLI
  */
 
-import sodium from 'node-sodium';
+import { randomBytes, createHash, timingSafeEqual } from 'crypto';
 
 /**
  * Secure buffer wrapper for sensitive data operations
@@ -13,17 +13,12 @@ export class SecureBuffer {
   private locked: boolean = false;
 
   constructor(size: number) {
-    // Allocate secure memory using sodium
-    this.buffer = sodium.sodium_malloc(size);
+    // Allocate buffer using Node.js Buffer
+    this.buffer = Buffer.alloc(size);
     
-    // Attempt to lock memory (may fail on some systems)
-    try {
-      sodium.sodium_mlock(this.buffer);
-      this.locked = true;
-    } catch (error) {
-      // Memory locking not available, continue without it
-      console.warn('Memory locking not available:', error);
-    }
+    // Note: Memory locking is not available in Node.js without native modules
+    // This is a simplified implementation for compatibility
+    this.locked = false;
   }
 
   /**
@@ -55,14 +50,19 @@ export class SecureBuffer {
    * Compare two buffers in constant time
    */
   static secureCompare(a: Buffer, b: Buffer): boolean {
-    return sodium.sodium_memcmp(a, b) === 0;
+    // Ensure buffers are same length for timing-safe comparison
+    if (a.length !== b.length) {
+      return false;
+    }
+    return timingSafeEqual(a, b);
   }
 
   /**
    * Securely wipe the buffer
    */
   wipe(): void {
-    sodium.sodium_memzero(this.buffer);
+    // Fill with zeros to clear sensitive data
+    this.buffer.fill(0);
   }
 
   /**
@@ -71,12 +71,8 @@ export class SecureBuffer {
   destroy(): void {
     try {
       this.wipe();
-      
-      if (this.locked) {
-        sodium.sodium_munlock(this.buffer);
-      }
-      
-      sodium.sodium_free(this.buffer);
+      // Note: In a real secure implementation, you'd want to overwrite
+      // the memory multiple times with random data
     } catch (error) {
       console.error('Error destroying secure buffer:', error);
     }
@@ -144,8 +140,8 @@ export class SecureHasher {
     secureInput.write(inputData);
     
     try {
-      // Compute hash using sodium
-      const hash = sodium.crypto_hash_sha256(secureInput.getBuffer());
+      // Compute hash using Node.js crypto
+      const hash = createHash('sha256').update(secureInput.getBuffer()).digest();
       return hash;
     } finally {
       // Always clean up secure memory
@@ -157,7 +153,7 @@ export class SecureHasher {
    * Generate secure random bytes
    */
   static generateSecureRandom(size: number): Buffer {
-    return sodium.randombytes_buf(size);
+    return randomBytes(size);
   }
 }
 
@@ -165,7 +161,7 @@ export class SecureHasher {
  * Utility function to securely clear a regular buffer
  */
 export function secureWipe(buffer: Buffer): void {
-  sodium.sodium_memzero(buffer);
+  buffer.fill(0);
 }
 
 /**
