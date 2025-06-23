@@ -280,8 +280,10 @@ export class IPFSService extends BaseService {
       .update(Buffer.concat([sha256Hash, Buffer.from([0xff])]))
       .digest();
 
-    // Zero out the first byte to ensure the value fits within the field size
-    keccakHash[0] = 0;
+    // Create a copy and zero out the first byte to ensure the value fits within the BN254 field size
+    const fieldSizedHash = Buffer.from(keccakHash);
+    fieldSizedHash[0] = 0;
+    return fieldSizedHash.toString('hex');
     return keccakHash.toString('hex');
   }
   
