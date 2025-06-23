@@ -16,6 +16,9 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import Link from 'next/link';
 import useStore from '../store/useStore';
 import MatrixRain from '../ui/MatrixRain';
+import AsyncErrorBoundary from '../AsyncErrorBoundary';
+import ResponsiveContainer from '../ui/ResponsiveContainer';
+import { cn } from '../../lib/utils';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -30,19 +33,62 @@ const navigation = [
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const { sidebarCollapsed, setSidebarCollapsed, user, notifications } = useStore();
   
   const unreadNotifications = notifications.filter(n => !n.read).length;
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth < 768) {
+        setSidebarCollapsed(true);
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, [setSidebarCollapsed]);
+
+  const handleMobileMenuToggle = () => {
+    if (isMobile) {
+      setMobileMenuOpen(!mobileMenuOpen);
+    } else {
+      setSidebarCollapsed(!sidebarCollapsed);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
       {/* Matrix Rain Background */}
       <MatrixRain />
       
+      {/* Mobile Overlay */}
+      <AnimatePresence>
+        {mobileMenuOpen && isMobile && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 transition-all duration-300 ${
-        sidebarCollapsed ? 'w-16' : 'w-64'
-      }`}>
+      <div className={cn(
+        'fixed inset-y-0 left-0 z-50 transition-all duration-300',
+        // Mobile: full width when open, hidden when closed
+        isMobile ? (
+          mobileMenuOpen ? 'w-64' : '-translate-x-full w-64'
+        ) : (
+          // Desktop: responsive width based on collapsed state
+          sidebarCollapsed ? 'w-16' : 'w-64'
+        )
+      )}>
         <div className="flex h-full flex-col bg-gray-900/95 backdrop-blur-sm border-r border-purple-500/20">
           {/* Logo */}
           <div className="flex h-16 shrink-0 items-center px-4">
@@ -74,16 +120,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`
-                  group flex items-center px-3 py-2 text-sm font-medium rounded-lg
-                  text-gray-300 hover:text-white hover:bg-purple-600/20
-                  transition-all duration-200
-                  ${sidebarCollapsed ? 'justify-center' : ''}
-                `}
+                className={cn(
+                  'group flex items-center px-3 py-3 md:py-2 text-sm md:text-base font-medium rounded-lg',
+                  'text-gray-300 hover:text-white hover:bg-purple-600/20 active:bg-purple-600/30',
+                  'transition-all duration-200 touch-manipulation',
+                  (sidebarCollapsed && !isMobile) ? 'justify-center' : '',
+                  'min-h-[44px] md:min-h-[40px]' // Touch target minimum
+                )}
               >
                 <item.icon className="h-5 w-5 shrink-0" />
                 <AnimatePresence>
-                  {!sidebarCollapsed && (
+                  {(!sidebarCollapsed || isMobile) && (
                     <motion.span
                       initial={{ opacity: 0, width: 0 }}
                       animate={{ opacity: 1, width: 'auto' }}
@@ -190,7 +237,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         
         {/* Page Content */}
         <main className="relative z-10 p-6">
-          {children}
+          <AsyncErrorBoundary
+            onRetry={() => window.location.reload()}
+            fallback={
+              <div className="min-h-[400px] flex items-center justify-center">
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-white mb-2">Unable to load content</h3>
+                  <p className="text-gray-400">Please refresh the page to try again.</p>
+                </div>
+              </div>
+            }
+          >
+            {children}
+          </AsyncErrorBoundary>
         </main>
       </div>
       

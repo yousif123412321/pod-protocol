@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -17,20 +17,36 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import useStore from '../../components/store/useStore';
 import { Channel, ChannelType } from '../../components/store/types';
 import usePodClient from '../../hooks/usePodClient';
+import LoadingState from '../../components/ui/LoadingState';
+import { SkeletonChannelList } from '../../components/ui/SkeletonLoader';
 
 const ChannelsPage = () => {
   const router = useRouter();
-  const { channels, setChannels, setChannelsLoading, setChannelsError, setActiveChannel } = useStore();
-  const client = usePodClient();
+  const { channels, setChannels, setChannelsLoading, setChannelsError, setActiveChannel, channelsLoading, channelsError } = useStore();
+  const { client, isInitialized, initError } = usePodClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<ChannelType | 'all'>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    type: ChannelType.GROUP,
+    isPrivate: false
+  });
 
   // Load channels from the protocol
   useEffect(() => {
+    if (!isInitialized || initError) {
+      return;
+    }
+
     const loadChannels = async () => {
       try {
         setChannelsLoading(true);
+        setChannelsError(null);
+        
         const fetched = await client.channels.getAllChannels(50);
         const processed: Channel[] = fetched.map((c) => ({
           id: c.pubkey.toBase58(),
@@ -54,14 +70,107 @@ const ChannelsPage = () => {
         setChannels(processed);
       } catch (err) {
         console.error('Failed to fetch channels', err);
-        setChannelsError('Failed to load channels');
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load channels';
+        setChannelsError(errorMessage);
       } finally {
         setChannelsLoading(false);
       }
     };
 
     loadChannels();
-  }, [client, setChannels, setChannelsLoading, setChannelsError]);
+  }, [client, isInitialized, initError, setChannels, setChannelsLoading, setChannelsError]);
+
+  const handleCreateChannel = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name.trim()) {
+      setCreateError('Channel name is required');
+      return;
+    }
+
+    if (formData.name.length < 3) {
+      setCreateError('Channel name must be at least 3 characters');
+      return;
+    }
+
+    if (formData.name.length > 50) {
+      setCreateError('Channel name must be less than 50 characters');
+      return;
+    }
+
+    setIsCreating(true);
+    setCreateError(null);
+
+    try {
+      const newChannel = await client.channels.createChannel({
+        name: formData.name.trim(),
+        description: formData.description.trim() || undefined,
+        visibility: formData.isPrivate ? 'private' : 'public',
+        channelType: formData.type
+      });
+
+      // Add new channel to local state
+      const processedChannel: Channel = {
+        id: newChannel.pubkey.toBase58(),
+        name: newChannel.name,
+        description: newChannel.description,
+        type: formData.type,
+        participants: [],
+        agents: [],
+        owner: newChannel.creator.toBase58(),
+        isPrivate: formData.isPrivate,
+        createdAt: new Date(),
+        lastActivity: new Date(),
+        messageCount: 0,
+        settings: {
+          allowFileUploads: true,
+          maxParticipants: 100,
+          moderationEnabled: false,
+          allowedFileTypes: [],
+        },
+      };
+
+      setChannels([processedChannel, ...channels]);
+      
+      // Reset form
+      setFormData({
+        name: '',
+        description: '',
+        type: ChannelType.GROUP,
+        isPrivate: false
+      });
+      
+      setShowCreateModal(false);
+    } catch (err) {
+      console.error('Failed to create channel:', err);
+      setCreateError(err instanceof Error ? err.message : 'Failed to create channel');
+    } finally {
+      setIsCreating(false);
+    }
+  }, [formData, client, channels, setChannels]);
+
+  const handleInputChange = useCallback((field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (createError) setCreateError(null);
+  }, [createError]);
+
+  const resetForm = useCallback(() => {
+    setFormData({
+      name: '',
+      description: '',
+      type: ChannelType.GROUP,
+      isPrivate: false
+    });
+    setCreateError(null);
+    setIsCreating(false);
+  }, []);
+
+  const handleModalClose = useCallback(() => {
+    if (!isCreating) {
+      setShowCreateModal(false);
+      resetForm();
+    }
+  }, [isCreating, resetForm]);
 
   const filteredChannels = channels.filter(channel => {
     const matchesSearch = channel.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -175,10 +284,55 @@ const ChannelsPage = () => {
           {filteredChannels.length} channel{filteredChannels.length !== 1 ? 's' : ''}
         </div>
 
+        {/* Client Initialization Error */}
+        {initError && (
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 mb-6">
+            <h3 className="text-lg font-bold text-red-400 mb-2">Connection Error</h3>
+            <p className="text-red-300 mb-4">{initError}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+            >
+              Retry Connection
+            </button>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {!isInitialized && !initError && (
+          <LoadingState 
+            message="Initializing PoD Client..." 
+            submessage="Connecting to Solana network and setting up secure communication"
+            size="lg"
+          />
+        )}
+
+        {/* Channels Loading */}
+        {isInitialized && channelsLoading && (
+          <div>
+            <SkeletonChannelList count={5} />
+          </div>
+        )}
+
+        {/* Channels Error */}
+        {isInitialized && channelsError && !channelsLoading && (
+          <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-6">
+            <h3 className="text-lg font-bold text-orange-400 mb-2">Failed to Load Channels</h3>
+            <p className="text-orange-300 mb-4">{channelsError}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
+            >
+              Retry Loading
+            </button>
+          </div>
+        )}
+
         {/* Channels List */}
-        <div className="space-y-4">
-          <AnimatePresence>
-            {filteredChannels.map((channel, index) => {
+        {isInitialized && !channelsLoading && !channelsError && (
+          <div className="space-y-4">
+            <AnimatePresence>
+              {filteredChannels.map((channel, index) => {
               const IconComponent = getChannelIcon(channel.type);
               
               return (
@@ -251,44 +405,45 @@ const ChannelsPage = () => {
                 </motion.div>
               );
             })}
-          </AnimatePresence>
-        </div>
-
-        {/* Empty State */}
-        {filteredChannels.length === 0 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12"
-          >
-            <div className="text-6xl mb-4">💬</div>
-            <h3 className="text-xl font-bold text-white mb-2">No channels found</h3>
-            <p className="text-gray-400 mb-6">
-              {searchQuery || selectedType !== 'all' 
-                ? 'Try adjusting your search criteria'
-                : 'Create your first channel to start collaborating with AI agents'
-              }
-            </p>
-            <div className="flex justify-center space-x-4">
-              {(searchQuery || selectedType !== 'all') && (
-                <button
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSelectedType('all');
-                  }}
-                  className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
-                >
-                  Clear Filters
-                </button>
-              )}
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+            </AnimatePresence>
+            
+            {/* Empty State */}
+            {filteredChannels.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-12"
               >
-                Create Channel
-              </button>
-            </div>
-          </motion.div>
+                <div className="text-6xl mb-4">💬</div>
+                <h3 className="text-xl font-bold text-white mb-2">No channels found</h3>
+                <p className="text-gray-400 mb-6">
+                  {searchQuery || selectedType !== 'all' 
+                    ? 'Try adjusting your search criteria'
+                    : 'Create your first channel to start collaborating with AI agents'
+                  }
+                </p>
+                <div className="flex justify-center space-x-4">
+                  {(searchQuery || selectedType !== 'all') && (
+                    <button
+                      onClick={() => {
+                        setSearchQuery('');
+                        setSelectedType('all');
+                      }}
+                      className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                    >
+                      Clear Filters
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                  >
+                    Create Channel
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </div>
         )}
       </div>
 
@@ -300,7 +455,7 @@ const ChannelsPage = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-            onClick={() => setShowCreateModal(false)}
+            onClick={handleModalClose}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
@@ -310,7 +465,12 @@ const ChannelsPage = () => {
               className="bg-gray-900 rounded-xl p-6 border border-purple-500/20 max-w-md w-full mx-4"
             >
               <h2 className="text-xl font-bold text-white mb-4">Create New Channel</h2>
-              <div className="space-y-4">
+              {createError && (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 mb-4">
+                  <p className="text-red-400 text-sm">{createError}</p>
+                </div>
+              )}
+              <form onSubmit={handleCreateChannel} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Channel Name
@@ -318,7 +478,13 @@ const ChannelsPage = () => {
                   <input
                     type="text"
                     placeholder="Enter channel name"
-                    className="w-full px-3 py-2 bg-gray-800/50 border border-purple-500/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    disabled={isCreating}
+                    className="w-full px-3 py-2 bg-gray-800/50 border border-purple-500/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 disabled:opacity-50"
+                    required
+                    minLength={3}
+                    maxLength={50}
                   />
                 </div>
                 <div>
@@ -328,14 +494,23 @@ const ChannelsPage = () => {
                   <textarea
                     placeholder="Describe the purpose of this channel"
                     rows={3}
-                    className="w-full px-3 py-2 bg-gray-800/50 border border-purple-500/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none"
+                    value={formData.description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    disabled={isCreating}
+                    className="w-full px-3 py-2 bg-gray-800/50 border border-purple-500/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none disabled:opacity-50"
+                    maxLength={200}
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Channel Type
                   </label>
-                  <select className="w-full px-3 py-2 bg-gray-800/50 border border-purple-500/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50">
+                  <select 
+                    value={formData.type}
+                    onChange={(e) => handleInputChange('type', e.target.value as ChannelType)}
+                    disabled={isCreating}
+                    className="w-full px-3 py-2 bg-gray-800/50 border border-purple-500/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 disabled:opacity-50"
+                  >
                     <option value={ChannelType.GROUP}>Group Chat</option>
                     <option value={ChannelType.AGENT_CHAT}>Agent Chat</option>
                     <option value={ChannelType.DIRECT}>Direct Message</option>
@@ -345,22 +520,35 @@ const ChannelsPage = () => {
                   <input
                     type="checkbox"
                     id="private"
-                    className="rounded border-purple-500/20 bg-gray-800/50 text-purple-600 focus:ring-purple-500/50"
+                    checked={formData.isPrivate}
+                    onChange={(e) => handleInputChange('isPrivate', e.target.checked)}
+                    disabled={isCreating}
+                    className="rounded border-purple-500/20 bg-gray-800/50 text-purple-600 focus:ring-purple-500/50 disabled:opacity-50"
                   />
                   <label htmlFor="private" className="text-sm text-gray-300">
                     Make this channel private
                   </label>
                 </div>
-              </div>
+              </form>
               <div className="flex justify-end space-x-3 mt-6">
                 <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                  type="button"
+                  onClick={handleModalClose}
+                  disabled={isCreating}
+                  className="px-4 py-2 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
-                <button className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
-                  Create Channel
+                <button 
+                  type="submit"
+                  onClick={handleCreateChannel}
+                  disabled={isCreating || !formData.name.trim()}
+                  className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {isCreating && (
+                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                  )}
+                  <span>{isCreating ? 'Creating...' : 'Create Channel'}</span>
                 </button>
               </div>
             </motion.div>

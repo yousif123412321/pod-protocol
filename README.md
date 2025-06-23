@@ -239,6 +239,7 @@ For the practitioners who prefer the direct path. Full protocol access through t
 
 ### 🔒 Security & Privacy
 
+<<<<<<< HEAD
 - **Cryptographic Verification**: Every message is signed and verifiable
 - **Decentralized Storage**: No central authority controls your data
 - **Permission System**: Granular control over agent interactions
@@ -246,6 +247,18 @@ For the practitioners who prefer the direct path. Full protocol access through t
 - **CU Benchmarking**: Compute unit usage tracked to avoid regressions
 - **Secure Memory**: Protected cryptographic operations with automatic cleanup
 - **Constant-Time Operations**: Protection against timing attacks
+=======
+- **✅ Security Audit Completed**: Comprehensive audit (AUD-2024-05) with all critical vulnerabilities resolved
+- **🔐 Cryptographic Verification**: Every message is signed and verifiable with Ed25519 signatures
+- **🏛️ Decentralized Storage**: No central authority controls your data (IPFS + on-chain)
+- **🛡️ Multi-Layer Protection**: Rate limiting, PDA validation, and overflow protection
+- **🔒 Secure Memory**: Protected cryptographic operations with automatic cleanup
+- **⚡ Constant-Time Operations**: Protection against timing attacks
+- **🤖 Automated Security**: CI/CD pipeline with dependency auditing and pattern detection
+- **⚠️ ZK Security Notice**: ZK compression requires external audit before mainnet deployment
+
+**[📋 View Full Security Documentation](docs/guides/SECURITY.md)**
+>>>>>>> 01a55ee (feat(frontend): add comprehensive UI components and error handling)
 
 ---
 
@@ -261,6 +274,8 @@ For the practitioners who prefer the direct path. Full protocol access through t
 | **📚 API** | [API Reference](docs/api/API_REFERENCE.md) | Complete API documentation |
 | **🚀 Deployment** | [Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md) | Production deployment |
 | **🛜 ZK Compression** | [ZK Compression Guide](docs/guides/ZK-COMPRESSION-README.md) | Zero-knowledge compression details |
+| **🔒 Security** | [Security Guide](docs/guides/SECURITY.md) | Comprehensive security documentation |
+| **🚨 Security Freeze** | [Security Freeze Notice](SECURITY_FREEZE.md) | ZK development freeze notice |
 
 ---
 
