@@ -22,7 +22,7 @@ no-log-ix-name = []
 anchor-lang = { version = "0.29.0", default-features = false, features = ["init-if-needed"] }
 
 # Use solana-program for compatibility with Anchor macros and Light Protocol
-solana-program = { version = "=1.18.22", default-features = false }
+solana-program = { version = "=2.3.0", default-features = false }
 
 # Light Protocol ZK Compression dependencies - using compatible versions  
 light-compressed-token = { version = "0.6.0", features = ["cpi"] }
