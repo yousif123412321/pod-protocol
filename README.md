@@ -247,7 +247,7 @@ For the practitioners who prefer the direct path. Full protocol access through t
 - **Secure Memory**: Protected cryptographic operations with automatic cleanup
 - **Constant-Time Operations**: Protection against timing attacks
 =======
-- **✅ Security Audit Completed**: Comprehensive audit (AUD-2024-05) with all critical vulnerabilities resolved
+- **✅ Security Audit Completed**: Comprehensive audit (AUD-2025-06) with all critical vulnerabilities resolved
 - **🔐 Cryptographic Verification**: Every message is signed and verifiable with Ed25519 signatures
 - **🏛️ Decentralized Storage**: No central authority controls your data (IPFS + on-chain)
 - **🛡️ Multi-Layer Protection**: Rate limiting, PDA validation, and overflow protection
