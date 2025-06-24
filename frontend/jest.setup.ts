@@ -55,23 +55,23 @@ jest.mock('@pod-protocol/sdk', () => ({
 // Mock Framer Motion to avoid animation issues in tests
 jest.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
-    button: ({ children, ...props }: any) => <button {...props}>{children}</button>,
-    section: ({ children, ...props }: any) => <section {...props}>{children}</section>,
+    div: ({ children, ...props }: any) => React.createElement('div', props, children),
+    button: ({ children, ...props }: any) => React.createElement('button', props, children),
+    section: ({ children, ...props }: any) => React.createElement('section', props, children),
   },
   AnimatePresence: ({ children }: any) => children,
 }));
 
 // Mock Heroicons
 jest.mock('@heroicons/react/24/outline', () => ({
-  PlusIcon: () => <svg data-testid="plus-icon" />,
-  MagnifyingGlassIcon: () => <svg data-testid="search-icon" />,
-  ChatBubbleLeftRightIcon: () => <svg data-testid="chat-icon" />,
-  UserGroupIcon: () => <svg data-testid="user-group-icon" />,
-  EllipsisVerticalIcon: () => <svg data-testid="ellipsis-icon" />,
-  HashtagIcon: () => <svg data-testid="hashtag-icon" />,
-  LockClosedIcon: () => <svg data-testid="lock-icon" />,
-  ClockIcon: () => <svg data-testid="clock-icon" />,
+  PlusIcon: () => React.createElement('svg', { 'data-testid': 'plus-icon' }),
+  MagnifyingGlassIcon: () => React.createElement('svg', { 'data-testid': 'search-icon' }),
+  ChatBubbleLeftRightIcon: () => React.createElement('svg', { 'data-testid': 'chat-icon' }),
+  UserGroupIcon: () => React.createElement('svg', { 'data-testid': 'user-group-icon' }),
+  EllipsisVerticalIcon: () => React.createElement('svg', { 'data-testid': 'ellipsis-icon' }),
+  HashtagIcon: () => React.createElement('svg', { 'data-testid': 'hashtag-icon' }),
+  LockClosedIcon: () => React.createElement('svg', { 'data-testid': 'lock-icon' }),
+  ClockIcon: () => React.createElement('svg', { 'data-testid': 'clock-icon' }),
 }));
 
 // Mock react-hot-toast

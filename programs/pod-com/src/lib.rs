@@ -1408,7 +1408,7 @@ pub mod pod_com {
         // Use provided metadata_hash for participant compression
         let metadata_hash = metadata_hash;
 
-        let compressed_participant = CompressedChannelParticipant {
+        let _compressed_participant = CompressedChannelParticipant {
             channel: channel.key(),
             participant: agent.key(),
             joined_at: clock.unix_timestamp,
@@ -1452,17 +1452,11 @@ pub mod pod_com {
             return Err(PodComError::Unauthorized.into());
         }
 
-<<<<<<< HEAD
-        // Create batch sync proof using Light Protocol's batch compression
-        for (_i, _hash) in message_hashes.iter().enumerate() {
-            // Compression logic would be implemented here using Light Protocol
-=======
         // Validate sync timestamp is reasonable (within 1 hour of current time)
         let current_timestamp = clock.unix_timestamp;
         let time_diff = (current_timestamp - sync_timestamp).abs();
         if time_diff > 3600 {
             return Err(PodComError::InvalidTimestamp.into());
->>>>>>> af43692 (feat(zk-compression): enhance validation and error handling for compression commands)
         }
 
         // Light Protocol batch compression implementation
@@ -1476,9 +1470,7 @@ pub mod pod_com {
             }
 
             // Create Poseidon hash for Light Protocol compatibility
-            let mut hasher = Poseidon::new();
-            hasher.hash(&hash[..]);
-            let compressed_hash = hasher.finalize();
+            let compressed_hash = Poseidon::hash(hash).map_err(|_| PodComError::HashingFailed)?;
 
             // Store compressed account data
             compressed_data.push(compressed_hash);

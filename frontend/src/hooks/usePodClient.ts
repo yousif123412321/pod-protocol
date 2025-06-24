@@ -1,15 +1,10 @@
 'use client';
 
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
-<<<<<<< HEAD
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { PodComClient, PodComConfig } from '@pod-protocol/sdk';
 import { PublicKey } from '@solana/web3.js';
-=======
-import { useMemo, useEffect, useState } from 'react';
-import { PodComClient } from '@pod-protocol/sdk';
 import toast from 'react-hot-toast';
->>>>>>> 01a55ee (feat(frontend): add comprehensive UI components and error handling)
 
 export default function usePodClient() {
   const wallet = useAnchorWallet();
@@ -78,9 +73,6 @@ export default function usePodClient() {
   
     return () => {
       mounted = false;
-<<<<<<< HEAD
-      client.secureCleanup();
-=======
       // Cleanup client on unmount
       if (client && typeof client.secureCleanup === 'function') {
         try {
@@ -89,7 +81,6 @@ export default function usePodClient() {
           console.warn('Error during client cleanup:', err);
         }
       }
->>>>>>> 01a55ee (feat(frontend): add comprehensive UI components and error handling)
     };
   }, [client, wallet]);
 

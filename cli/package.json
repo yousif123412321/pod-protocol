@@ -67,7 +67,7 @@
     "@inquirer/core": "10.1.13",
     "@lightprotocol/compressed-token": "0.22.0",
     "@lightprotocol/stateless.js": "0.22.0",
-    "@pod-protocol/sdk": "^1.5.0",
+    "@pod-protocol/sdk": "^1.4.5",
     "@solana/spl-token": "0.4.13",
     "@solana/wallet-adapter-base": "0.9.27",
     "@solana/web3.js": "1.98.2",

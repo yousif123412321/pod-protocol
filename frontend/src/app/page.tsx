@@ -13,12 +13,14 @@ import {
   LockClosedIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';
-import DashboardLayout from '../../components/layout/DashboardLayout';
-import useStore from '../../components/store/useStore';
-import { Channel, ChannelType } from '../../components/store/types';
-import usePodClient from '../../hooks/usePodClient';
-import LoadingState from '../../components/ui/LoadingState';
-import { SkeletonChannelList } from '../../components/ui/SkeletonLoader';
+import DashboardLayout from '../components/layout/DashboardLayout';
+import useStore from '../components/store/useStore';
+import { Channel, ChannelType } from '../components/store/types';
+import usePodClient from '../hooks/usePodClient';
+import LoadingState from '../components/ui/LoadingState';
+import { SkeletonChannelList } from '../components/ui/SkeletonLoader';
+import ResponsiveContainer from '../components/ui/ResponsiveContainer';
+import { cn } from '../lib/utils';
 
 const ChannelsPage = () => {
   const router = useRouter();

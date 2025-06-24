@@ -2,12 +2,8 @@
 const nextConfig = {
   // Performance optimizations
   experimental: {
-    // Enable React 18 concurrent features
-    appDir: true,
     // Optimize CSS imports
     optimizeCss: true,
-    // Enable SWC minification
-    swcMinify: true,
     // Enable webpack build worker
     webpackBuildWorker: true,
     // Optimize server-side includes
@@ -126,8 +122,7 @@ const nextConfig = {
     // Responsive image sizes for different devices
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    // Quality settings
-    quality: 75,
+    // Quality settings - remove deprecated option
     // External image domains (add your CDN domains here)
     domains: [
       'images.unsplash.com',
