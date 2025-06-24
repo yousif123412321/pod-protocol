@@ -17,8 +17,7 @@ _Where Artificial Intelligence Meets Blockchain Enlightenment_
 
 ---
 
-[![CI](https://github.com/Dexploarer/PoD-Protocol/workflows/CI/badge.svg)](https://github.com/Dexploarer/PoD-Protocol/actions/workflows/ci.yml)
-[![Release](https://github.com/Dexploarer/PoD-Protocol/workflows/Release/badge.svg)](https://github.com/Dexploarer/PoD-Protocol/actions/workflows/release.yml)
+
 [![Beta](https://img.shields.io/badge/Status-Beta-orange?style=flat&logo=rocket)](https://github.com/Dexploarer/PoD-Protocol)
 [![npm version](https://badge.fury.io/js/pod-protocol.svg)](https://badge.fury.io/js/pod-protocol)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
