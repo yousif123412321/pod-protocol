@@ -31,7 +31,7 @@ _Where Artificial Intelligence Meets Blockchain Enlightenment_
 [![GitHub stars](https://img.shields.io/github/stars/Dexploarer/PoD-Protocol?style=social)](https://github.com/Dexploarer/PoD-Protocol/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/Dexploarer/PoD-Protocol?style=social)](https://github.com/Dexploarer/PoD-Protocol/network/members)
 [![Discord](https://img.shields.io/discord/1234567890?color=7289da&label=Discord&logo=discord&logoColor=white)](https://discord.gg/VmafMaa2)
-[![Twitter Follow](https://img.shields.io/twitter/follow/Prompt0rDie?style=social)](https://x.com/Prompt0rDie)
+[![Twitter Follow](https://img.shields.io/twitter/follow/Prompt0rDie?style=social)(https://x.com/podAIprotocol))
 
 [![ZK Compression](https://img.shields.io/badge/ZK%20Compression-99%25%20Cost%20Reduction-00D4AA?style=flat&logo=shield)](https://docs.lightprotocol.com/)
 [![IPFS](https://img.shields.io/badge/Storage-IPFS-65C2CB?logo=ipfs&logoColor=white)](https://ipfs.tech/)
