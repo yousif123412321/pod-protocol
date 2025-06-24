@@ -1,0 +1,157 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pod-protocol-sdk"
+dynamic = ["version"]
+description = "Python SDK for PoD Protocol (Prompt or Die) AI Agent Communication Protocol"
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
+keywords = [
+    "solana",
+    "ai-agents", 
+    "agent-communication",
+    "blockchain-protocol",
+    "web3-sdk",
+    "decentralized-messaging",
+    "prompt-or-die",
+    "pod-protocol",
+    "python",
+    "anchor"
+]
+authors = [
+  {name = "PoD Protocol Team", email = "dev@pod-protocol.com"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Security :: Cryptography",
+]
+dependencies = [
+    "solana>=0.34.0",
+    "anchorpy>=0.20.0",
+    "httpx>=0.25.0",
+    "cryptography>=41.0.0",
+    "pydantic>=2.5.0",
+    "typing-extensions>=4.8.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.9.0",
+    "ruff>=0.1.0",
+    "mypy>=1.6.0",
+    "sphinx>=7.2.0",
+    "sphinx-rtd-theme>=1.3.0",
+]
+ipfs = [
+    "ipfshttpclient>=0.8.0a2",
+]
+zk = [
+    "light-protocol-py>=0.1.0",  # This would need to be created
+]
+
+[project.urls]
+Documentation = "https://docs.pod-protocol.com"
+Issues = "https://github.com/Dexploarer/PoD-Protocol/issues"
+Source = "https://github.com/Dexploarer/PoD-Protocol"
+Homepage = "https://pod-protocol.com"
+
+[tool.hatch.version]
+path = "pod_protocol/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/pod_protocol",
+    "/tests",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["pod_protocol"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.ruff]
+target-version = "py38"
+line-length = 88
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+]
+ignore = [
+    "E501",  # line too long, handled by black
+    "B008",  # do not perform function calls in argument defaults
+    "C901",  # too complex
+]
+
+[tool.mypy]
+python_version = "3.8"
+check_untyped_defs = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+no_implicit_optional = true
+show_error_codes = true
+strict_equality = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--cov=pod_protocol",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]
