@@ -3,8 +3,12 @@
  * Test runner script for PoD Protocol JavaScript SDK
  */
 
-const { spawn } = require('child_process');
-const path = require('path');
+import { spawn } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function runCommand(command, args, options = {}) {
   return new Promise((resolve, reject) => {
@@ -32,6 +36,35 @@ function runCommand(command, args, options = {}) {
 
 async function main() {
   const args = process.argv.slice(2);
+  
+  // Show help if requested
+  if (args.includes('--help') || args.includes('-h')) {
+    console.log(`
+PoD Protocol JavaScript SDK Test Runner
+
+Usage: node run_tests.js [options] [test-type]
+
+Test Types:
+  unit         Run unit tests only
+  integration  Run integration tests only  
+  e2e          Run end-to-end tests only
+  all          Run all tests (default)
+
+Options:
+  --coverage   Generate coverage report
+  --watch      Run tests in watch mode
+  --verbose    Run tests in verbose mode
+  --fast       Run tests with reduced timeout
+  --help, -h   Show this help message
+
+Examples:
+  node run_tests.js unit --coverage
+  node run_tests.js integration --verbose
+  node run_tests.js e2e
+  node run_tests.js all --coverage
+    `);
+    return;
+  }
   
   // Parse arguments
   const testType = args.find(arg => ['unit', 'integration', 'e2e', 'all'].includes(arg)) || 'all';
@@ -79,7 +112,8 @@ async function main() {
 }
 
 // Handle CLI execution
-if (require.main === module) {
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
   main().catch(error => {
     console.error('Error running tests:', error);
     process.exit(1);
