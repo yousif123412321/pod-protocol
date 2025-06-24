@@ -338,11 +338,208 @@ try {
 
 ## 🧪 Testing
 
-```bash
-npm test
-npm run test:coverage
+The JavaScript SDK includes a comprehensive test suite covering all functionality with unit, integration, and end-to-end tests.
+
+### Test Structure
+
+```
+tests/
+├── basic.test.js           # Basic SDK functionality
+├── agent.test.js          # Agent service tests
+├── message.test.js        # Message service tests
+├── zk-compression.test.js # ZK compression tests
+├── ipfs.test.js          # IPFS service tests
+├── integration.test.js    # Service integration tests
+├── merkle-tree.test.js   # Merkle tree functionality
+├── e2e.test.js           # End-to-end protocol tests
+├── setup.js              # Test configuration
+└── conftest.js           # Test fixtures
 ```
 
+### Running Tests
+
+#### Quick Start
+```bash
+# Install dependencies
+npm install
+
+# Run all tests
+npm test
+
+# Run with coverage
+npm run test:coverage
+
+# Run specific test types
+npm run test:unit          # Unit tests only
+npm run test:integration   # Integration tests only
+npm run test:e2e          # End-to-end tests only
+
+# Watch mode for development
+npm run test:watch
+```
+
+#### Advanced Test Commands
+```bash
+# Run tests in parallel
+npm test -- --maxWorkers=4
+
+# Run specific test file
+npm test agent.test.js
+
+# Run tests matching pattern
+npm test -- --testNamePattern="agent registration"
+
+# Run tests with verbose output
+npm test -- --verbose
+
+# Generate detailed coverage report
+npm run test:coverage -- --coverage --collectCoverageFrom="src/**/*.js"
+```
+
+#### Using the Test Runner
+```bash
+# Run with custom test runner
+node run_tests.js all --coverage --verbose
+
+# Run only fast tests (skip slow integration tests)
+node run_tests.js unit --fast
+
+# Run specific test type
+node run_tests.js e2e --verbose
+```
+
+### Test Configuration
+
+The SDK uses Jest with custom configuration:
+
+```javascript
+// jest.config.js
+export default {
+  preset: 'jest-node-environment',
+  testEnvironment: 'node',
+  extensionsToTreatAsEsm: ['.js'],
+  transform: {
+    '^.+\\.js$': ['babel-jest', { 
+      presets: [['@babel/preset-env', { targets: { node: 'current' } }]] 
+    }],
+  },
+  testMatch: ['<rootDir>/tests/**/*.test.js'],
+  collectCoverageFrom: ['src/**/*.js', '!src/**/*.test.js'],
+  coverageDirectory: 'coverage',
+  testTimeout: 30000,
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
+};
+```
+
+### Test Categories
+
+#### Unit Tests
+- Service initialization and configuration
+- Individual method functionality
+- Input validation and error handling
+- Data transformation and utilities
+
+#### Integration Tests
+- Service-to-service communication
+- Cross-service data flow
+- Analytics and discovery integration
+- ZK compression with IPFS
+
+#### End-to-End Tests
+- Complete protocol workflows
+- Agent registration → messaging → status updates
+- Channel creation → joining → messaging
+- Escrow creation → condition fulfillment → release
+- Real-world usage scenarios
+
+### Mock Strategy
+
+Tests use a comprehensive mocking strategy:
+
+```javascript
+// Example: Mocking Solana connection
+jest.mock('@solana/web3.js', () => ({
+  ...jest.requireActual('@solana/web3.js'),
+  Connection: jest.fn().mockImplementation(() => ({
+    requestAirdrop: jest.fn().mockResolvedValue('mockTxSignature'),
+    getAccountInfo: jest.fn().mockResolvedValue(null),
+    sendTransaction: jest.fn().mockResolvedValue('mockTxSignature'),
+  })),
+}));
+```
+
+### Coverage Requirements
+
+- **Minimum Coverage**: 80% overall
+- **Critical Services**: 90% coverage required
+- **Core Utilities**: 95% coverage required
+
+```bash
+# Check coverage
+npm run test:coverage
+
+# View detailed coverage report
+open coverage/lcov-report/index.html
+```
+
+### Continuous Integration
+
+Tests run automatically on:
+- Pull requests
+- Pushes to main branch
+- Release tags
+- Nightly builds
+
+```yaml
+# Example CI configuration
+- name: Run tests
+  run: |
+    npm ci
+    npm run test:all
+    npm run test:coverage
+```
+
+### Writing New Tests
+
+When adding new functionality:
+
+1. **Write unit tests** for individual methods
+2. **Add integration tests** for service interactions
+3. **Include error cases** and edge conditions
+4. **Update e2e tests** for new workflows
+5. **Maintain coverage** above minimum thresholds
+
+```javascript
+// Example test structure
+describe('NewService', () => {
+  beforeEach(() => {
+    // Setup test environment
+  });
+
+  describe('methodName', () => {
+    it('should handle valid input', () => {
+      // Test implementation
+    });
+
+    it('should reject invalid input', () => {
+      // Error case testing
+    });
+  });
+});
+```
+
+### Performance Testing
+
+```bash
+# Run performance benchmarks
+npm run test:performance
+
+# Memory usage tests
+npm run test:memory
+
+# Load testing
+npm run test:load
+```
 ## 📚 Examples
 
 Check out the [examples directory](./examples/) for complete usage examples:

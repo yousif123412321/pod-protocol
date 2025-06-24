@@ -280,11 +280,314 @@ except Exception as e:
 
 ## 🧪 Testing
 
-```bash
-pytest
-pytest --cov=pod_protocol
+The Python SDK includes a comprehensive test suite covering all functionality with unit, integration, and end-to-end tests.
+
+### Test Structure
+
+```
+tests/
+├── test_basic.py          # Basic SDK functionality
+├── test_agent.py          # Agent service tests
+├── test_message.py        # Message service tests
+├── test_zk_compression.py # ZK compression tests
+├── test_ipfs.py          # IPFS service tests
+├── test_integration.py    # Service integration tests
+├── test_merkle_tree.py   # Merkle tree functionality
+├── test_e2e.py           # End-to-end protocol tests
+├── conftest.py           # Test configuration and fixtures
+└── pytest.ini           # Pytest configuration
 ```
 
+### Running Tests
+
+#### Quick Start
+```bash
+# Install dependencies
+pip install -e ".[test]"
+
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=pod_protocol --cov-report=html
+
+# Run specific test types
+pytest -m unit              # Unit tests only
+pytest -m integration       # Integration tests only
+pytest -m e2e               # End-to-end tests only
+
+# Run specific test file
+pytest tests/test_agent.py
+
+# Run tests matching pattern
+pytest -k "test_agent_registration"
+```
+
+#### Advanced Test Commands
+```bash
+# Run tests in parallel
+pytest -n auto
+
+# Run with verbose output
+pytest -v
+
+# Run only fast tests (skip slow integration tests)
+pytest -m "not slow"
+
+# Generate detailed coverage report
+pytest --cov=pod_protocol --cov-report=html --cov-report=term-missing
+
+# Run tests with specific Python version
+python3.11 -m pytest
+
+# Profile test performance
+pytest --durations=10
+```
+
+#### Using the Test Runner
+```bash
+# Run with custom test runner
+python run_tests.py --type all --coverage --verbose
+
+# Run only fast tests
+python run_tests.py --type unit --fast
+
+# Run parallel tests
+python run_tests.py --type integration --parallel
+```
+
+### Test Configuration
+
+The SDK uses pytest with custom configuration:
+
+```toml
+# pyproject.toml
+[tool.pytest.ini_options]
+testpaths = ["tests", "pod_protocol"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--cov=pod_protocol",
+    "--cov-report=term-missing",
+    "--cov-fail-under=80"
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests",
+    "slow: Slow running tests",
+    "network: Tests requiring network access"
+]
+asyncio_mode = "auto"
+```
+
+### Test Categories
+
+#### Unit Tests
+- Service initialization and configuration
+- Individual method functionality
+- Input validation and error handling
+- Data transformation and utilities
+- Cryptographic operations
+
+#### Integration Tests
+- Service-to-service communication
+- Cross-service data flow
+- Analytics and discovery integration
+- ZK compression with IPFS
+- Database interactions
+
+#### End-to-End Tests
+- Complete protocol workflows
+- Agent registration → messaging → status updates
+- Channel creation → joining → messaging
+- Escrow creation → condition fulfillment → release
+- Real-world usage scenarios
+- Performance under load
+
+### Fixtures and Mocking
+
+Tests use comprehensive fixtures and mocking:
+
+```python
+# conftest.py - Global fixtures
+@pytest.fixture
+def client():
+    """Create a test client with mocked connection."""
+    return PodProtocolClient("http://localhost:8899", mock_program_id)
+
+@pytest.fixture
+def test_keypair():
+    """Create a test keypair."""
+    return Keypair()
+
+# Example test with mocking
+@pytest.mark.asyncio
+async def test_agent_registration(client, test_keypair):
+    with patch.object(client.agent, 'register') as mock_register:
+        mock_register.return_value = {"signature": "mock_sig"}
+        result = await client.agent.register(agent_data, test_keypair)
+        assert result["signature"] == "mock_sig"
+```
+
+### Coverage Requirements
+
+- **Minimum Coverage**: 80% overall
+- **Critical Services**: 90% coverage required
+- **Core Utilities**: 95% coverage required
+- **Security Functions**: 100% coverage required
+
+```bash
+# Check coverage
+pytest --cov=pod_protocol --cov-report=term-missing
+
+# Generate HTML coverage report
+pytest --cov=pod_protocol --cov-report=html
+open htmlcov/index.html
+
+# Coverage with branch analysis
+pytest --cov=pod_protocol --cov-branch --cov-report=term-missing
+```
+
+### Continuous Integration
+
+Tests run automatically on:
+- Pull requests
+- Pushes to main branch
+- Release tags
+- Nightly builds
+- Multiple Python versions (3.8, 3.9, 3.10, 3.11, 3.12)
+
+```yaml
+# Example CI configuration
+- name: Run tests
+  run: |
+    pip install -e ".[test]"
+    pytest --cov=pod_protocol --cov-report=xml
+    codecov
+```
+
+### Writing New Tests
+
+When adding new functionality:
+
+1. **Write unit tests** for individual methods
+2. **Add integration tests** for service interactions  
+3. **Include error cases** and edge conditions
+4. **Update e2e tests** for new workflows
+5. **Maintain coverage** above minimum thresholds
+6. **Add performance tests** for critical paths
+
+```python
+# Example test structure
+class TestNewService:
+    """Test NewService functionality."""
+    
+    def setup_method(self):
+        """Setup test environment."""
+        self.service = NewService(mock_config)
+    
+    def test_method_with_valid_input(self):
+        """Test method with valid input."""
+        result = self.service.method("valid_input")
+        assert result == expected_output
+    
+    def test_method_with_invalid_input(self):
+        """Test method with invalid input."""
+        with pytest.raises(ValueError):
+            self.service.method("invalid_input")
+    
+    @pytest.mark.asyncio
+    async def test_async_method(self):
+        """Test async method."""
+        result = await self.service.async_method()
+        assert result is not None
+    
+    @pytest.mark.slow
+    def test_performance_critical_method(self):
+        """Test performance-critical method."""
+        import time
+        start = time.time()
+        self.service.performance_method()
+        duration = time.time() - start
+        assert duration < 1.0  # Should complete in under 1 second
+```
+
+### Test Data Management
+
+```python
+# Use factories for test data
+@pytest.fixture
+def agent_data():
+    return {
+        "name": "Test Agent",
+        "description": "A test agent",
+        "capabilities": ["text", "analysis"],
+        "version": "1.0.0"
+    }
+
+# Use parameterized tests for multiple scenarios
+@pytest.mark.parametrize("capability,expected", [
+    (AgentCapabilities.TEXT, ["text"]),
+    (AgentCapabilities.TEXT | AgentCapabilities.IMAGE, ["text", "image"]),
+])
+def test_capability_conversion(capability, expected):
+    result = convert_capabilities(capability)
+    assert result == expected
+```
+
+### Performance Testing
+
+```bash
+# Run performance benchmarks
+pytest tests/test_performance.py -v
+
+# Memory usage tests
+pytest --memray tests/test_memory.py
+
+# Load testing with multiple workers
+pytest -n 4 tests/test_load.py
+
+# Profile specific test
+pytest --profile tests/test_slow_function.py
+```
+
+### Debugging Tests
+
+```bash
+# Run specific test with debugging
+pytest tests/test_agent.py::test_registration -v -s
+
+# Drop into debugger on failure
+pytest --pdb
+
+# Debug with ipdb
+pip install ipdb
+pytest --pdbcls=IPython.terminal.debugger:Pdb
+
+# Capture output
+pytest -s --capture=no
+```
+
+### Test Environment Setup
+
+```bash
+# Development environment
+pip install -e ".[dev]"
+
+# Test-only environment  
+pip install -e ".[test]"
+
+# Full development environment
+pip install -e ".[dev,test,ipfs,zk]"
+
+# Docker test environment
+docker run -it python:3.11 bash
+pip install pytest pod-protocol-sdk[test]
+pytest
+```
 ## 📚 Examples
 
 Check out the `examples/` directory for complete usage examples.
